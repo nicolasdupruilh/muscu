@@ -1,4 +1,4 @@
-import type { CatalogueExercise } from '../data/types'
+import type { CatalogueExercise, Reps } from '../data/types'
 
 export interface Exercise extends CatalogueExercise {
   /** « catalogue » : vient de data/exercises.json ; « user » : créé dans l'appli. */
@@ -44,6 +44,13 @@ export interface PlannedExercise {
   skipped?: boolean
   /** J'ai choisi d'ignorer l'ajustement de cible lié à un repos plus court. */
   ignoreRestAdjust?: boolean
+  /** Séances cadrées : reps telles que prescrites (« 8/côté », « 20 s », « 15 m »…). */
+  prescribedReps?: Reps
+  /** Séances cadrées : charge cible du programme. */
+  targetLoadKg?: number
+  tempo?: string
+  /** Ajustement appliqué à cause du genou (affiché sur l'exercice). */
+  adjustmentNote?: string
 }
 
 /** Chrono de repos en cours. Calculé à partir de l'heure de fin, pas d'un compteur. */
@@ -70,6 +77,8 @@ export interface Session {
   /** Exercices prévus, dans l'ordre (séances haut du corps et libres). */
   plan?: PlannedExercise[]
   rest?: RestTimer
+  /** Séance jambes ajustée à cause du dernier check genou. */
+  kneeAdjustment?: 'orange' | 'rouge'
   notes?: string
   kneeCheck?: KneeCheck
 }

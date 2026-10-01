@@ -6,6 +6,7 @@ import type { Session } from '../db/models'
 import { adjustRest, endRest } from '../db/sessions'
 import { formatRest } from '../logic/format'
 import { formatClock, REST_STEP, remainingMs } from '../logic/rest'
+import { circuitNext } from '../logic/structuredPlans'
 
 /** Heure courante, rafraîchie plusieurs fois par seconde. */
 function useNow(active: boolean) {
@@ -30,6 +31,11 @@ function useNextLabel(session: Session): string | undefined {
     const logs = await db.setLogs.where('sessionId').equals(session.id!).toArray()
     const count = (key: string) => logs.filter((l) => l.planKey === key).length
     const names = new Map((await db.exercises.bulkGet(plan.map((p) => p.exerciseId))).map((e) => [e?.id, e?.name]))
+    if (session.type === 'abdos') {
+      const n = circuitNext(plan, count)
+      const p = n && plan.find((x) => x.key === n.key)
+      return p && `Tour ${n.round} : ${names.get(p.exerciseId)}`
+    }
     const current = plan.find((p) => p.key === session.rest?.planKey)
     if (current && !current.skipped && count(current.key) < current.sets) {
       return `${names.get(current.exerciseId)}, série ${count(current.key) + 1}`

@@ -1,7 +1,10 @@
-import { Link } from 'react-router'
-import { legWeek, programShapes } from '../data'
+import { Link, useNavigate } from 'react-router'
+import { KneeScale } from '../components/KneeScale'
+import { legProgram, legWeek, programShapes } from '../data'
 import { db } from '../db/db'
 import { logFooting } from '../db/queries'
+import { saveKneeNextDay, startLegSession } from '../db/sessions'
+import { kneeRule, lastKneeSession, needsNextDayCheck } from '../logic/knee'
 import { useActiveSession, useProgramStatus, useSessions } from '../hooks'
 import { formatDay, isSameWeek } from '../logic/dates'
 import { nextUpperType } from '../logic/upperBody'
@@ -13,12 +16,16 @@ export function Accueil() {
   const active = useActiveSession()
   const legs = useProgramStatus('jambes')
   const abs = useProgramStatus('abdos')
+  const navigate = useNavigate()
   if (!sessions || !legs || !abs || active === undefined) return null
 
   const now = new Date()
   const footings = sessions.filter((s) => s.type === 'course' && isSameWeek(new Date(s.date), now))
   const upper = nextUpperType(sessions)
   const legsWeek = legs.next && legWeek(legs.next.week)
+  const kneeSession = lastKneeSession(sessions)
+  const kneeStatus = kneeRule(kneeSession?.kneeCheck, legProgram.healthCheck.rules)
+  const askNextDay = needsNextDayCheck(kneeSession, now)
 
   return (
     <>
@@ -30,6 +37,14 @@ export function Accueil() {
           <strong>Séance en cours : {active.type === 'push' ? 'Push' : active.type === 'pull' ? 'Pull' : active.type}</strong>
           <span className="btn primary">Reprendre</span>
         </Link>
+      )}
+
+      {askNextDay && kneeSession && (
+        <section className="card">
+          <h2>Genou : check du matin</h2>
+          <p>{legProgram.healthCheck.questions.find((q) => q.id === 'lendemain')?.label}, douleur de 0 à 10 :</p>
+          <KneeScale onPick={(v) => saveKneeNextDay(kneeSession.id!, v)} />
+        </section>
       )}
 
       <section className="card">
@@ -45,9 +60,21 @@ export function Accueil() {
               Semaine {legs.next.week} / {programShapes.jambes.weeksCount} · {legsWeek?.blockName}
             </p>
             <ProgramWeek status={legs} labelOf={(p) => `Séance ${p.label}`} detailOf={(p) => legWeek(p.week)?.sessions[p.label]?.name} />
-            <Link className="btn primary block" to={`/seance/jambes/${legs.next.index}`} style={{ marginTop: 12 }}>
+            {kneeStatus && !askNextDay && (
+              <div className={`knee-line ${kneeStatus.level}`}>
+                <strong>Genou {kneeStatus.level}</strong> · {kneeStatus.action}
+              </div>
+            )}
+            <button
+              className="btn primary block"
+              style={{ marginTop: 12 }}
+              onClick={async () => {
+                await startLegSession(legs.next!.index)
+                navigate('/seance')
+              }}
+            >
               Démarrer la séance {legs.next.label}
-            </Link>
+            </button>
           </>
         )}
       </section>

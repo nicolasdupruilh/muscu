@@ -1,7 +1,10 @@
 // Actions sur les séances en cours : démarrer, enregistrer une série, modifier le plan, terminer.
-import { upperBody } from '../data'
+import { absBlockForWeek, legProgram, legWeek, programShapes, upperBody } from '../data'
 import type { LoadUnit } from '../data/types'
+import { kneeRule, lastKneeSession } from '../logic/knee'
+import { positionOf } from '../logic/programs'
 import { restTaken } from '../logic/rest'
+import { buildAbsPlan, buildLegPlan } from '../logic/structuredPlans'
 import { buildUpperPlan, slugify } from '../logic/upperPlan'
 import { db, type AppDB } from './db'
 import type { Exercise, PlannedExercise, Session, SetLog } from './models'
@@ -20,6 +23,68 @@ export async function startUpperSession(type: 'push' | 'pull', database: AppDB =
     const available = (id: string) => !!exercises.get(id) && !exercises.get(id)!.archived
     const plan = buildUpperPlan(template, await database.setLogs.toArray(), available)
     return (await database.sessions.add({ date: new Date().toISOString(), type, status: 'en-cours', plan })) as number
+  })
+}
+
+/**
+ * Démarre la séance jambes à cette position du programme (ou renvoie la séance en cours).
+ * Le dernier check genou orange ou rouge ajuste la séance.
+ */
+export async function startLegSession(index: number, database: AppDB = db): Promise<number> {
+  return database.transaction('rw', database.sessions, database.exercises, async () => {
+    const current = await activeSession(database)
+    if (current) return current.id!
+    const pos = positionOf(programShapes.jambes, index)
+    const session = legWeek(pos.week)?.sessions[pos.label]
+    if (!session) throw new Error(`Séance jambes introuvable : semaine ${pos.week} ${pos.label}`)
+    const level = kneeRule(lastKneeSession(await database.sessions.toArray())?.kneeCheck, legProgram.healthCheck.rules)?.level
+    const kneeAdjustment = level === 'orange' || level === 'rouge' ? level : undefined
+    const jumps = new Set((await database.exercises.where('category').equals('plyo').primaryKeys()) as string[])
+    const plan = buildLegPlan(session, legWeek(pos.week - 1)?.sessions[pos.label], kneeAdjustment, (id) => jumps.has(id))
+    return (await database.sessions.add({
+      date: new Date().toISOString(),
+      type: 'jambes',
+      status: 'en-cours',
+      program: { programId: 'jambes', index },
+      plan,
+      kneeAdjustment,
+    })) as number
+  })
+}
+
+/** Démarre la séance abdos à cette position du programme, éventuellement enchaînée après un push ou un pull. */
+export async function startAbsSession(index: number, parentSessionId?: number, database: AppDB = db): Promise<number> {
+  return database.transaction('rw', database.sessions, async () => {
+    const current = await activeSession(database)
+    if (current) return current.id!
+    const block = absBlockForWeek(positionOf(programShapes.abdos, index).week)
+    if (!block) throw new Error('Bloc abdos introuvable')
+    return (await database.sessions.add({
+      date: new Date().toISOString(),
+      type: 'abdos',
+      status: 'en-cours',
+      program: { programId: 'abdos', index },
+      parentSessionId,
+      plan: buildAbsPlan(block),
+    })) as number
+  })
+}
+
+/** Termine une séance jambes avec la douleur au genou pendant la séance (0 à 10). */
+export async function finishLegSession(sessionId: number, pendant: number, database: AppDB = db) {
+  await database.sessions.update(sessionId, {
+    status: 'terminee',
+    endedAt: new Date().toISOString(),
+    rest: undefined,
+    kneeCheck: { pendant },
+  })
+}
+
+/** Réponse du lendemain matin : squat unipodal lent (0 à 10). */
+export async function saveKneeNextDay(sessionId: number, lendemain: number, database: AppDB = db) {
+  await database.transaction('rw', database.sessions, async () => {
+    const s = await database.sessions.get(sessionId)
+    if (s) await database.sessions.update(sessionId, { kneeCheck: { ...s.kneeCheck, lendemain, lendemainAt: new Date().toISOString() } })
   })
 }
 

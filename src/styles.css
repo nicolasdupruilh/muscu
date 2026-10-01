@@ -623,3 +623,78 @@ input.search {
   font-size: 1.4rem;
   font-variant-numeric: tabular-nums;
 }
+
+/* Genou */
+
+.knee-scale {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.knee-btn {
+  min-height: 56px;
+  padding: 0;
+  font-size: 1.3rem;
+  border-width: 2px;
+}
+
+.knee-btn.vert,
+.knee.vert,
+.knee-line.vert {
+  border-color: var(--ok);
+}
+
+.knee-btn.orange,
+.knee.orange,
+.knee-line.orange {
+  border-color: var(--warn);
+}
+
+.knee-btn.rouge,
+.knee.rouge,
+.knee-line.rouge {
+  border-color: var(--danger);
+}
+
+.knee-line {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-left: 4px solid;
+  border-radius: 8px;
+  background: var(--surface-2);
+  font-size: 0.9rem;
+}
+
+.knee {
+  border-width: 2px;
+}
+
+.info.adjust {
+  border-left: 4px solid var(--warn);
+  font-size: 0.9rem;
+}
+
+/* Circuit abdos */
+
+.rounds {
+  display: flex;
+  gap: 6px;
+}
+
+.rounds .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+}
+
+.rounds .dot.on {
+  background: var(--ok);
+  border-color: var(--ok);
+}
+
+.exercise > .stack:empty {
+  display: none;
+}

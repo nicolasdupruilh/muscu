@@ -1,7 +1,21 @@
 import 'fake-indexeddb/auto'
 import { afterEach, describe, expect, it } from 'vitest'
 import { AppDB, syncCatalogue } from './db'
-import { abandonSession, activeSession, adjustRest, createExercise, deleteSet, endRest, finishSession, logSet, startUpperSession } from './sessions'
+import {
+  abandonSession,
+  activeSession,
+  adjustRest,
+  createExercise,
+  deleteSet,
+  endRest,
+  finishLegSession,
+  finishSession,
+  logSet,
+  saveKneeNextDay,
+  startAbsSession,
+  startLegSession,
+  startUpperSession,
+} from './sessions'
 
 let n = 0
 const dbs: AppDB[] = []
@@ -87,5 +101,37 @@ describe("création d'exercice", () => {
     expect((await d.exercises.where('slots').equals('triceps').primaryKeys())).toContain('dips-2')
     // Une resynchronisation du catalogue ne touche pas à mes exercices.
     expect(await syncCatalogue(d)).toBe(0)
+  })
+})
+
+describe('séances cadrées', () => {
+  it('démarre la séance jambes prescrite et la termine avec le check genou', async () => {
+    const d = await freshDb()
+    const id = await startLegSession(3, d) // semaine 2, séance B
+    const s = (await d.sessions.get(id))!
+    expect(s).toMatchObject({ type: 'jambes', program: { programId: 'jambes', index: 3 } })
+    expect(s.plan?.find((p) => p.exerciseId === 'rdl')?.targetLoadKg).toBe(82.5)
+    expect(s.kneeAdjustment).toBeUndefined()
+    await finishLegSession(id, 4, d)
+    await saveKneeNextDay(id, 1, d)
+    expect((await d.sessions.get(id))!.kneeCheck).toMatchObject({ pendant: 4, lendemain: 1 })
+  })
+
+  it('ajuste la séance jambes suivante si le genou était orange', async () => {
+    const d = await freshDb()
+    await finishLegSession(await startLegSession(2, d), 4, d) // semaine 2 A, douleur 4 → orange
+    const id = await startLegSession(3, d) // semaine 2 B
+    const s = (await d.sessions.get(id))!
+    expect(s.kneeAdjustment).toBe('orange')
+    expect(s.plan?.find((p) => p.exerciseId === 'rdl')?.targetLoadKg).toBe(80) // charge de la semaine 1
+  })
+
+  it('démarre les abdos enchaînés après un push', async () => {
+    const d = await freshDb()
+    const push = await startUpperSession('push', d)
+    await finishSession(push, d)
+    const id = await startAbsSession(0, push, d)
+    expect(await d.sessions.get(id)).toMatchObject({ type: 'abdos', parentSessionId: push, program: { programId: 'abdos', index: 0 } })
+    expect((await d.sessions.get(id))!.plan).toHaveLength(4)
   })
 })

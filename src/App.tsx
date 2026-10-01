@@ -1,7 +1,6 @@
 import { HashRouter, NavLink, Route, Routes } from 'react-router'
 import { Accueil } from './screens/Accueil'
 import { Seance } from './screens/SeanceEnCours'
-import { ApercuAbdos, ApercuJambes } from './screens/Apercu'
 import { Historique } from './screens/Historique'
 import { Reglages } from './screens/Reglages'
 import { dataErrors } from './data'
@@ -43,8 +42,6 @@ export function App() {
           <Routes>
             <Route path="/" element={<Accueil />} />
             <Route path="/seance" element={<Seance />} />
-            <Route path="/seance/jambes/:index" element={<ApercuJambes />} />
-            <Route path="/seance/abdos/:index" element={<ApercuAbdos />} />
             <Route path="/historique" element={<Historique />} />
             <Route path="/reglages" element={<Reglages />} />
           </Routes>

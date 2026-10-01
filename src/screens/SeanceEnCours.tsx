@@ -1,40 +1,62 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import type { LoadUnit } from '../data/types'
-import { ExercisePicker } from '../components/ExercisePicker'
-import { Stepper } from '../components/Stepper'
-import type { Exercise, PlannedExercise, Session, SetLog } from '../db/models'
-import { abandonSession, deleteSet, finishSession, logSet, updatePlan, updateSet } from '../db/sessions'
-import { useActiveSession, useExercises, useSetLogs } from '../hooks'
-import { doubleProgression, type Target } from '../logic/doubleProgression'
-import { formatLoad, formatRest, formatSet, formatValue } from '../logic/format'
-import { hasLoad, lastPerformance, setValue, toPastSets, type LastPerformance } from '../logic/history'
-import { applyRestAdjustment, lastChosenRest, lastRestReference, REST_PRESETS, REST_STEP, restAdjustment } from '../logic/rest'
 import { unlockAudio } from '../alarm'
+import { ExercisePicker } from '../components/ExercisePicker'
+import { KneeScale } from '../components/KneeScale'
+import { defaultMode, doneValue, formatDone, LastTime, RestChooser, SetEditor, TargetLine, valueFields } from '../components/SetEntry'
+import { legProgram, legWeek, programShapes } from '../data'
+import type { Exercise, PlannedExercise, Session, SetLog } from '../db/models'
+import {
+  abandonSession,
+  deleteSet,
+  finishLegSession,
+  finishSession,
+  logSet,
+  startAbsSession,
+  updatePlan,
+  updateSet,
+} from '../db/sessions'
+import { useActiveSession, useExercises, useProgramStatus, useSetLogs } from '../hooks'
+import { doubleProgression, type Target } from '../logic/doubleProgression'
+import { formatKg, formatLoad, formatRest } from '../logic/format'
+import { hasLoad, lastPerformance, toPastSets, type LastPerformance } from '../logic/history'
+import { positionOf } from '../logic/programs'
+import { describeReps, entryMode, parseReps, type EntryMode } from '../logic/reps'
+import { applyRestAdjustment, lastChosenRest, lastRestReference, restAdjustment } from '../logic/rest'
+import { legTarget } from '../logic/structuredPlans'
+import { describeTempo } from '../logic/tempo'
+import { AbsCircuit } from './AbsCircuit'
 import { ChoixSeance } from './ChoixSeance'
 
 const typeNames: Record<string, string> = { push: 'Push', pull: 'Pull', libre: 'Séance libre' }
-const dayFormat = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
 const timeFormat = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
 type PickerState = { mode: 'change'; key: string } | { mode: 'add' } | null
+
+/** Saisie d'un exercice : selon la prescription pour une séance cadrée, selon l'unité sinon. */
+export const modeOf = (planned: PlannedExercise, exercise: Exercise): EntryMode =>
+  planned.prescribedReps !== undefined ? entryMode(parseReps(planned.prescribedReps), exercise.loadUnit) : defaultMode(exercise.loadUnit)
 
 /** Écran /seance : la séance en cours, ou le choix d'une séance s'il n'y en a pas. */
 export function Seance() {
   const session = useActiveSession()
   if (session === undefined) return null
-  return session ? <SeanceEnCours session={session} /> : <ChoixSeance />
+  if (!session) return <ChoixSeance />
+  return session.type === 'abdos' ? <AbsCircuit session={session} /> : <SeanceEnCours session={session} />
 }
 
 function SeanceEnCours({ session }: { session: Session }) {
   const exercises = useExercises()
   const logs = useSetLogs()
+  const abs = useProgramStatus('abdos')
   const navigate = useNavigate()
   const [openKey, setOpenKey] = useState<string | null>(null)
   const [picker, setPicker] = useState<PickerState>(null)
-  if (!exercises || !logs) return null
+  const [kneeCheck, setKneeCheck] = useState(false)
+  if (!exercises || !logs || !abs) return null
 
   const id = session.id!
+  const isLegs = session.type === 'jambes'
   const plan = session.plan ?? []
   const sessionLogs = logs.filter((l) => l.sessionId === id)
   const setsOf = (key: string) => sessionLogs.filter((l) => l.planKey === key).sort((a, b) => a.setNumber - b.setNumber)
@@ -53,6 +75,37 @@ function SeanceEnCours({ session }: { session: Session }) {
     })
   const patch = (key: string, changes: Partial<PlannedExercise>) =>
     updatePlan(id, (pl) => pl.map((p) => (p.key === key ? { ...p, ...changes } : p)))
+
+  const finish = async () => {
+    if (remaining > 0 && !confirm('Il reste des exercices non terminés. Terminer la séance quand même ?')) return
+    if (isLegs) return setKneeCheck(true)
+    await finishSession(id)
+    // Les abdos s'enchaînent après un push ou un pull.
+    if ((session.type === 'push' || session.type === 'pull') && abs.next) {
+      await startAbsSession(abs.next.index, id)
+      window.scrollTo(0, 0)
+    } else {
+      navigate('/')
+    }
+  }
+
+  if (kneeCheck) {
+    return (
+      <>
+        <h1>Check genou</h1>
+        <p>{legProgram.healthCheck.questions.find((q) => q.id === 'pendant')?.label ?? 'Douleur pendant la séance'}, de 0 à 10 :</p>
+        <KneeScale
+          onPick={async (value) => {
+            await finishLegSession(id, value)
+            navigate('/')
+          }}
+        />
+        <button className="link" onClick={() => setKneeCheck(false)}>
+          Retour à la séance
+        </button>
+      </>
+    )
+  }
 
   const pickerTarget = picker?.mode === 'change' ? plan.find((p) => p.key === picker.key) : undefined
 
@@ -95,7 +148,7 @@ function SeanceEnCours({ session }: { session: Session }) {
 
   return (
     <>
-      <h1>{typeNames[session.type] ?? session.type}</h1>
+      {isLegs ? <LegHeader session={session} /> : <h1>{typeNames[session.type] ?? session.type}</h1>}
       <p className="muted">
         Commencée à {timeFormat.format(new Date(session.date))} ·{' '}
         {remaining === 0 ? 'tout est fait' : `${remaining} exercice${remaining > 1 ? 's' : ''} restant${remaining > 1 ? 's' : ''}`}
@@ -117,7 +170,7 @@ function SeanceEnCours({ session }: { session: Session }) {
             lastInPlan={i === plan.length - 1}
             othersRemaining={plan.some((q) => q.key !== p.key && !q.skipped && !isComplete(q))}
             onToggle={() => setOpenKey(open === p.key ? '' : p.key)}
-            onChange={() => setPicker({ mode: 'change', key: p.key })}
+            onChange={p.prescribedReps === undefined ? () => setPicker({ mode: 'change', key: p.key }) : undefined}
             onMove={(dir) => move(p.key, dir)}
             onSkip={() => {
               patch(p.key, { skipped: !p.skipped })
@@ -133,19 +186,12 @@ function SeanceEnCours({ session }: { session: Session }) {
       })}
 
       <button className="btn block" style={{ marginTop: 16 }} onClick={() => setPicker({ mode: 'add' })}>
-        + Ajouter un exercice hors trame
+        + Ajouter un exercice {isLegs ? 'hors programme' : 'hors trame'}
       </button>
 
       <div className="stack" style={{ marginTop: 24 }}>
-        <button
-          className="btn primary block"
-          onClick={async () => {
-            if (remaining > 0 && !confirm('Il reste des exercices non terminés. Terminer la séance quand même ?')) return
-            await finishSession(id)
-            navigate('/')
-          }}
-        >
-          Terminer la séance
+        <button className="btn primary block" onClick={finish}>
+          {isLegs ? 'Terminer et faire le check genou' : abs.next ? 'Terminer et enchaîner les abdos' : 'Terminer la séance'}
         </button>
         <button
           className="link"
@@ -158,6 +204,32 @@ function SeanceEnCours({ session }: { session: Session }) {
           Abandonner la séance
         </button>
       </div>
+    </>
+  )
+}
+
+/** En-tête d'une séance jambes : semaine, bloc, semaine allégée, ajustement genou, règle de charge. */
+function LegHeader({ session }: { session: Session }) {
+  const pos = positionOf(programShapes.jambes, session.program?.index ?? 0)
+  const week = legWeek(pos.week)
+  const rule = session.kneeAdjustment && legProgram.healthCheck.rules.find((r) => r.level === session.kneeAdjustment)
+  return (
+    <>
+      <h1>{week?.sessions[pos.label]?.name ?? 'Jambes'}</h1>
+      <p className="muted">
+        Semaine {pos.week} · {week?.blockName} {week?.deload && <span className="badge warn">Semaine allégée</span>}
+      </p>
+      {rule && (
+        <div className={`card knee ${rule.level}`}>
+          <strong>Genou {rule.level} à la dernière séance.</strong>
+          <div className="small">{rule.action}</div>
+          <div className="small muted">Les ajustements sont appliqués ci-dessous ; tu peux les annuler exercice par exercice.</div>
+        </div>
+      )}
+      <details className="small muted">
+        <summary>Règle de charge</summary>
+        {legProgram.loadRule}
+      </details>
     </>
   )
 }
@@ -193,7 +265,8 @@ function ExerciseCard({
   /** D'autres exercices restent à faire après celui-ci. */
   othersRemaining: boolean
   onToggle: () => void
-  onChange: () => void
+  /** Absent pour un exercice prescrit par le programme. */
+  onChange?: () => void
   onMove: (dir: -1 | 1) => void
   onSkip: () => void
   onRemove: () => void
@@ -209,21 +282,33 @@ function ExerciseCard({
   useEffect(() => {
     if (open) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [open])
+
   const unit = exercise.loadUnit
+  const mode = modeOf(planned, exercise)
+  const prescribed = planned.prescribedReps !== undefined
   const pastSets = last ? toPastSets(last.sets, unit) : []
-  const progression = doubleProgression({
-    last: pastSets,
-    repRange: planned.repRange,
-    sets: planned.sets,
-    incrementKg: hasLoad(unit) ? exercise.loadIncrementKg ?? 2.5 : undefined,
-    unit: unit === 'time' ? 's' : 'reps',
-  })
-  // Repos nettement plus court que la dernière fois : cible revue à la baisse (ignorable).
-  const adjustment = last && restAdjustment(planned.restSec, lastRestReference(last.sets))
-  const target = adjustment && !planned.ignoreRestAdjust ? applyRestAdjustment(progression, pastSets, adjustment) : progression
+  let target: Target
+  let adjustment: ReturnType<typeof restAdjustment> | undefined
+  if (prescribed) {
+    target = legTarget(planned, pastSets, unit)
+  } else {
+    const progression = doubleProgression({
+      last: pastSets,
+      repRange: planned.repRange,
+      sets: planned.sets,
+      incrementKg: hasLoad(unit) ? exercise.loadIncrementKg ?? 2.5 : undefined,
+      unit: unit === 'time' ? 's' : 'reps',
+    })
+    // Repos nettement plus court que la dernière fois : cible revue à la baisse (ignorable).
+    adjustment = last && restAdjustment(planned.restSec, lastRestReference(last.sets))
+    target = adjustment && !planned.ignoreRestAdjust ? applyRestAdjustment(progression, pastSets, adjustment) : progression
+  }
   const done = sets.length >= planned.sets
-  const valueUnit = unit === 'time' ? 's' : 'reps'
   const status = planned.skipped ? 'Sautée' : done ? 'Fait ✓' : sets.length ? `${sets.length}/${planned.sets}` : ''
+  const prescription = prescribed
+    ? describeReps(parseReps(planned.prescribedReps!))
+    : `${planned.repRange[0]} à ${planned.repRange[1]} ${unit === 'time' ? 's' : 'reps'}${exercise.unilateral ? ' par côté' : ''}`
+  const loadHint = target.sets[0]?.loadKg !== undefined ? formatLoad(target.sets[0].loadKg, unit) : ''
 
   return (
     <section ref={ref} className={`card exercise ${open ? 'open' : ''} ${planned.skipped ? 'skipped' : ''}`}>
@@ -233,8 +318,8 @@ function ExerciseCard({
           <strong className="exercise-name">{exercise.name}</strong>
           {!open && (
             <span className="small muted">
-              {planned.sets} × {planned.repRange[0]}–{planned.repRange[1]} {valueUnit}
-              {target.sets[0]?.loadKg !== undefined && ` · ${formatLoad(target.sets[0].loadKg, unit)}`}
+              {planned.sets} × {prescription}
+              {loadHint && ` · ${loadHint}`}
             </span>
           )}
         </span>
@@ -243,21 +328,36 @@ function ExerciseCard({
 
       {open && (
         <div className="stack">
-          <div className="small muted">
-            {planned.sets} séries · {planned.repRange[0]} à {planned.repRange[1]} {valueUnit}
-            {exercise.unilateral && ' par côté'} · repos {formatRest(planned.restSec)}
+          <div>
+            <strong>
+              {planned.sets} × {prescription}
+            </strong>
+            {planned.targetLoadKg !== undefined && <> · {formatKg(planned.targetLoadKg)}</>}
+            {planned.restSec > 0 && <span className="muted"> · repos {formatRest(planned.restSec)}</span>}
           </div>
-          {planned.note && <div className="small">{planned.note}</div>}
-          {exercise.cues && <div className="small muted">{exercise.cues}</div>}
+          {planned.tempo && (
+            <div className="small">
+              Tempo {planned.tempo} : {describeTempo(planned.tempo)}
+            </div>
+          )}
+          {planned.adjustmentNote && <div className="info adjust">{planned.adjustmentNote}</div>}
+          {planned.note && !(planned.tempo && sameStart(describeTempo(planned.tempo), planned.note)) && <div className="small">{planned.note}</div>}
+          {exercise.cues && !sameStart(exercise.cues, planned.note) && <div className="small muted">{exercise.cues}</div>}
 
-          <LastTime last={last} unit={unit} />
-          <TargetLine target={target} unit={unit} />
+          {/* Rien à comparer pour une série simplement cochée, sans charge (échauffement). */}
+          {(mode !== 'check' || hasLoad(unit)) && (
+            <>
+              <LastTime sets={last?.sets} unit={unit} mode={mode} />
+              <TargetLine target={target} unit={unit} mode={mode} />
+            </>
+          )}
           {adjustment && (
             <button className="link" onClick={() => onIgnoreRestAdjust(!planned.ignoreRestAdjust)}>
               {planned.ignoreRestAdjust ? 'Réappliquer l’ajustement au repos plus court' : 'Ignorer cet ajustement'}
             </button>
           )}
           {!done &&
+            planned.restSec > 0 &&
             (sets.length === 0 || showRest ? (
               <RestChooser value={planned.restSec} onChange={onRest} />
             ) : (
@@ -275,13 +375,14 @@ function ExerciseCard({
                 key={s.id}
                 title={`Série ${s.setNumber}`}
                 unit={unit}
+                mode={mode}
                 exercise={exercise}
                 initialLoad={s.loadKg ?? 0}
-                initialValue={setValue(s, unit)}
-                targetValue={s.targetReps ?? setValue(s, unit)}
+                initialValue={doneValue(s, mode)}
+                targetValue={s.targetReps ?? doneValue(s, mode)}
                 submitLabel="Enregistrer"
                 onSubmit={async (loadKg, value) => {
-                  await updateSet(s.id!, valueFields(unit, loadKg, value))
+                  await updateSet(s.id!, valueFields(mode, unit, loadKg, value))
                   setEditing(null)
                 }}
                 onCancel={() => setEditing(null)}
@@ -293,7 +394,7 @@ function ExerciseCard({
             ) : (
               <button key={s.id} className="set-row done" onClick={() => setEditing(s.id!)}>
                 <span>Série {i + 1}</span>
-                <strong>{formatSet(s.loadKg, setValue(s, unit), unit)}</strong>
+                <strong>{formatDone(s, unit, mode)}</strong>
                 <span className="small muted">modifier</span>
               </button>
             ),
@@ -305,6 +406,7 @@ function ExerciseCard({
               sessionId={sessionId}
               planned={planned}
               exercise={exercise}
+              mode={mode}
               sets={sets}
               target={target}
               othersRemaining={othersRemaining}
@@ -313,10 +415,11 @@ function ExerciseCard({
           )}
 
           {!done &&
+            mode !== 'check' &&
             target.sets.slice(sets.length + 1).map((t, i) => (
               <div key={i} className="set-row pending">
                 <span>Série {sets.length + i + 2}</span>
-                <span className="muted">{formatSet(t.loadKg, t.value, unit)}</span>
+                <span className="muted">{formatDone({ loadKg: t.loadKg, reps: t.value, durationSec: t.value }, unit, mode)}</span>
               </div>
             ))}
 
@@ -329,7 +432,7 @@ function ExerciseCard({
                 − Série
               </button>
             )}
-            {sets.length === 0 && (
+            {onChange && sets.length === 0 && (
               <button className="btn" onClick={onChange}>
                 Changer
               </button>
@@ -337,7 +440,7 @@ function ExerciseCard({
             <button className="btn" onClick={onSkip}>
               {planned.skipped ? 'Reprendre' : 'Sauter'}
             </button>
-            {!planned.templateKey && sets.length === 0 && (
+            {planned.key.startsWith('extra:') && sets.length === 0 && (
               <button className="btn" onClick={onRemove}>
                 Retirer
               </button>
@@ -355,65 +458,14 @@ function ExerciseCard({
   )
 }
 
-/** Choix du repos avant un exercice : boutons rapides et réglage fin. */
-function RestChooser({ value, onChange }: { value: number; onChange: (sec: number) => void }) {
-  return (
-    <div className="rest-chooser">
-      <div className="row">
-        <span className="stepper-label grow">Repos</span>
-        <button className="chip" onClick={() => onChange(Math.max(REST_STEP, value - REST_STEP))} aria-label="Repos moins 15 s">
-          −15
-        </button>
-        <strong className="rest-value">{formatRest(value)}</strong>
-        <button className="chip" onClick={() => onChange(value + REST_STEP)} aria-label="Repos plus 15 s">
-          +15
-        </button>
-      </div>
-      <div className="chips rest-presets">
-        {REST_PRESETS.map((r) => (
-          <button key={r} className={`chip ${value === r ? 'on' : ''}`} onClick={() => onChange(r)}>
-            {formatRest(r)}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function LastTime({ last, unit }: { last?: LastPerformance; unit: LoadUnit }) {
-  if (!last) return <div className="info">Jamais fait.</div>
-  return (
-    <div className="info">
-      <div className="small muted">Dernière fois, {dayFormat.format(new Date(last.at))}</div>
-      <div>{last.sets.map((s) => formatSet(s.loadKg, setValue(s, unit), unit)).join(' · ')}</div>
-    </div>
-  )
-}
-
-function TargetLine({ target, unit }: { target: Target; unit: LoadUnit }) {
-  const loads = new Set(target.sets.map((s) => s.loadKg))
-  const values = target.sets.map((s) => formatValue(s.value, unit)).join(' / ')
-  const load = loads.size === 1 && target.sets[0].loadKg !== undefined ? formatLoad(target.sets[0].loadKg, unit) : ''
-  return (
-    <div className={`info target ${target.increased ? 'up' : ''}`}>
-      <div>
-        <strong>Cible :</strong> {load && `${load} × `}
-        {values}
-      </div>
-      <div className="small">{target.reason}</div>
-    </div>
-  )
-}
-
-const valueFields = (unit: LoadUnit, loadKg: number, value: number) => ({
-  loadKg: hasLoad(unit) ? loadKg : undefined,
-  ...(unit === 'time' ? { durationSec: value, reps: undefined } : { reps: value, durationSec: undefined }),
-})
+/** La consigne du catalogue redit la note du programme (même début) : inutile de l'afficher deux fois. */
+const sameStart = (a: string, b?: string) => !!b && a.slice(0, 15).toLowerCase() === b.slice(0, 15).toLowerCase()
 
 function NextSet({
   sessionId,
   planned,
   exercise,
+  mode,
   sets,
   target,
   othersRemaining,
@@ -422,6 +474,7 @@ function NextSet({
   sessionId: number
   planned: PlannedExercise
   exercise: Exercise
+  mode: EntryMode
   sets: SetLog[]
   target: Target
   othersRemaining: boolean
@@ -436,103 +489,33 @@ function NextSet({
     <SetEditor
       title={`Série ${n + 1}`}
       unit={unit}
+      mode={mode}
       exercise={exercise}
       initialLoad={initialLoad}
       initialValue={t?.value ?? planned.repRange[0]}
       targetValue={t?.value ?? planned.repRange[0]}
-      submitLabel={`Valider la série ${n + 1}`}
+      submitLabel={mode === 'check' ? `Série ${n + 1} faite` : `Valider la série ${n + 1}`}
       onSubmit={async (loadKg, value) => {
         unlockAudio()
         const completed = n + 1 >= planned.sets
-        // Le chrono démarre, sauf après la toute dernière série de la séance.
-        const restSec = !completed || othersRemaining ? planned.restSec : undefined
+        // Le chrono démarre, sauf après la toute dernière série de la séance ou sans repos prévu.
+        const restSec = (!completed || othersRemaining) && planned.restSec > 0 ? planned.restSec : undefined
         await logSet(
           {
-          sessionId,
-          planKey: planned.key,
-          templateKey: planned.templateKey,
-          exerciseId: exercise.id,
-          setNumber: n + 1,
-          targetLoadKg: t?.loadKg,
-          targetReps: t?.value,
-          restPlannedSec: planned.restSec,
-          ...valueFields(unit, loadKg, value),
+            sessionId,
+            planKey: planned.key,
+            templateKey: planned.templateKey,
+            exerciseId: exercise.id,
+            setNumber: n + 1,
+            targetLoadKg: t?.loadKg,
+            targetReps: mode === 'check' ? undefined : t?.value,
+            restPlannedSec: planned.restSec,
+            ...valueFields(mode, unit, loadKg, value),
           },
           restSec,
         )
         onValidated(completed)
       }}
     />
-  )
-}
-
-function SetEditor({
-  title,
-  unit,
-  exercise,
-  initialLoad,
-  initialValue,
-  targetValue,
-  submitLabel,
-  onSubmit,
-  onCancel,
-  onDelete,
-}: {
-  title: string
-  unit: LoadUnit
-  exercise: Exercise
-  initialLoad: number
-  initialValue: number
-  targetValue: number
-  submitLabel: string
-  onSubmit: (loadKg: number, value: number) => void
-  onCancel?: () => void
-  onDelete?: () => void
-}) {
-  const [load, setLoad] = useState(initialLoad)
-  const [value, setValue] = useState(initialValue)
-  const valueLabel = unit === 'time' ? 'Durée (s)' : exercise.unilateral ? 'Reps par côté' : 'Reps'
-  const quick = [-2, -1, 0, 1, 2].map((d) => targetValue + d).filter((v) => v >= 0)
-
-  return (
-    <div className="set-editor">
-      <div className="small muted">{title}</div>
-      {hasLoad(unit) && (
-        <Stepper
-          label={unit === 'bodyweight+kg' ? 'Lest' : 'Charge'}
-          value={load}
-          step={exercise.loadIncrementKg ?? 2.5}
-          bigStep={10}
-          onChange={setLoad}
-          format={(v) => (unit === 'bodyweight+kg' && v === 0 ? 'PDC' : `${v.toLocaleString('fr-FR')} kg`)}
-        />
-      )}
-      <div className="stepper-label">{valueLabel}</div>
-      <div className="chips quick">
-        {quick.map((v) => (
-          <button type="button" key={v} className={`chip ${value === v ? 'on' : ''}`} onClick={() => setValue(v)}>
-            {v}
-          </button>
-        ))}
-      </div>
-      <Stepper label="" value={value} step={1} onChange={setValue} format={(v) => formatValue(v, unit)} />
-      <button className="btn primary block big" onClick={() => onSubmit(load, value)}>
-        {submitLabel}
-      </button>
-      {(onCancel || onDelete) && (
-        <div className="row">
-          {onCancel && (
-            <button className="btn grow" onClick={onCancel}>
-              Annuler
-            </button>
-          )}
-          {onDelete && (
-            <button className="btn grow danger" onClick={onDelete}>
-              Supprimer
-            </button>
-          )}
-        </div>
-      )}
-    </div>
   )
 }
