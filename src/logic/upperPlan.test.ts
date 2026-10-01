@@ -39,6 +39,12 @@ it('reprend le repos choisi la dernière fois pour cet exercice', () => {
   expect(plan[1].restSec).toBe(120)
 })
 
+it("propose un autre exercice du slot si celui par défaut est archivé", () => {
+  const plan = buildUpperPlan(push, [], (id) => id !== 'dc-halteres', (slot) => (slot === 'push-horizontal' ? 'dc-barre' : undefined))
+  expect(plan[0].exerciseId).toBe('dc-barre')
+  expect(plan[1].exerciseId).toBe('incline-halteres')
+})
+
 describe('identifiant d’exercice', () => {
   it('est lisible et unique', () => {
     expect(slugify('Curl araignée', () => false)).toBe('curl-araignee')

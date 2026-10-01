@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react'
-import type { LoadUnit } from '../data/types'
 import type { Exercise, SetLog } from '../db/models'
 import { createExercise } from '../db/sessions'
-import { formatRest } from '../logic/format'
+import { ExerciseForm } from './ExerciseForm'
 import { lastPerformance } from '../logic/history'
 
 const shortDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
@@ -50,11 +49,22 @@ export function ExercisePicker({
         </button>
       </div>
       {creating ? (
-        <CreateExerciseForm
-          initialName={query}
-          slot={slot}
-          defaultRestSec={defaultRestSec}
-          onCreated={(id) => {
+        <ExerciseForm
+          initial={{
+            name: query,
+            loadUnit: 'kg',
+            loadIncrementKg: 2.5,
+            unilateral: false,
+            defaultRestSec: defaultRestSec || 90,
+            slots: slot ? [slot] : [],
+            cues: '',
+          }}
+          showSlots={false}
+          showCues={false}
+          submitLabel="Créer et choisir"
+          note={slot ? 'Il sera proposé dans ce slot les prochaines fois.' : undefined}
+          onSubmit={async (values) => {
+            const id = await createExercise(values)
             setCreating(false)
             onPick(id)
           }}
@@ -87,101 +97,9 @@ export function ExercisePicker({
   )
 }
 
-const normalize = (s: string) =>
+export const normalize = (s: string) =>
   s
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
     .trim()
-
-const units: { value: LoadUnit; label: string }[] = [
-  { value: 'kg', label: 'Charge (kg)' },
-  { value: 'bodyweight+kg', label: 'Poids du corps + lest' },
-  { value: 'bodyweight', label: 'Poids du corps' },
-  { value: 'time', label: 'Durée' },
-]
-const increments = [1, 1.25, 2, 2.5, 5]
-const rests = [45, 60, 75, 90, 120, 150, 180]
-
-function CreateExerciseForm({
-  initialName,
-  slot,
-  defaultRestSec,
-  onCreated,
-}: {
-  initialName: string
-  slot?: string
-  defaultRestSec: number
-  onCreated: (id: string) => void
-}) {
-  const [name, setName] = useState(initialName)
-  const [loadUnit, setLoadUnit] = useState<LoadUnit>('kg')
-  const [increment, setIncrement] = useState(2.5)
-  const [unilateral, setUnilateral] = useState(false)
-  const [rest, setRest] = useState(rests.includes(defaultRestSec) ? defaultRestSec : 90)
-  const withLoad = loadUnit === 'kg' || loadUnit === 'bodyweight+kg'
-
-  return (
-    <form
-      className="stack"
-      onSubmit={async (e) => {
-        e.preventDefault()
-        if (!name.trim()) return
-        const id = await createExercise({
-          name,
-          loadUnit,
-          loadIncrementKg: withLoad ? increment : undefined,
-          unilateral,
-          defaultRestSec: rest,
-          slots: slot ? [slot] : [],
-        })
-        onCreated(id)
-      }}
-    >
-      <label className="field">
-        Nom
-        <input className="search" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex. Curl araignée" autoFocus />
-      </label>
-
-      <div className="field">Type de charge</div>
-      <div className="chips">
-        {units.map((u) => (
-          <button type="button" key={u.value} className={`chip ${loadUnit === u.value ? 'on' : ''}`} onClick={() => setLoadUnit(u.value)}>
-            {u.label}
-          </button>
-        ))}
-      </div>
-
-      {withLoad && (
-        <>
-          <div className="field">Cran de charge</div>
-          <div className="chips">
-            {increments.map((i) => (
-              <button type="button" key={i} className={`chip ${increment === i ? 'on' : ''}`} onClick={() => setIncrement(i)}>
-                {i.toLocaleString('fr-FR')} kg
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-
-      <div className="field">Repos par défaut</div>
-      <div className="chips">
-        {rests.map((r) => (
-          <button type="button" key={r} className={`chip ${rest === r ? 'on' : ''}`} onClick={() => setRest(r)}>
-            {formatRest(r)}
-          </button>
-        ))}
-      </div>
-
-      <button type="button" className={`chip ${unilateral ? 'on' : ''}`} onClick={() => setUnilateral(!unilateral)}>
-        {unilateral ? '✓ ' : ''}Unilatéral (saisie par côté)
-      </button>
-
-      {slot && <p className="small muted">Il sera proposé dans ce slot les prochaines fois.</p>}
-      <button className="btn primary block" type="submit" disabled={!name.trim()}>
-        Créer et choisir
-      </button>
-    </form>
-  )
-}

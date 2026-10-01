@@ -893,3 +893,10 @@ input.search {
 .table td:first-child {
   white-space: nowrap;
 }
+
+textarea.textarea {
+  padding: 10px 12px;
+  min-height: 80px;
+  font: inherit;
+  resize: vertical;
+}

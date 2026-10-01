@@ -7,13 +7,20 @@ import { lastChosenRest } from './rest'
  * Plan d'une séance push ou pull : la trame slot par slot, avec pour chaque place
  * l'exercice fait la dernière fois à cette place (sinon l'exercice par défaut de la trame),
  * et le repos choisi la dernière fois pour cet exercice (sinon celui du slot).
- * `isAvailable` écarte un exercice archivé ou supprimé.
+ * `isAvailable` écarte un exercice archivé ou supprimé ; si l'exercice par défaut l'est aussi,
+ * `alternativeFor` propose un autre exercice disponible du même slot.
  */
-export function buildUpperPlan(template: UpperTemplate, logs: SetLog[], isAvailable: (id: string) => boolean): PlannedExercise[] {
+export function buildUpperPlan(
+  template: UpperTemplate,
+  logs: SetLog[],
+  isAvailable: (id: string) => boolean,
+  alternativeFor: (slot: string) => string | undefined = () => undefined,
+): PlannedExercise[] {
   return template.slots.map((s, i) => {
     const templateKey = `${template.id}:${i}`
     const last = lastExerciseAt(logs, templateKey)
-    const exerciseId = last && isAvailable(last) ? last : s.defaultExerciseId
+    const exerciseId =
+      last && isAvailable(last) ? last : isAvailable(s.defaultExerciseId) ? s.defaultExerciseId : alternativeFor(s.slot) ?? s.defaultExerciseId
     return {
       key: templateKey,
       templateKey,

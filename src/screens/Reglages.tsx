@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { notificationsSupported, requestNotifications } from '../alarm'
 import { backupFileName, backupStats, checkBackup, exportBackup, importBackup, type Backup } from '../db/backup'
 import { catalogue, programShapes } from '../data'
@@ -101,8 +102,11 @@ export function Reglages() {
           {all.length} exercices · {all.filter((e) => e.source === 'user').length} créés par toi ·{' '}
           {all.filter((e) => e.archived).length} archivés
         </p>
-        <p className="small muted">
-          Catalogue de départ version {catalogue.version}. Voir, modifier et créer : dans une prochaine étape.
+        <Link className="btn block" to="/reglages/catalogue">
+          Voir et modifier le catalogue
+        </Link>
+        <p className="small muted" style={{ marginTop: 8 }}>
+          Catalogue de départ version {catalogue.version}.
         </p>
       </section>
 

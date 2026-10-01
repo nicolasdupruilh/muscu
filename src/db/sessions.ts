@@ -21,7 +21,8 @@ export async function startUpperSession(type: 'push' | 'pull', database: AppDB =
     const template = upperBody.templates.find((t) => t.id === type)!
     const exercises = new Map((await database.exercises.toArray()).map((e) => [e.id, e]))
     const available = (id: string) => !!exercises.get(id) && !exercises.get(id)!.archived
-    const plan = buildUpperPlan(template, await database.setLogs.toArray(), available)
+    const alternativeFor = (slot: string) => [...exercises.values()].find((e) => !e.archived && e.slots.includes(slot))?.id
+    const plan = buildUpperPlan(template, await database.setLogs.toArray(), available, alternativeFor)
     return (await database.sessions.add({ date: new Date().toISOString(), type, status: 'en-cours', plan })) as number
   })
 }
@@ -170,6 +171,7 @@ export interface NewExercise {
   unilateral: boolean
   defaultRestSec: number
   slots: string[]
+  cues?: string
 }
 
 /** Ajoute un exercice créé par moi au catalogue et renvoie son id. */
@@ -186,7 +188,7 @@ export async function createExercise(input: NewExercise, database: AppDB = db): 
       unilateral: input.unilateral,
       defaultRestSec: input.defaultRestSec,
       slots: input.slots,
-      cues: '',
+      cues: input.cues?.trim() ?? '',
       ...(withLoad ? { loadIncrementKg: input.loadIncrementKg ?? 2.5 } : {}),
       source: 'user',
       userModified: false,

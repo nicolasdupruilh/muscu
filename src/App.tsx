@@ -3,6 +3,7 @@ import { Accueil } from './screens/Accueil'
 import { Seance } from './screens/SeanceEnCours'
 import { ExerciceDetail, ExercicesHistorique, GenouHistorique, Historique, SeanceDetail } from './screens/Historique'
 import { Reglages } from './screens/Reglages'
+import { CatalogueFiche, CatalogueListe, CatalogueNouveau } from './screens/Catalogue'
 import { dataErrors } from './data'
 import { ScrollToTop } from './components/ScrollToTop'
 import { RestTimer } from './components/RestTimer'
@@ -48,6 +49,9 @@ export function App() {
             <Route path="/historique/exercice/:id" element={<ExerciceDetail />} />
             <Route path="/historique/genou" element={<GenouHistorique />} />
             <Route path="/reglages" element={<Reglages />} />
+            <Route path="/reglages/catalogue" element={<CatalogueListe />} />
+            <Route path="/reglages/catalogue/nouveau" element={<CatalogueNouveau />} />
+            <Route path="/reglages/catalogue/:id" element={<CatalogueFiche />} />
           </Routes>
         </main>
         <SessionChrome />

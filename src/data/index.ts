@@ -31,3 +31,15 @@ export const programShapes: Record<ProgramId, ProgramShape> = {
 export const legWeek = (week: number) => legProgram.weeks.find((w) => w.week === week)
 
 export const absBlockForWeek = (week: number) => absProgram.blocks.find((b) => week >= b.weeks[0] && week <= b.weeks[1])
+
+/** Slots de la trame haut du corps, avec un libellé lisible (« Push · Développé incliné »). */
+export const slotOptions: { slot: string; label: string }[] = (() => {
+  const seen = new Map<string, string>()
+  for (const t of upperBody.templates) {
+    for (const s of t.slots) {
+      // Deux places sur le même slot (Triceps 1 et 2) : un seul libellé, sans numéro.
+      if (!seen.has(s.slot)) seen.set(s.slot, `${t.name} · ${s.label.replace(/\s\d$/, '')}`)
+    }
+  }
+  return [...seen].map(([slot, label]) => ({ slot, label }))
+})()
