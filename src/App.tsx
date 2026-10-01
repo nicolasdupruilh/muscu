@@ -1,7 +1,7 @@
 import { HashRouter, NavLink, Route, Routes } from 'react-router'
 import { Accueil } from './screens/Accueil'
 import { Seance } from './screens/SeanceEnCours'
-import { Historique } from './screens/Historique'
+import { ExerciceDetail, ExercicesHistorique, GenouHistorique, Historique, SeanceDetail } from './screens/Historique'
 import { Reglages } from './screens/Reglages'
 import { dataErrors } from './data'
 import { ScrollToTop } from './components/ScrollToTop'
@@ -43,6 +43,10 @@ export function App() {
             <Route path="/" element={<Accueil />} />
             <Route path="/seance" element={<Seance />} />
             <Route path="/historique" element={<Historique />} />
+            <Route path="/historique/seance/:id" element={<SeanceDetail />} />
+            <Route path="/historique/exercices" element={<ExercicesHistorique />} />
+            <Route path="/historique/exercice/:id" element={<ExerciceDetail />} />
+            <Route path="/historique/genou" element={<GenouHistorique />} />
             <Route path="/reglages" element={<Reglages />} />
           </Routes>
         </main>
