@@ -1,0 +1,193 @@
+{
+ "id": "haut-du-corps",
+ "name": "Haut du corps",
+ "type": "template-slots",
+ "progressionRule": {
+  "type": "double-progression",
+  "text": "Même charge tant que toutes les séries n'atteignent pas le haut de la fourchette. Quand c'est le cas : +1 cran de charge (incrément de l'exercice) et repartir du bas de la fourchette."
+ },
+ "templates": [
+  {
+   "id": "push",
+   "name": "Push",
+   "slots": [
+    {
+     "slot": "push-horizontal",
+     "label": "Développé horizontal lourd",
+     "sets": 3,
+     "repRange": [
+      6,
+      10
+     ],
+     "restSec": 150,
+     "defaultExerciseId": "dc-halteres",
+     "note": "3 à 4 séries"
+    },
+    {
+     "slot": "push-incline",
+     "label": "Développé incliné",
+     "sets": 3,
+     "repRange": [
+      8,
+      12
+     ],
+     "restSec": 120,
+     "defaultExerciseId": "incline-halteres",
+     "note": ""
+    },
+    {
+     "slot": "push-vertical",
+     "label": "Développé vertical",
+     "sets": 3,
+     "repRange": [
+      6,
+      10
+     ],
+     "restSec": 120,
+     "defaultExerciseId": "militaire-halteres",
+     "note": ""
+    },
+    {
+     "slot": "pec-isolation",
+     "label": "Isolation pecs",
+     "sets": 3,
+     "repRange": [
+      10,
+      15
+     ],
+     "restSec": 75,
+     "defaultExerciseId": "ecartes-halteres",
+     "note": ""
+    },
+    {
+     "slot": "lateral-raise",
+     "label": "Élévations latérales",
+     "sets": 3,
+     "repRange": [
+      12,
+      20
+     ],
+     "restSec": 60,
+     "defaultExerciseId": "elevations-laterales",
+     "note": ""
+    },
+    {
+     "slot": "triceps",
+     "label": "Triceps 1",
+     "sets": 3,
+     "repRange": [
+      8,
+      12
+     ],
+     "restSec": 75,
+     "defaultExerciseId": "skull-crusher",
+     "note": ""
+    },
+    {
+     "slot": "triceps",
+     "label": "Triceps 2",
+     "sets": 3,
+     "repRange": [
+      8,
+      12
+     ],
+     "restSec": 60,
+     "defaultExerciseId": "triceps-corde",
+     "note": ""
+    }
+   ],
+   "thenProgram": "abdos"
+  },
+  {
+   "id": "pull",
+   "name": "Pull",
+   "slots": [
+    {
+     "slot": "skill",
+     "label": "Front lever",
+     "sets": 5,
+     "repRange": [
+      5,
+      10
+     ],
+     "restSec": 120,
+     "defaultExerciseId": "front-lever",
+     "note": "Tenues de 5 à 10 s + 3 descentes lentes. En premier, frais"
+    },
+    {
+     "slot": "pull-vertical-heavy",
+     "label": "Tractions",
+     "sets": 4,
+     "repRange": [
+      5,
+      8
+     ],
+     "restSec": 150,
+     "defaultExerciseId": "tractions",
+     "note": "1 à 2 reps en réserve. À 4×8 : ajouter du lest"
+    },
+    {
+     "slot": "pull-vertical",
+     "label": "Tirage vertical",
+     "sets": 3,
+     "repRange": [
+      10,
+      12
+     ],
+     "restSec": 90,
+     "defaultExerciseId": "tirage-uni-supination",
+     "note": ""
+    },
+    {
+     "slot": "row",
+     "label": "Rowing",
+     "sets": 3,
+     "repRange": [
+      8,
+      12
+     ],
+     "restSec": 120,
+     "defaultExerciseId": "rowing-poulie",
+     "note": ""
+    },
+    {
+     "slot": "biceps",
+     "label": "Biceps 1",
+     "sets": 3,
+     "repRange": [
+      8,
+      12
+     ],
+     "restSec": 75,
+     "defaultExerciseId": "curl-incline",
+     "note": ""
+    },
+    {
+     "slot": "biceps-2",
+     "label": "Biceps 2",
+     "sets": 3,
+     "repRange": [
+      8,
+      12
+     ],
+     "restSec": 60,
+     "defaultExerciseId": "curl-marteau",
+     "note": ""
+    },
+    {
+     "slot": "rear-delt",
+     "label": "Deltoïde postérieur",
+     "sets": 3,
+     "repRange": [
+      12,
+      15
+     ],
+     "restSec": 60,
+     "defaultExerciseId": "oiseau-poulie",
+     "note": ""
+    }
+   ],
+   "thenProgram": "abdos"
+  }
+ ]
+}

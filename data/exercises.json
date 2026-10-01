@@ -1,0 +1,795 @@
+{
+ "version": 1,
+ "note": "Catalogue de départ. L'utilisateur peut ajouter ses propres exercices depuis l'appli.",
+ "exercises": [
+  {
+   "id": "echauffement-jambes",
+   "name": "Échauffement jambes",
+   "category": "warmup",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 0,
+   "slots": [],
+   "cues": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos, exercices de kiné"
+  },
+  {
+   "id": "box-jump",
+   "name": "Box jump, réception sur la box",
+   "category": "plyo",
+   "equipment": "box",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 90,
+   "slots": [],
+   "cues": ""
+  },
+  {
+   "id": "drop-landing-30",
+   "name": "Drop landing 30 cm",
+   "category": "plyo",
+   "equipment": "box",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 90,
+   "slots": [],
+   "cues": "Tiens 2 s en bas, genoux dans l'axe"
+  },
+  {
+   "id": "cmj",
+   "name": "Saut vertical avec les bras (CMJ)",
+   "category": "plyo",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 90,
+   "slots": [],
+   "cues": ""
+  },
+  {
+   "id": "saut-attaque",
+   "name": "Saut d'attaque avec élan",
+   "category": "plyo",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [],
+   "cues": ""
+  },
+  {
+   "id": "depth-jump-30",
+   "name": "Depth jump 30 cm",
+   "category": "plyo",
+   "equipment": "box",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [],
+   "cues": "Contact au sol le plus court possible"
+  },
+  {
+   "id": "depth-jump-40",
+   "name": "Depth jump 40 cm",
+   "category": "plyo",
+   "equipment": "box",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [],
+   "cues": ""
+  },
+  {
+   "id": "sauts-contre",
+   "name": "Sauts de contre enchaînés ×3",
+   "category": "plyo",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [],
+   "cues": ""
+  },
+  {
+   "id": "squat-arriere",
+   "name": "Squat arrière",
+   "category": "strength",
+   "equipment": "barre",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 180,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "fente-bulgare",
+   "name": "Fente bulgare haltères",
+   "category": "strength",
+   "equipment": "haltères",
+   "loadUnit": "kg",
+   "unilateral": true,
+   "defaultRestSec": 90,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 2
+  },
+  {
+   "id": "reverse-nordic",
+   "name": "Reverse nordic",
+   "category": "strength",
+   "equipment": "aucun",
+   "loadUnit": "bodyweight",
+   "unilateral": false,
+   "defaultRestSec": 90,
+   "slots": [],
+   "cues": "Buste et cuisses alignés, descente lente"
+  },
+  {
+   "id": "mollets-debout",
+   "name": "Mollets debout",
+   "category": "strength",
+   "equipment": "machine",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 60,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 5
+  },
+  {
+   "id": "hang-high-pull",
+   "name": "Hang high pull",
+   "category": "olympic",
+   "equipment": "barre",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "hang-power-clean",
+   "name": "Hang power clean",
+   "category": "olympic",
+   "equipment": "barre",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 150,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "power-clean",
+   "name": "Power clean depuis le sol",
+   "category": "olympic",
+   "equipment": "barre",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 150,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "trap-bar-deadlift",
+   "name": "Soulevé de terre trap bar",
+   "category": "strength",
+   "equipment": "trap bar",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 180,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 5
+  },
+  {
+   "id": "trap-bar-jump",
+   "name": "Trap bar jump",
+   "category": "plyo",
+   "equipment": "trap bar",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 5
+  },
+  {
+   "id": "rdl",
+   "name": "Soulevé de terre roumain",
+   "category": "strength",
+   "equipment": "barre",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 150,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "hip-thrust",
+   "name": "Hip thrust",
+   "category": "strength",
+   "equipment": "machine",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 5
+  },
+  {
+   "id": "leg-curl",
+   "name": "Leg curl",
+   "category": "strength",
+   "equipment": "machine",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 90,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "copenhague",
+   "name": "Planche Copenhague",
+   "category": "core",
+   "equipment": "banc",
+   "loadUnit": "time",
+   "unilateral": true,
+   "defaultRestSec": 60,
+   "slots": [],
+   "cues": ""
+  },
+  {
+   "id": "traineau",
+   "name": "Traîneau poussé",
+   "category": "conditioning",
+   "equipment": "traîneau",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 60,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 10
+  },
+  {
+   "id": "dc-halteres",
+   "name": "Développé couché haltères",
+   "category": "strength",
+   "equipment": "haltères",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 150,
+   "slots": [
+    "push-horizontal"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2
+  },
+  {
+   "id": "dc-barre",
+   "name": "Développé couché barre",
+   "category": "strength",
+   "equipment": "barre",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 180,
+   "slots": [
+    "push-horizontal"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "dips-lestes",
+   "name": "Dips",
+   "category": "strength",
+   "equipment": "barres parallèles",
+   "loadUnit": "bodyweight+kg",
+   "unilateral": false,
+   "defaultRestSec": 150,
+   "slots": [
+    "push-horizontal",
+    "triceps"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2
+  },
+  {
+   "id": "incline-halteres",
+   "name": "Développé incliné haltères",
+   "category": "strength",
+   "equipment": "haltères",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [
+    "push-incline"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2
+  },
+  {
+   "id": "incline-barre",
+   "name": "Développé incliné barre",
+   "category": "strength",
+   "equipment": "barre",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 150,
+   "slots": [
+    "push-incline"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "incline-machine",
+   "name": "Développé incliné machine",
+   "category": "strength",
+   "equipment": "machine",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [
+    "push-incline"
+   ],
+   "cues": "",
+   "loadIncrementKg": 5
+  },
+  {
+   "id": "militaire-halteres",
+   "name": "Développé militaire haltères",
+   "category": "strength",
+   "equipment": "haltères",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [
+    "push-vertical"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2
+  },
+  {
+   "id": "militaire-barre-debout",
+   "name": "Développé militaire barre debout",
+   "category": "strength",
+   "equipment": "barre",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 150,
+   "slots": [
+    "push-vertical"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "ecartes-halteres",
+   "name": "Écartés haltères",
+   "category": "hypertrophy",
+   "equipment": "haltères",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 75,
+   "slots": [
+    "pec-isolation"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2
+  },
+  {
+   "id": "ecartes-poulie",
+   "name": "Écartés poulie",
+   "category": "hypertrophy",
+   "equipment": "poulie",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 75,
+   "slots": [
+    "pec-isolation"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "pec-deck",
+   "name": "Pec deck",
+   "category": "hypertrophy",
+   "equipment": "machine",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 75,
+   "slots": [
+    "pec-isolation"
+   ],
+   "cues": "",
+   "loadIncrementKg": 5
+  },
+  {
+   "id": "elevations-laterales",
+   "name": "Élévations latérales haltères",
+   "category": "hypertrophy",
+   "equipment": "haltères",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 60,
+   "slots": [
+    "lateral-raise"
+   ],
+   "cues": "",
+   "loadIncrementKg": 1
+  },
+  {
+   "id": "elevations-laterales-poulie",
+   "name": "Élévations latérales poulie",
+   "category": "hypertrophy",
+   "equipment": "poulie",
+   "loadUnit": "kg",
+   "unilateral": true,
+   "defaultRestSec": 60,
+   "slots": [
+    "lateral-raise"
+   ],
+   "cues": "",
+   "loadIncrementKg": 1.25
+  },
+  {
+   "id": "skull-crusher",
+   "name": "Skull crusher barre",
+   "category": "hypertrophy",
+   "equipment": "barre",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 75,
+   "slots": [
+    "triceps"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "triceps-corde",
+   "name": "Extension triceps poulie corde",
+   "category": "hypertrophy",
+   "equipment": "poulie",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 60,
+   "slots": [
+    "triceps"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "triceps-overhead",
+   "name": "Extension triceps au-dessus de la tête poulie",
+   "category": "hypertrophy",
+   "equipment": "poulie",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 60,
+   "slots": [
+    "triceps"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "front-lever",
+   "name": "Front lever (tenues)",
+   "category": "skill",
+   "equipment": "barre de traction",
+   "loadUnit": "time",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [
+    "skill"
+   ],
+   "cues": "Progression : tuck, advanced tuck, une jambe, straddle, complet"
+  },
+  {
+   "id": "tractions",
+   "name": "Tractions",
+   "category": "strength",
+   "equipment": "barre de traction",
+   "loadUnit": "bodyweight+kg",
+   "unilateral": false,
+   "defaultRestSec": 150,
+   "slots": [
+    "pull-vertical-heavy"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2
+  },
+  {
+   "id": "tractions-supination",
+   "name": "Tractions supination",
+   "category": "strength",
+   "equipment": "barre de traction",
+   "loadUnit": "bodyweight+kg",
+   "unilateral": false,
+   "defaultRestSec": 150,
+   "slots": [
+    "pull-vertical-heavy"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2
+  },
+  {
+   "id": "tirage-uni-supination",
+   "name": "Tirage vertical unilatéral penché, supination",
+   "category": "hypertrophy",
+   "equipment": "poulie",
+   "loadUnit": "kg",
+   "unilateral": true,
+   "defaultRestSec": 90,
+   "slots": [
+    "pull-vertical"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "tirage-vertical",
+   "name": "Tirage vertical poulie",
+   "category": "hypertrophy",
+   "equipment": "poulie",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 90,
+   "slots": [
+    "pull-vertical"
+   ],
+   "cues": "",
+   "loadIncrementKg": 5
+  },
+  {
+   "id": "rowing-poulie",
+   "name": "Rowing poulie basse",
+   "category": "strength",
+   "equipment": "poulie",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [
+    "row"
+   ],
+   "cues": "",
+   "loadIncrementKg": 5
+  },
+  {
+   "id": "rowing-haltere",
+   "name": "Rowing haltère unilatéral",
+   "category": "strength",
+   "equipment": "haltères",
+   "loadUnit": "kg",
+   "unilateral": true,
+   "defaultRestSec": 90,
+   "slots": [
+    "row"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2
+  },
+  {
+   "id": "rowing-machine",
+   "name": "Rowing machine",
+   "category": "strength",
+   "equipment": "machine",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [
+    "row"
+   ],
+   "cues": "",
+   "loadIncrementKg": 5
+  },
+  {
+   "id": "rowing-barre",
+   "name": "Rowing barre",
+   "category": "strength",
+   "equipment": "barre",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [
+    "row"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "curl-incline",
+   "name": "Curl incliné haltères",
+   "category": "hypertrophy",
+   "equipment": "haltères",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 75,
+   "slots": [
+    "biceps"
+   ],
+   "cues": "",
+   "loadIncrementKg": 1
+  },
+  {
+   "id": "curl-marteau",
+   "name": "Curl marteau",
+   "category": "hypertrophy",
+   "equipment": "haltères",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 60,
+   "slots": [
+    "biceps-2"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2
+  },
+  {
+   "id": "curl-poulie",
+   "name": "Curl poulie",
+   "category": "hypertrophy",
+   "equipment": "poulie",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 60,
+   "slots": [
+    "biceps",
+    "biceps-2"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "oiseau-poulie",
+   "name": "Oiseau poulie unilatéral",
+   "category": "hypertrophy",
+   "equipment": "poulie",
+   "loadUnit": "kg",
+   "unilateral": true,
+   "defaultRestSec": 60,
+   "slots": [
+    "rear-delt"
+   ],
+   "cues": "",
+   "loadIncrementKg": 1.25
+  },
+  {
+   "id": "face-pull",
+   "name": "Face pull",
+   "category": "hypertrophy",
+   "equipment": "poulie",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 60,
+   "slots": [
+    "rear-delt"
+   ],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "dead-bug",
+   "name": "Dead bug",
+   "category": "core",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": true,
+   "defaultRestSec": 0,
+   "slots": [],
+   "cues": ""
+  },
+  {
+   "id": "releves-genoux",
+   "name": "Relevés de genoux suspendu",
+   "category": "core",
+   "equipment": "barre de traction",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 0,
+   "slots": [],
+   "cues": ""
+  },
+  {
+   "id": "releves-jambes",
+   "name": "Relevés de jambes tendues suspendu",
+   "category": "core",
+   "equipment": "barre de traction",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 0,
+   "slots": [],
+   "cues": ""
+  },
+  {
+   "id": "toes-to-bar",
+   "name": "Toes to bar",
+   "category": "core",
+   "equipment": "barre de traction",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 0,
+   "slots": [],
+   "cues": ""
+  },
+  {
+   "id": "planche-laterale",
+   "name": "Planche latérale",
+   "category": "core",
+   "equipment": "aucun",
+   "loadUnit": "time",
+   "unilateral": true,
+   "defaultRestSec": 0,
+   "slots": [],
+   "cues": ""
+  },
+  {
+   "id": "pallof-press",
+   "name": "Pallof press",
+   "category": "core",
+   "equipment": "poulie",
+   "loadUnit": "kg",
+   "unilateral": true,
+   "defaultRestSec": 0,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "rollout-barre",
+   "name": "Roll-out à la barre, à genoux",
+   "category": "core",
+   "equipment": "barre",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 0,
+   "slots": [],
+   "cues": ""
+  },
+  {
+   "id": "woodchop",
+   "name": "Woodchop poulie",
+   "category": "core",
+   "equipment": "poulie",
+   "loadUnit": "kg",
+   "unilateral": true,
+   "defaultRestSec": 0,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "lancer-rotatif",
+   "name": "Lancer rotatif médecine-ball au mur",
+   "category": "power",
+   "equipment": "médecine-ball",
+   "loadUnit": "kg",
+   "unilateral": true,
+   "defaultRestSec": 0,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 1
+  },
+  {
+   "id": "slam",
+   "name": "Slam médecine-ball au-dessus de la tête",
+   "category": "power",
+   "equipment": "médecine-ball",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 0,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 1
+  }
+ ]
+}

@@ -1,0 +1,2192 @@
+{
+ "id": "jambes-detente",
+ "name": "Jambes : détente et genou",
+ "type": "structured",
+ "weeksCount": 16,
+ "sessionsPerWeek": [
+  "A",
+  "B"
+ ],
+ "tempoNotation": "excentrique-pause bas-concentrique-pause haut, en secondes, X = explosif",
+ "loadRule": "Charges cibles indicatives, effort visé 8/10 (2 reps en réserve). Si la technique se dégrade ou si l'effort dépasse 8/10, garder la charge de la semaine précédente. Si trop facile, +2,5 kg.",
+ "healthCheck": {
+  "id": "genou-droit",
+  "label": "Genou droit (tendon rotulien)",
+  "questions": [
+   {
+    "id": "pendant",
+    "label": "Douleur pendant la séance",
+    "scale": [
+     0,
+     10
+    ]
+   },
+   {
+    "id": "lendemain",
+    "label": "Le lendemain matin, squat unipodal lent",
+    "scale": [
+     0,
+     10
+    ],
+    "askNextDay": true
+   }
+  ],
+  "rules": [
+   {
+    "max": 2,
+    "level": "vert",
+    "action": "Suivre le plan."
+   },
+   {
+    "max": 5,
+    "level": "orange",
+    "action": "La semaine suivante : garder les charges de la semaine précédente et diviser les sauts par deux."
+   },
+   {
+    "max": 10,
+    "level": "rouge",
+    "action": "Pas de sauts ni de réceptions. Isométriques et force légère seulement. En parler à la kiné."
+   }
+  ],
+  "note": "Le niveau se calcule sur le maximum des deux réponses. Leg extension interdit."
+ },
+ "volleyAdjustments": "Pas de séance jambes la veille d'un match. 1 entraînement de volley/semaine : pliométrie réduite d'un tiers. 2 ou plus : pliométrie divisée par deux.",
+ "weeks": [
+  {
+   "week": 1,
+   "block": 1,
+   "blockName": "Base tendon",
+   "deload": false,
+   "sessions": {
+    "A": {
+     "name": "Jambes A : force et sauts",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×10, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "box-jump",
+       "sets": 4,
+       "reps": 3,
+       "note": "Réception silencieuse, genoux dans l'axe",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "drop-landing-30",
+       "sets": 3,
+       "reps": 3,
+       "note": "Tiens 2 s en bas",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "squat-arriere",
+       "sets": 4,
+       "reps": 6,
+       "note": "Descente 3 s, remontée explosive",
+       "targetLoadKg": 72.5,
+       "tempo": "3-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "fente-bulgare",
+       "sets": 3,
+       "reps": 8,
+       "note": "Par jambe, commence par la droite",
+       "tempo": "2-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "reverse-nordic",
+       "sets": 3,
+       "reps": 6,
+       "note": "Descente 3 à 4 s",
+       "tempo": "4-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "mollets-debout",
+       "sets": 3,
+       "reps": 12,
+       "note": "1 s en haut, descente lente",
+       "tempo": "2-1-1-1",
+       "restSec": 60
+      }
+     ]
+    },
+    "B": {
+     "name": "Jambes B : puissance et chaîne postérieure",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×10, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "hang-high-pull",
+       "sets": 5,
+       "reps": 3,
+       "note": "Technique : extension complète, coudes hauts. 30 à 40 kg",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "trap-bar-deadlift",
+       "sets": 4,
+       "reps": 5,
+       "note": "Effort 8/10, dos neutre",
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "rdl",
+       "sets": 3,
+       "reps": 8,
+       "note": "Hanches en arrière",
+       "targetLoadKg": 80,
+       "tempo": "3-0-1-0",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "hip-thrust",
+       "sets": 3,
+       "reps": 8,
+       "note": "Pause 1 s en haut, effort 8/10",
+       "tempo": "2-1-1-0",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "leg-curl",
+       "sets": 3,
+       "reps": 10,
+       "note": "",
+       "targetLoadKg": 55,
+       "tempo": "3-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "copenhague",
+       "sets": 3,
+       "reps": "20 s",
+       "note": "Par côté",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "traineau",
+       "sets": 4,
+       "reps": "15 m",
+       "note": "Bonus cardio si le temps le permet",
+       "restSec": 60
+      }
+     ]
+    }
+   }
+  },
+  {
+   "week": 2,
+   "block": 1,
+   "blockName": "Base tendon",
+   "deload": false,
+   "sessions": {
+    "A": {
+     "name": "Jambes A : force et sauts",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×10, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "box-jump",
+       "sets": 4,
+       "reps": 3,
+       "note": "Réception silencieuse, genoux dans l'axe",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "drop-landing-30",
+       "sets": 3,
+       "reps": 3,
+       "note": "Tiens 2 s en bas",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "squat-arriere",
+       "sets": 4,
+       "reps": 6,
+       "note": "Descente 3 s, remontée explosive",
+       "targetLoadKg": 75,
+       "tempo": "3-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "fente-bulgare",
+       "sets": 3,
+       "reps": 8,
+       "note": "Par jambe, commence par la droite",
+       "tempo": "2-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "reverse-nordic",
+       "sets": 3,
+       "reps": 6,
+       "note": "Descente 3 à 4 s",
+       "tempo": "4-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "mollets-debout",
+       "sets": 3,
+       "reps": 12,
+       "note": "1 s en haut, descente lente",
+       "tempo": "2-1-1-1",
+       "restSec": 60
+      }
+     ]
+    },
+    "B": {
+     "name": "Jambes B : puissance et chaîne postérieure",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×10, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "hang-high-pull",
+       "sets": 5,
+       "reps": 3,
+       "note": "Technique : extension complète, coudes hauts. 30 à 40 kg",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "trap-bar-deadlift",
+       "sets": 4,
+       "reps": 5,
+       "note": "Effort 8/10, dos neutre",
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "rdl",
+       "sets": 3,
+       "reps": 8,
+       "note": "Hanches en arrière",
+       "targetLoadKg": 82.5,
+       "tempo": "3-0-1-0",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "hip-thrust",
+       "sets": 3,
+       "reps": 8,
+       "note": "Pause 1 s en haut, effort 8/10",
+       "tempo": "2-1-1-0",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "leg-curl",
+       "sets": 3,
+       "reps": 10,
+       "note": "",
+       "targetLoadKg": 57.5,
+       "tempo": "3-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "copenhague",
+       "sets": 3,
+       "reps": "20 s",
+       "note": "Par côté",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "traineau",
+       "sets": 4,
+       "reps": "15 m",
+       "note": "Bonus cardio si le temps le permet",
+       "restSec": 60
+      }
+     ]
+    }
+   }
+  },
+  {
+   "week": 3,
+   "block": 1,
+   "blockName": "Base tendon",
+   "deload": false,
+   "sessions": {
+    "A": {
+     "name": "Jambes A : force et sauts",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×10, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "box-jump",
+       "sets": 4,
+       "reps": 3,
+       "note": "Réception silencieuse, genoux dans l'axe",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "drop-landing-30",
+       "sets": 3,
+       "reps": 3,
+       "note": "Tiens 2 s en bas",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "squat-arriere",
+       "sets": 4,
+       "reps": 6,
+       "note": "Descente 3 s, remontée explosive",
+       "targetLoadKg": 77.5,
+       "tempo": "3-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "fente-bulgare",
+       "sets": 3,
+       "reps": 8,
+       "note": "Par jambe, commence par la droite",
+       "tempo": "2-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "reverse-nordic",
+       "sets": 3,
+       "reps": 6,
+       "note": "Descente 3 à 4 s",
+       "tempo": "4-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "mollets-debout",
+       "sets": 3,
+       "reps": 12,
+       "note": "1 s en haut, descente lente",
+       "tempo": "2-1-1-1",
+       "restSec": 60
+      }
+     ]
+    },
+    "B": {
+     "name": "Jambes B : puissance et chaîne postérieure",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×10, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "hang-high-pull",
+       "sets": 5,
+       "reps": 3,
+       "note": "Technique : extension complète, coudes hauts. 30 à 40 kg",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "trap-bar-deadlift",
+       "sets": 4,
+       "reps": 5,
+       "note": "Effort 8/10, dos neutre",
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "rdl",
+       "sets": 3,
+       "reps": 8,
+       "note": "Hanches en arrière",
+       "targetLoadKg": 85,
+       "tempo": "3-0-1-0",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "hip-thrust",
+       "sets": 3,
+       "reps": 8,
+       "note": "Pause 1 s en haut, effort 8/10",
+       "tempo": "2-1-1-0",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "leg-curl",
+       "sets": 3,
+       "reps": 10,
+       "note": "",
+       "targetLoadKg": 57.5,
+       "tempo": "3-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "copenhague",
+       "sets": 3,
+       "reps": "20 s",
+       "note": "Par côté",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "traineau",
+       "sets": 4,
+       "reps": "15 m",
+       "note": "Bonus cardio si le temps le permet",
+       "restSec": 60
+      }
+     ]
+    }
+   }
+  },
+  {
+   "week": 4,
+   "block": 1,
+   "blockName": "Base tendon",
+   "deload": true,
+   "sessions": {
+    "A": {
+     "name": "Jambes A : force et sauts",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×10, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "box-jump",
+       "sets": 3,
+       "reps": 3,
+       "note": "Réception silencieuse, genoux dans l'axe",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "drop-landing-30",
+       "sets": 2,
+       "reps": 3,
+       "note": "Tiens 2 s en bas",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "squat-arriere",
+       "sets": 3,
+       "reps": 6,
+       "note": "Descente 3 s, remontée explosive",
+       "targetLoadKg": 65,
+       "tempo": "3-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "fente-bulgare",
+       "sets": 3,
+       "reps": 8,
+       "note": "Par jambe, commence par la droite",
+       "tempo": "2-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "reverse-nordic",
+       "sets": 3,
+       "reps": 6,
+       "note": "Descente 3 à 4 s",
+       "tempo": "4-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "mollets-debout",
+       "sets": 3,
+       "reps": 12,
+       "note": "1 s en haut, descente lente",
+       "tempo": "2-1-1-1",
+       "restSec": 60
+      }
+     ]
+    },
+    "B": {
+     "name": "Jambes B : puissance et chaîne postérieure",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×10, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "hang-high-pull",
+       "sets": 4,
+       "reps": 3,
+       "note": "Technique : extension complète, coudes hauts. 30 à 40 kg",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "trap-bar-deadlift",
+       "sets": 3,
+       "reps": 5,
+       "note": "Effort 8/10, dos neutre",
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "rdl",
+       "sets": 3,
+       "reps": 8,
+       "note": "Hanches en arrière",
+       "targetLoadKg": 70,
+       "tempo": "3-0-1-0",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "hip-thrust",
+       "sets": 3,
+       "reps": 8,
+       "note": "Pause 1 s en haut, effort 8/10",
+       "tempo": "2-1-1-0",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "leg-curl",
+       "sets": 3,
+       "reps": 10,
+       "note": "",
+       "targetLoadKg": 50,
+       "tempo": "3-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "copenhague",
+       "sets": 3,
+       "reps": "20 s",
+       "note": "Par côté",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "traineau",
+       "sets": 2,
+       "reps": "15 m",
+       "note": "Bonus cardio si le temps le permet",
+       "restSec": 60
+      }
+     ]
+    }
+   }
+  },
+  {
+   "week": 5,
+   "block": 2,
+   "blockName": "Force",
+   "deload": false,
+   "sessions": {
+    "A": {
+     "name": "Jambes A : force et sauts",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "cmj",
+       "sets": 4,
+       "reps": 3,
+       "note": "Hauteur max à chaque saut",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "saut-attaque",
+       "sets": 3,
+       "reps": 3,
+       "note": "Élan 3 pas, dernier appui comme au filet",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "squat-arriere",
+       "sets": 4,
+       "reps": 5,
+       "note": "Remontée la plus rapide possible",
+       "targetLoadKg": 80,
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "fente-bulgare",
+       "sets": 3,
+       "reps": 8,
+       "note": "Par jambe, commence par la droite",
+       "tempo": "2-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "reverse-nordic",
+       "sets": 3,
+       "reps": 8,
+       "note": "Descente 3 à 4 s",
+       "tempo": "4-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "mollets-debout",
+       "sets": 3,
+       "reps": 12,
+       "note": "1 s en haut, descente lente",
+       "tempo": "2-1-1-1",
+       "restSec": 60
+      }
+     ]
+    },
+    "B": {
+     "name": "Jambes B : puissance et chaîne postérieure",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "hang-power-clean",
+       "sets": 5,
+       "reps": 3,
+       "note": "Réception haute. Commence vers 40 kg",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "trap-bar-deadlift",
+       "sets": 4,
+       "reps": 5,
+       "note": "Effort 8/10, dos neutre",
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "rdl",
+       "sets": 3,
+       "reps": 8,
+       "note": "Hanches en arrière",
+       "targetLoadKg": 85,
+       "tempo": "3-0-1-0",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "hip-thrust",
+       "sets": 3,
+       "reps": 8,
+       "note": "Pause 1 s en haut, effort 8/10",
+       "tempo": "2-1-1-0",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "leg-curl",
+       "sets": 3,
+       "reps": 10,
+       "note": "",
+       "targetLoadKg": 57.5,
+       "tempo": "3-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "copenhague",
+       "sets": 3,
+       "reps": "20 s",
+       "note": "Par côté",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "traineau",
+       "sets": 4,
+       "reps": "15 m",
+       "note": "Bonus cardio si le temps le permet",
+       "restSec": 60
+      }
+     ]
+    }
+   }
+  },
+  {
+   "week": 6,
+   "block": 2,
+   "blockName": "Force",
+   "deload": false,
+   "sessions": {
+    "A": {
+     "name": "Jambes A : force et sauts",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "cmj",
+       "sets": 4,
+       "reps": 3,
+       "note": "Hauteur max à chaque saut",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "saut-attaque",
+       "sets": 3,
+       "reps": 3,
+       "note": "Élan 3 pas, dernier appui comme au filet",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "squat-arriere",
+       "sets": 4,
+       "reps": 5,
+       "note": "Remontée la plus rapide possible",
+       "targetLoadKg": 82.5,
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "fente-bulgare",
+       "sets": 3,
+       "reps": 8,
+       "note": "Par jambe, commence par la droite",
+       "tempo": "2-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "reverse-nordic",
+       "sets": 3,
+       "reps": 8,
+       "note": "Descente 3 à 4 s",
+       "tempo": "4-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "mollets-debout",
+       "sets": 3,
+       "reps": 12,
+       "note": "1 s en haut, descente lente",
+       "tempo": "2-1-1-1",
+       "restSec": 60
+      }
+     ]
+    },
+    "B": {
+     "name": "Jambes B : puissance et chaîne postérieure",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "hang-power-clean",
+       "sets": 5,
+       "reps": 3,
+       "note": "Réception haute. Commence vers 40 kg",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "trap-bar-deadlift",
+       "sets": 4,
+       "reps": 5,
+       "note": "Effort 8/10, dos neutre",
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "rdl",
+       "sets": 3,
+       "reps": 8,
+       "note": "Hanches en arrière",
+       "targetLoadKg": 87.5,
+       "tempo": "3-0-1-0",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "hip-thrust",
+       "sets": 3,
+       "reps": 8,
+       "note": "Pause 1 s en haut, effort 8/10",
+       "tempo": "2-1-1-0",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "leg-curl",
+       "sets": 3,
+       "reps": 10,
+       "note": "",
+       "targetLoadKg": 60,
+       "tempo": "3-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "copenhague",
+       "sets": 3,
+       "reps": "20 s",
+       "note": "Par côté",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "traineau",
+       "sets": 4,
+       "reps": "15 m",
+       "note": "Bonus cardio si le temps le permet",
+       "restSec": 60
+      }
+     ]
+    }
+   }
+  },
+  {
+   "week": 7,
+   "block": 2,
+   "blockName": "Force",
+   "deload": false,
+   "sessions": {
+    "A": {
+     "name": "Jambes A : force et sauts",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "cmj",
+       "sets": 4,
+       "reps": 3,
+       "note": "Hauteur max à chaque saut",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "saut-attaque",
+       "sets": 3,
+       "reps": 3,
+       "note": "Élan 3 pas, dernier appui comme au filet",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "squat-arriere",
+       "sets": 4,
+       "reps": 5,
+       "note": "Remontée la plus rapide possible",
+       "targetLoadKg": 85,
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "fente-bulgare",
+       "sets": 3,
+       "reps": 8,
+       "note": "Par jambe, commence par la droite",
+       "tempo": "2-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "reverse-nordic",
+       "sets": 3,
+       "reps": 8,
+       "note": "Descente 3 à 4 s",
+       "tempo": "4-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "mollets-debout",
+       "sets": 3,
+       "reps": 12,
+       "note": "1 s en haut, descente lente",
+       "tempo": "2-1-1-1",
+       "restSec": 60
+      }
+     ]
+    },
+    "B": {
+     "name": "Jambes B : puissance et chaîne postérieure",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "hang-power-clean",
+       "sets": 5,
+       "reps": 3,
+       "note": "Réception haute. Commence vers 40 kg",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "trap-bar-deadlift",
+       "sets": 4,
+       "reps": 5,
+       "note": "Effort 8/10, dos neutre",
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "rdl",
+       "sets": 3,
+       "reps": 8,
+       "note": "Hanches en arrière",
+       "targetLoadKg": 90,
+       "tempo": "3-0-1-0",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "hip-thrust",
+       "sets": 3,
+       "reps": 8,
+       "note": "Pause 1 s en haut, effort 8/10",
+       "tempo": "2-1-1-0",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "leg-curl",
+       "sets": 3,
+       "reps": 10,
+       "note": "",
+       "targetLoadKg": 60,
+       "tempo": "3-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "copenhague",
+       "sets": 3,
+       "reps": "20 s",
+       "note": "Par côté",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "traineau",
+       "sets": 4,
+       "reps": "15 m",
+       "note": "Bonus cardio si le temps le permet",
+       "restSec": 60
+      }
+     ]
+    }
+   }
+  },
+  {
+   "week": 8,
+   "block": 2,
+   "blockName": "Force",
+   "deload": true,
+   "sessions": {
+    "A": {
+     "name": "Jambes A : force et sauts",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "cmj",
+       "sets": 3,
+       "reps": 3,
+       "note": "Hauteur max à chaque saut",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "saut-attaque",
+       "sets": 2,
+       "reps": 3,
+       "note": "Élan 3 pas, dernier appui comme au filet",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "squat-arriere",
+       "sets": 3,
+       "reps": 5,
+       "note": "Remontée la plus rapide possible",
+       "targetLoadKg": 70,
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "fente-bulgare",
+       "sets": 3,
+       "reps": 8,
+       "note": "Par jambe, commence par la droite",
+       "tempo": "2-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "reverse-nordic",
+       "sets": 3,
+       "reps": 8,
+       "note": "Descente 3 à 4 s",
+       "tempo": "4-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "mollets-debout",
+       "sets": 3,
+       "reps": 12,
+       "note": "1 s en haut, descente lente",
+       "tempo": "2-1-1-1",
+       "restSec": 60
+      }
+     ]
+    },
+    "B": {
+     "name": "Jambes B : puissance et chaîne postérieure",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "hang-power-clean",
+       "sets": 4,
+       "reps": 3,
+       "note": "Réception haute. Commence vers 40 kg",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "trap-bar-deadlift",
+       "sets": 3,
+       "reps": 5,
+       "note": "Effort 8/10, dos neutre",
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "rdl",
+       "sets": 3,
+       "reps": 8,
+       "note": "Hanches en arrière",
+       "targetLoadKg": 75,
+       "tempo": "3-0-1-0",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "hip-thrust",
+       "sets": 3,
+       "reps": 8,
+       "note": "Pause 1 s en haut, effort 8/10",
+       "tempo": "2-1-1-0",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "leg-curl",
+       "sets": 3,
+       "reps": 10,
+       "note": "",
+       "targetLoadKg": 50,
+       "tempo": "3-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "copenhague",
+       "sets": 3,
+       "reps": "20 s",
+       "note": "Par côté",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "traineau",
+       "sets": 2,
+       "reps": "15 m",
+       "note": "Bonus cardio si le temps le permet",
+       "restSec": 60
+      }
+     ]
+    }
+   }
+  },
+  {
+   "week": 9,
+   "block": 3,
+   "blockName": "Puissance",
+   "deload": false,
+   "sessions": {
+    "A": {
+     "name": "Jambes A : force et sauts",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "depth-jump-30",
+       "sets": 4,
+       "reps": 3,
+       "note": "Contact au sol le plus court possible",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "saut-attaque",
+       "sets": 4,
+       "reps": 3,
+       "note": "Élan complet, vise une marque au mur",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "squat-arriere",
+       "sets": 5,
+       "reps": 3,
+       "note": "Explosif, 2 reps en réserve",
+       "targetLoadKg": 87.5,
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "fente-bulgare",
+       "sets": 3,
+       "reps": 6,
+       "note": "Par jambe, commence par la droite",
+       "tempo": "2-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "reverse-nordic",
+       "sets": 3,
+       "reps": 8,
+       "note": "Descente 3 à 4 s",
+       "tempo": "4-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "mollets-debout",
+       "sets": 3,
+       "reps": 12,
+       "note": "1 s en haut, descente lente",
+       "tempo": "2-1-1-1",
+       "restSec": 60
+      }
+     ]
+    },
+    "B": {
+     "name": "Jambes B : puissance et chaîne postérieure",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "hang-power-clean",
+       "sets": 5,
+       "reps": 2,
+       "note": "Plus lourd, toujours propre",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "trap-bar-jump",
+       "sets": 4,
+       "reps": 4,
+       "note": "Barre à vide ou +10 à 20 kg, réception amortie",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "rdl",
+       "sets": 3,
+       "reps": 6,
+       "note": "Hanches en arrière",
+       "targetLoadKg": 90,
+       "tempo": "3-0-1-0",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "hip-thrust",
+       "sets": 3,
+       "reps": 8,
+       "note": "Pause 1 s en haut, effort 8/10",
+       "tempo": "2-1-1-0",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "leg-curl",
+       "sets": 3,
+       "reps": 10,
+       "note": "",
+       "targetLoadKg": 60,
+       "tempo": "3-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "copenhague",
+       "sets": 3,
+       "reps": "30 s",
+       "note": "Par côté",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "traineau",
+       "sets": 4,
+       "reps": "15 m",
+       "note": "Bonus cardio si le temps le permet",
+       "restSec": 60
+      }
+     ]
+    }
+   }
+  },
+  {
+   "week": 10,
+   "block": 3,
+   "blockName": "Puissance",
+   "deload": false,
+   "sessions": {
+    "A": {
+     "name": "Jambes A : force et sauts",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "depth-jump-30",
+       "sets": 4,
+       "reps": 3,
+       "note": "Contact au sol le plus court possible",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "saut-attaque",
+       "sets": 4,
+       "reps": 3,
+       "note": "Élan complet, vise une marque au mur",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "squat-arriere",
+       "sets": 5,
+       "reps": 3,
+       "note": "Explosif, 2 reps en réserve",
+       "targetLoadKg": 90,
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "fente-bulgare",
+       "sets": 3,
+       "reps": 6,
+       "note": "Par jambe, commence par la droite",
+       "tempo": "2-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "reverse-nordic",
+       "sets": 3,
+       "reps": 8,
+       "note": "Descente 3 à 4 s",
+       "tempo": "4-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "mollets-debout",
+       "sets": 3,
+       "reps": 12,
+       "note": "1 s en haut, descente lente",
+       "tempo": "2-1-1-1",
+       "restSec": 60
+      }
+     ]
+    },
+    "B": {
+     "name": "Jambes B : puissance et chaîne postérieure",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "hang-power-clean",
+       "sets": 5,
+       "reps": 2,
+       "note": "Plus lourd, toujours propre",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "trap-bar-jump",
+       "sets": 4,
+       "reps": 4,
+       "note": "Barre à vide ou +10 à 20 kg, réception amortie",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "rdl",
+       "sets": 3,
+       "reps": 6,
+       "note": "Hanches en arrière",
+       "targetLoadKg": 92.5,
+       "tempo": "3-0-1-0",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "hip-thrust",
+       "sets": 3,
+       "reps": 8,
+       "note": "Pause 1 s en haut, effort 8/10",
+       "tempo": "2-1-1-0",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "leg-curl",
+       "sets": 3,
+       "reps": 10,
+       "note": "",
+       "targetLoadKg": 62.5,
+       "tempo": "3-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "copenhague",
+       "sets": 3,
+       "reps": "30 s",
+       "note": "Par côté",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "traineau",
+       "sets": 4,
+       "reps": "15 m",
+       "note": "Bonus cardio si le temps le permet",
+       "restSec": 60
+      }
+     ]
+    }
+   }
+  },
+  {
+   "week": 11,
+   "block": 3,
+   "blockName": "Puissance",
+   "deload": false,
+   "sessions": {
+    "A": {
+     "name": "Jambes A : force et sauts",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "depth-jump-30",
+       "sets": 4,
+       "reps": 3,
+       "note": "Contact au sol le plus court possible",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "saut-attaque",
+       "sets": 4,
+       "reps": 3,
+       "note": "Élan complet, vise une marque au mur",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "squat-arriere",
+       "sets": 5,
+       "reps": 3,
+       "note": "Explosif, 2 reps en réserve",
+       "targetLoadKg": 92.5,
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "fente-bulgare",
+       "sets": 3,
+       "reps": 6,
+       "note": "Par jambe, commence par la droite",
+       "tempo": "2-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "reverse-nordic",
+       "sets": 3,
+       "reps": 8,
+       "note": "Descente 3 à 4 s",
+       "tempo": "4-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "mollets-debout",
+       "sets": 3,
+       "reps": 12,
+       "note": "1 s en haut, descente lente",
+       "tempo": "2-1-1-1",
+       "restSec": 60
+      }
+     ]
+    },
+    "B": {
+     "name": "Jambes B : puissance et chaîne postérieure",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "hang-power-clean",
+       "sets": 5,
+       "reps": 2,
+       "note": "Plus lourd, toujours propre",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "trap-bar-jump",
+       "sets": 4,
+       "reps": 4,
+       "note": "Barre à vide ou +10 à 20 kg, réception amortie",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "rdl",
+       "sets": 3,
+       "reps": 6,
+       "note": "Hanches en arrière",
+       "targetLoadKg": 95,
+       "tempo": "3-0-1-0",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "hip-thrust",
+       "sets": 3,
+       "reps": 8,
+       "note": "Pause 1 s en haut, effort 8/10",
+       "tempo": "2-1-1-0",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "leg-curl",
+       "sets": 3,
+       "reps": 10,
+       "note": "",
+       "targetLoadKg": 62.5,
+       "tempo": "3-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "copenhague",
+       "sets": 3,
+       "reps": "30 s",
+       "note": "Par côté",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "traineau",
+       "sets": 4,
+       "reps": "15 m",
+       "note": "Bonus cardio si le temps le permet",
+       "restSec": 60
+      }
+     ]
+    }
+   }
+  },
+  {
+   "week": 12,
+   "block": 3,
+   "blockName": "Puissance",
+   "deload": true,
+   "sessions": {
+    "A": {
+     "name": "Jambes A : force et sauts",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "depth-jump-30",
+       "sets": 3,
+       "reps": 3,
+       "note": "Contact au sol le plus court possible",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "saut-attaque",
+       "sets": 3,
+       "reps": 3,
+       "note": "Élan complet, vise une marque au mur",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "squat-arriere",
+       "sets": 3,
+       "reps": 3,
+       "note": "Explosif, 2 reps en réserve",
+       "targetLoadKg": 75,
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "fente-bulgare",
+       "sets": 3,
+       "reps": 6,
+       "note": "Par jambe, commence par la droite",
+       "tempo": "2-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "reverse-nordic",
+       "sets": 3,
+       "reps": 8,
+       "note": "Descente 3 à 4 s",
+       "tempo": "4-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "mollets-debout",
+       "sets": 3,
+       "reps": 12,
+       "note": "1 s en haut, descente lente",
+       "tempo": "2-1-1-1",
+       "restSec": 60
+      }
+     ]
+    },
+    "B": {
+     "name": "Jambes B : puissance et chaîne postérieure",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "hang-power-clean",
+       "sets": 4,
+       "reps": 2,
+       "note": "Plus lourd, toujours propre",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "trap-bar-jump",
+       "sets": 3,
+       "reps": 4,
+       "note": "Barre à vide ou +10 à 20 kg, réception amortie",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "rdl",
+       "sets": 3,
+       "reps": 6,
+       "note": "Hanches en arrière",
+       "targetLoadKg": 80,
+       "tempo": "3-0-1-0",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "hip-thrust",
+       "sets": 3,
+       "reps": 8,
+       "note": "Pause 1 s en haut, effort 8/10",
+       "tempo": "2-1-1-0",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "leg-curl",
+       "sets": 3,
+       "reps": 10,
+       "note": "",
+       "targetLoadKg": 55,
+       "tempo": "3-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "copenhague",
+       "sets": 3,
+       "reps": "30 s",
+       "note": "Par côté",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "traineau",
+       "sets": 2,
+       "reps": "15 m",
+       "note": "Bonus cardio si le temps le permet",
+       "restSec": 60
+      }
+     ]
+    }
+   }
+  },
+  {
+   "week": 13,
+   "block": 4,
+   "blockName": "Pic",
+   "deload": false,
+   "sessions": {
+    "A": {
+     "name": "Jambes A : force et sauts",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "depth-jump-40",
+       "sets": 4,
+       "reps": 3,
+       "note": "Si la hauteur baisse, arrête la série",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "sauts-contre",
+       "sets": 4,
+       "reps": 3,
+       "note": "Pas chassé puis saut, trois fois de suite",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "squat-arriere",
+       "sets": 4,
+       "reps": 3,
+       "note": "Explosif, 2 reps en réserve",
+       "targetLoadKg": 92.5,
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "fente-bulgare",
+       "sets": 3,
+       "reps": 6,
+       "note": "Par jambe, commence par la droite",
+       "tempo": "2-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "reverse-nordic",
+       "sets": 3,
+       "reps": 10,
+       "note": "Descente 3 à 4 s",
+       "tempo": "4-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "mollets-debout",
+       "sets": 3,
+       "reps": 12,
+       "note": "1 s en haut, descente lente",
+       "tempo": "2-1-1-1",
+       "restSec": 60
+      }
+     ]
+    },
+    "B": {
+     "name": "Jambes B : puissance et chaîne postérieure",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "power-clean",
+       "sets": 5,
+       "reps": 2,
+       "note": "Barre proche du corps",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "trap-bar-jump",
+       "sets": 4,
+       "reps": 4,
+       "note": "Barre à vide ou +10 à 20 kg, réception amortie",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "rdl",
+       "sets": 3,
+       "reps": 6,
+       "note": "Hanches en arrière",
+       "targetLoadKg": 92.5,
+       "tempo": "3-0-1-0",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "hip-thrust",
+       "sets": 3,
+       "reps": 8,
+       "note": "Pause 1 s en haut, effort 8/10",
+       "tempo": "2-1-1-0",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "leg-curl",
+       "sets": 3,
+       "reps": 10,
+       "note": "",
+       "targetLoadKg": 62.5,
+       "tempo": "3-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "copenhague",
+       "sets": 3,
+       "reps": "30 s",
+       "note": "Par côté",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "traineau",
+       "sets": 4,
+       "reps": "15 m",
+       "note": "Bonus cardio si le temps le permet",
+       "restSec": 60
+      }
+     ]
+    }
+   }
+  },
+  {
+   "week": 14,
+   "block": 4,
+   "blockName": "Pic",
+   "deload": false,
+   "sessions": {
+    "A": {
+     "name": "Jambes A : force et sauts",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "depth-jump-40",
+       "sets": 4,
+       "reps": 3,
+       "note": "Si la hauteur baisse, arrête la série",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "sauts-contre",
+       "sets": 4,
+       "reps": 3,
+       "note": "Pas chassé puis saut, trois fois de suite",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "squat-arriere",
+       "sets": 4,
+       "reps": 3,
+       "note": "Explosif, 2 reps en réserve",
+       "targetLoadKg": 95,
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "fente-bulgare",
+       "sets": 3,
+       "reps": 6,
+       "note": "Par jambe, commence par la droite",
+       "tempo": "2-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "reverse-nordic",
+       "sets": 3,
+       "reps": 10,
+       "note": "Descente 3 à 4 s",
+       "tempo": "4-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "mollets-debout",
+       "sets": 3,
+       "reps": 12,
+       "note": "1 s en haut, descente lente",
+       "tempo": "2-1-1-1",
+       "restSec": 60
+      }
+     ]
+    },
+    "B": {
+     "name": "Jambes B : puissance et chaîne postérieure",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "power-clean",
+       "sets": 5,
+       "reps": 2,
+       "note": "Barre proche du corps",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "trap-bar-jump",
+       "sets": 4,
+       "reps": 4,
+       "note": "Barre à vide ou +10 à 20 kg, réception amortie",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "rdl",
+       "sets": 3,
+       "reps": 6,
+       "note": "Hanches en arrière",
+       "targetLoadKg": 95,
+       "tempo": "3-0-1-0",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "hip-thrust",
+       "sets": 3,
+       "reps": 8,
+       "note": "Pause 1 s en haut, effort 8/10",
+       "tempo": "2-1-1-0",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "leg-curl",
+       "sets": 3,
+       "reps": 10,
+       "note": "",
+       "targetLoadKg": 65,
+       "tempo": "3-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "copenhague",
+       "sets": 3,
+       "reps": "30 s",
+       "note": "Par côté",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "traineau",
+       "sets": 4,
+       "reps": "15 m",
+       "note": "Bonus cardio si le temps le permet",
+       "restSec": 60
+      }
+     ]
+    }
+   }
+  },
+  {
+   "week": 15,
+   "block": 4,
+   "blockName": "Pic",
+   "deload": false,
+   "sessions": {
+    "A": {
+     "name": "Jambes A : force et sauts",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "depth-jump-40",
+       "sets": 4,
+       "reps": 3,
+       "note": "Si la hauteur baisse, arrête la série",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "sauts-contre",
+       "sets": 4,
+       "reps": 3,
+       "note": "Pas chassé puis saut, trois fois de suite",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "squat-arriere",
+       "sets": 4,
+       "reps": 3,
+       "note": "Explosif, 2 reps en réserve",
+       "targetLoadKg": 97.5,
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "fente-bulgare",
+       "sets": 3,
+       "reps": 6,
+       "note": "Par jambe, commence par la droite",
+       "tempo": "2-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "reverse-nordic",
+       "sets": 3,
+       "reps": 10,
+       "note": "Descente 3 à 4 s",
+       "tempo": "4-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "mollets-debout",
+       "sets": 3,
+       "reps": 12,
+       "note": "1 s en haut, descente lente",
+       "tempo": "2-1-1-1",
+       "restSec": 60
+      }
+     ]
+    },
+    "B": {
+     "name": "Jambes B : puissance et chaîne postérieure",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "power-clean",
+       "sets": 5,
+       "reps": 2,
+       "note": "Barre proche du corps",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "trap-bar-jump",
+       "sets": 4,
+       "reps": 4,
+       "note": "Barre à vide ou +10 à 20 kg, réception amortie",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "rdl",
+       "sets": 3,
+       "reps": 6,
+       "note": "Hanches en arrière",
+       "targetLoadKg": 97.5,
+       "tempo": "3-0-1-0",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "hip-thrust",
+       "sets": 3,
+       "reps": 8,
+       "note": "Pause 1 s en haut, effort 8/10",
+       "tempo": "2-1-1-0",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "leg-curl",
+       "sets": 3,
+       "reps": 10,
+       "note": "",
+       "targetLoadKg": 65,
+       "tempo": "3-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "copenhague",
+       "sets": 3,
+       "reps": "30 s",
+       "note": "Par côté",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "traineau",
+       "sets": 4,
+       "reps": "15 m",
+       "note": "Bonus cardio si le temps le permet",
+       "restSec": 60
+      }
+     ]
+    }
+   }
+  },
+  {
+   "week": 16,
+   "block": 4,
+   "blockName": "Pic",
+   "deload": true,
+   "sessions": {
+    "A": {
+     "name": "Jambes A : force et sauts",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "depth-jump-40",
+       "sets": 3,
+       "reps": 3,
+       "note": "Si la hauteur baisse, arrête la série",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "sauts-contre",
+       "sets": 3,
+       "reps": 3,
+       "note": "Pas chassé puis saut, trois fois de suite",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "squat-arriere",
+       "sets": 3,
+       "reps": 3,
+       "note": "Explosif, 2 reps en réserve",
+       "targetLoadKg": 80,
+       "tempo": "2-0-X-0",
+       "restSec": 180
+      },
+      {
+       "exerciseId": "fente-bulgare",
+       "sets": 3,
+       "reps": 6,
+       "note": "Par jambe, commence par la droite",
+       "tempo": "2-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "reverse-nordic",
+       "sets": 3,
+       "reps": 10,
+       "note": "Descente 3 à 4 s",
+       "tempo": "4-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "mollets-debout",
+       "sets": 3,
+       "reps": 12,
+       "note": "1 s en haut, descente lente",
+       "tempo": "2-1-1-1",
+       "restSec": 60
+      }
+     ]
+    },
+    "B": {
+     "name": "Jambes B : puissance et chaîne postérieure",
+     "items": [
+      {
+       "exerciseId": "echauffement-jambes",
+       "sets": 1,
+       "reps": "10 min",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "restSec": 0
+      },
+      {
+       "exerciseId": "power-clean",
+       "sets": 4,
+       "reps": 2,
+       "note": "Barre proche du corps",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "trap-bar-jump",
+       "sets": 3,
+       "reps": 4,
+       "note": "Barre à vide ou +10 à 20 kg, réception amortie",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "rdl",
+       "sets": 3,
+       "reps": 6,
+       "note": "Hanches en arrière",
+       "targetLoadKg": 80,
+       "tempo": "3-0-1-0",
+       "restSec": 150
+      },
+      {
+       "exerciseId": "hip-thrust",
+       "sets": 3,
+       "reps": 8,
+       "note": "Pause 1 s en haut, effort 8/10",
+       "tempo": "2-1-1-0",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "leg-curl",
+       "sets": 3,
+       "reps": 10,
+       "note": "",
+       "targetLoadKg": 55,
+       "tempo": "3-0-1-0",
+       "restSec": 90
+      },
+      {
+       "exerciseId": "copenhague",
+       "sets": 3,
+       "reps": "30 s",
+       "note": "Par côté",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "traineau",
+       "sets": 2,
+       "reps": "15 m",
+       "note": "Bonus cardio si le temps le permet",
+       "restSec": 60
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

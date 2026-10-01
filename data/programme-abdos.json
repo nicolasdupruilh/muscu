@@ -1,0 +1,114 @@
+{
+ "id": "abdos",
+ "name": "Abdos",
+ "type": "structured-circuit",
+ "weeksCount": 16,
+ "placement": "Fin des séances push et pull, environ 10 min",
+ "format": "Circuit : un exercice après l'autre sans pause, 1 min de repos entre les tours. Le nombre de séries = nombre de tours.",
+ "restBetweenRoundsSec": 60,
+ "progressionRule": "Dans un bloc, quand tous les tours sont propres, ajouter 2 reps ou 5 s par exercice à la séance suivante.",
+ "blocks": [
+  {
+   "weeks": [
+    1,
+    4
+   ],
+   "items": [
+    {
+     "exerciseId": "dead-bug",
+     "rounds": 3,
+     "reps": "8/côté",
+     "note": "Lent, bas du dos collé au sol"
+    },
+    {
+     "exerciseId": "releves-genoux",
+     "rounds": 3,
+     "reps": 10,
+     "note": ""
+    },
+    {
+     "exerciseId": "planche-laterale",
+     "rounds": 3,
+     "reps": "25 s/côté",
+     "note": ""
+    },
+    {
+     "exerciseId": "pallof-press",
+     "rounds": 3,
+     "reps": "10/côté",
+     "note": "Bras tendus 2 s"
+    }
+   ]
+  },
+  {
+   "weeks": [
+    5,
+    8
+   ],
+   "items": [
+    {
+     "exerciseId": "rollout-barre",
+     "rounds": 3,
+     "reps": "6-8",
+     "note": "Dos plat, ne pas creuser"
+    },
+    {
+     "exerciseId": "releves-jambes",
+     "rounds": 3,
+     "reps": "6-10",
+     "note": "Sans balancer"
+    },
+    {
+     "exerciseId": "pallof-press",
+     "rounds": 3,
+     "reps": "10/côté",
+     "note": ""
+    },
+    {
+     "exerciseId": "lancer-rotatif",
+     "rounds": 3,
+     "reps": "6/côté",
+     "note": "Rotation des hanches d'abord"
+    }
+   ]
+  },
+  {
+   "weeks": [
+    9,
+    16
+   ],
+   "items": [
+    {
+     "exerciseId": "rollout-barre",
+     "rounds": 3,
+     "reps": 10,
+     "note": ""
+    },
+    {
+     "exerciseId": "toes-to-bar",
+     "rounds": 3,
+     "reps": "6-8",
+     "note": ""
+    },
+    {
+     "exerciseId": "woodchop",
+     "rounds": 3,
+     "reps": "10/côté",
+     "note": ""
+    },
+    {
+     "exerciseId": "lancer-rotatif",
+     "rounds": 3,
+     "reps": 5,
+     "note": "Alterner avec slam : 3×5 chacun"
+    },
+    {
+     "exerciseId": "slam",
+     "rounds": 3,
+     "reps": 5,
+     "note": ""
+    }
+   ]
+  }
+ ]
+}

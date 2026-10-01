@@ -1,0 +1,11 @@
+{
+ "weekPlan": {
+  "lundi": "jambes A",
+  "mardi": "push",
+  "jeudi": "jambes B",
+  "vendredi": "pull",
+  "week-end": "footing tranquille"
+ },
+ "startDate": null,
+ "note": "Planning indicatif, modifiable dans l'appli"
+}
