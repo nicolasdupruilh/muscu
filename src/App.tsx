@@ -1,10 +1,11 @@
 import { HashRouter, NavLink, Route, Routes } from 'react-router'
 import { Accueil } from './screens/Accueil'
-import { ChoixSeance } from './screens/ChoixSeance'
-import { ApercuAbdos, ApercuHaut, ApercuJambes } from './screens/Apercu'
+import { Seance } from './screens/SeanceEnCours'
+import { ApercuAbdos, ApercuJambes } from './screens/Apercu'
 import { Historique } from './screens/Historique'
 import { Reglages } from './screens/Reglages'
 import { dataErrors } from './data'
+import { ScrollToTop } from './components/ScrollToTop'
 
 const tabs = [
   { to: '/', label: 'Accueil', icon: '⌂', end: true },
@@ -16,6 +17,7 @@ const tabs = [
 export function App() {
   return (
     <HashRouter>
+      <ScrollToTop />
       <div className="app">
         <main>
           {dataErrors.length > 0 && (
@@ -30,10 +32,9 @@ export function App() {
           )}
           <Routes>
             <Route path="/" element={<Accueil />} />
-            <Route path="/seance" element={<ChoixSeance />} />
+            <Route path="/seance" element={<Seance />} />
             <Route path="/seance/jambes/:index" element={<ApercuJambes />} />
             <Route path="/seance/abdos/:index" element={<ApercuAbdos />} />
-            <Route path="/seance/:type" element={<ApercuHaut />} />
             <Route path="/historique" element={<Historique />} />
             <Route path="/reglages" element={<Reglages />} />
           </Routes>

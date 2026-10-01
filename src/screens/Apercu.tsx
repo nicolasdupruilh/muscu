@@ -1,6 +1,6 @@
 // Aperçu en lecture seule de ce qui est prévu. La saisie série par série arrive aux étapes 2 et 4.
 import { Link, useParams } from 'react-router'
-import { absBlockForWeek, absProgram, legWeek, programShapes, upperBody } from '../data'
+import { absBlockForWeek, absProgram, legWeek, programShapes } from '../data'
 import { useExercises } from '../hooks'
 import { formatKg, formatReps, formatRest } from '../logic/format'
 import { positionOf } from '../logic/programs'
@@ -47,35 +47,6 @@ export function ApercuJambes() {
           )
         })}
       </ul>
-    </>
-  )
-}
-
-export function ApercuHaut() {
-  const exercises = useExercises()
-  const template = upperBody.templates.find((t) => t.id === useParams().type)
-  if (!exercises) return null
-  if (!template) return <p>Séance introuvable.</p>
-
-  return (
-    <>
-      <h1>{template.name}</h1>
-      <ComingSoon />
-      <ul className="list card">
-        {template.slots.map((s, i) => (
-          <li key={i}>
-            <strong>{s.label}</strong>
-            <div className="small muted">Par défaut : {exercises.get(s.defaultExerciseId)?.name}</div>
-            <div>
-              {s.sets} × {s.repRange[0]} à {s.repRange[1]} reps · repos {formatRest(s.restSec)}
-            </div>
-            {s.note && <div className="small">{s.note}</div>}
-          </li>
-        ))}
-      </ul>
-      <p className="muted small" style={{ marginTop: 12 }}>
-        Puis les abdos.
-      </p>
     </>
   )
 }

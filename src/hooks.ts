@@ -20,3 +20,9 @@ export function useProgramStatus(id: ProgramId) {
 /** Exercices de la base, indexés par id. */
 export const useExercises = () =>
   useLiveQuery(async () => new Map((await db.exercises.toArray()).map((e) => [e.id, e])), [])
+
+/** Séance en cours (null s'il n'y en a pas, undefined pendant le chargement). */
+export const useActiveSession = () =>
+  useLiveQuery(async () => (await db.sessions.where('status').equals('en-cours').first()) ?? null, [])
+
+export const useSetLogs = () => useLiveQuery(() => db.setLogs.toArray(), [])

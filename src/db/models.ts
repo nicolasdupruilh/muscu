@@ -26,6 +26,24 @@ export interface KneeCheck {
   lendemainAt?: string
 }
 
+/** Un exercice prévu dans une séance : sa place dans la trame (ou hors trame), l'exercice choisi, la prescription. */
+export interface PlannedExercise {
+  /** Identifiant stable dans la séance (les séries y sont rattachées, même si l'ordre change). */
+  key: string
+  /** Position dans la trame, « push:0 »… ; absent pour un exercice hors trame. */
+  templateKey?: string
+  /** Slot de la trame (« triceps »…) : filtre la liste des exercices proposés. */
+  slot?: string
+  label?: string
+  exerciseId: string
+  sets: number
+  /** Fourchette de reps (ou de secondes pour un exercice en durée). */
+  repRange: [number, number]
+  restSec: number
+  note?: string
+  skipped?: boolean
+}
+
 export interface Session {
   id?: number
   /** Début de la séance, ISO. */
@@ -37,6 +55,8 @@ export interface Session {
   program?: ProgramPosition
   /** Pour une séance abdos enchaînée après un push ou un pull. */
   parentSessionId?: number
+  /** Exercices prévus, dans l'ordre (séances haut du corps et libres). */
+  plan?: PlannedExercise[]
   notes?: string
   kneeCheck?: KneeCheck
 }
@@ -45,16 +65,17 @@ export interface SetLog {
   id?: number
   sessionId: number
   exerciseId: string
-  /** Ordre de l'exercice dans la séance. */
-  exerciseOrder: number
-  /** Slot de la trame haut du corps, si l'exercice y a été choisi. */
-  slot?: string
+  /** PlannedExercise.key auquel la série appartient. */
+  planKey: string
+  /** Position dans la trame (« push:0 »…), pour retrouver l'exercice fait la dernière fois à cette place. */
+  templateKey?: string
   setNumber: number
   targetLoadKg?: number
   targetReps?: number
   loadKg?: number
   /** Reps réalisées ; pour un exercice unilatéral, par côté. */
   reps?: number
+  /** Durée réalisée, pour un exercice en durée (loadUnit « time »). */
   durationSec?: number
   /** Repos réellement pris avant la série. */
   restTakenSec?: number

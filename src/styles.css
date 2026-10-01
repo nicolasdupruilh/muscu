@@ -256,3 +256,240 @@ input[type='date'] {
 .tabbar a.active {
   color: var(--accent);
 }
+
+/* Séance en cours */
+
+.resume {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+  text-decoration: none;
+  border-color: var(--accent);
+}
+
+.exercise {
+  padding: 0;
+  overflow: hidden;
+}
+
+.exercise > .stack {
+  padding: 0 16px 16px;
+}
+
+.exercise.skipped {
+  opacity: 0.55;
+}
+
+.exercise-head {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  min-height: var(--tap);
+  background: none;
+  border: none;
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.exercise-head > span:first-child {
+  display: flex;
+  flex-direction: column;
+}
+
+.exercise-name {
+  font-size: 1.05rem;
+}
+
+.exercise.open .exercise-head {
+  padding-bottom: 8px;
+}
+
+.info {
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.info.target {
+  border-left: 4px solid var(--accent);
+}
+
+.info.target.up {
+  border-left-color: var(--ok);
+}
+
+.set-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  width: 100%;
+  text-align: left;
+}
+
+.set-row.done {
+  background: var(--surface-2);
+  cursor: pointer;
+}
+
+.set-row.pending {
+  border-style: dashed;
+}
+
+.set-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 2px solid var(--accent);
+}
+
+.stepper-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.stepper-row {
+  display: grid;
+  grid-template-columns: 72px 1fr 72px;
+  gap: 8px;
+  align-items: center;
+}
+
+.stepper-btn {
+  font-size: 1.8rem;
+  min-height: 60px;
+  padding: 0;
+}
+
+.stepper-value {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.chips.quick {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.chips.quick .chip {
+  min-height: 52px;
+  font-size: 1.15rem;
+  padding: 0;
+}
+
+.btn.big {
+  min-height: 60px;
+  font-size: 1.1rem;
+}
+
+.btn.danger {
+  color: var(--danger);
+}
+
+.card-actions .btn {
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 0.9rem;
+}
+
+/* Sélecteur d'exercice plein écran */
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sheet-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sheet-header h2 {
+  margin: 0;
+}
+
+input.search {
+  min-height: var(--tap);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 16px;
+  padding: 0 12px;
+  width: 100%;
+}
+
+.pick {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  padding: 4px 0;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.pick.current strong {
+  color: var(--accent);
+}
+
+.stepper-big {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.exercise {
+  scroll-margin-top: calc(env(safe-area-inset-top) + 8px);
+}

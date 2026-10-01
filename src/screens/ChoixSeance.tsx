@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { StartUpperButton } from '../components/StartUpperButton'
 import { useProgramStatus } from '../hooks'
 
 export function ChoixSeance() {
@@ -15,12 +16,8 @@ export function ChoixSeance() {
             Jambes · semaine {legs.next.week}, séance {legs.next.label}
           </Link>
         )}
-        <Link className="btn block" to="/seance/push">
-          Push
-        </Link>
-        <Link className="btn block" to="/seance/pull">
-          Pull
-        </Link>
+        <StartUpperButton type="push" block />
+        <StartUpperButton type="pull" block />
         {abs.next && (
           <Link className="btn block" to={`/seance/abdos/${abs.next.index}`}>
             Abdos seuls · semaine {abs.next.week}

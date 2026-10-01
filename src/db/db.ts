@@ -17,6 +17,10 @@ export class AppDB extends Dexie {
       setLogs: '++id, sessionId, exerciseId, [exerciseId+at]',
       settings: 'id',
     })
+    this.version(2).stores({
+      sessions: '++id, date, type, status, [type+date]',
+      setLogs: '++id, sessionId, exerciseId, templateKey, [exerciseId+at]',
+    })
   }
 }
 

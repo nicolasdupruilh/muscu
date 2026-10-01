@@ -2,16 +2,18 @@ import { Link } from 'react-router'
 import { legWeek, programShapes } from '../data'
 import { db } from '../db/db'
 import { logFooting } from '../db/queries'
-import { useProgramStatus, useSessions } from '../hooks'
+import { useActiveSession, useProgramStatus, useSessions } from '../hooks'
 import { formatDay, isSameWeek } from '../logic/dates'
 import { nextUpperType } from '../logic/upperBody'
 import { ProgramWeek } from '../components/ProgramWeek'
+import { StartUpperButton } from '../components/StartUpperButton'
 
 export function Accueil() {
   const sessions = useSessions()
+  const active = useActiveSession()
   const legs = useProgramStatus('jambes')
   const abs = useProgramStatus('abdos')
-  if (!sessions || !legs || !abs) return null
+  if (!sessions || !legs || !abs || active === undefined) return null
 
   const now = new Date()
   const footings = sessions.filter((s) => s.type === 'course' && isSameWeek(new Date(s.date), now))
@@ -22,6 +24,13 @@ export function Accueil() {
     <>
       <h1>Aujourd'hui</h1>
       <p className="muted">{formatDay(now)}</p>
+
+      {active && (
+        <Link className="card resume" to="/seance">
+          <strong>Séance en cours : {active.type === 'push' ? 'Push' : active.type === 'pull' ? 'Pull' : active.type}</strong>
+          <span className="btn primary">Reprendre</span>
+        </Link>
+      )}
 
       <section className="card">
         <div className="row">
@@ -50,12 +59,8 @@ export function Accueil() {
           {abs.next && ` · puis abdos, semaine ${abs.next.week} (${abs.next.label} séance)`}
         </p>
         <div className="row">
-          <Link className={`btn grow ${upper === 'push' ? 'primary' : ''}`} to="/seance/push">
-            Push
-          </Link>
-          <Link className={`btn grow ${upper === 'pull' ? 'primary' : ''}`} to="/seance/pull">
-            Pull
-          </Link>
+          <StartUpperButton type="push" primary={upper === 'push'} />
+          <StartUpperButton type="pull" primary={upper === 'pull'} />
         </div>
       </section>
 
