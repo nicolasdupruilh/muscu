@@ -7,9 +7,13 @@ export default defineConfig({
   base: './',
   plugins: [
     react(),
-    // Configuration minimale ; le mode hors ligne et les icônes seront finalisés à l'étape 6.
+    // Appli installable et utilisable hors ligne : tous les fichiers sont mis en cache au premier chargement,
+    // et la nouvelle version s'installe toute seule au lancement suivant.
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,png,webmanifest}'],
+      },
       manifest: {
         name: 'Muscu',
         short_name: 'Muscu',
@@ -18,7 +22,13 @@ export default defineConfig({
         start_url: '.',
         background_color: '#0f1115',
         theme_color: '#0f1115',
-        icons: [],
+        description: "Mes séances de muscu : programme jambes, haut du corps, abdos, chrono de repos.",
+        orientation: 'portrait',
+        icons: [
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
       },
     }),
   ],

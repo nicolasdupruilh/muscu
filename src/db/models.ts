@@ -118,6 +118,8 @@ export interface ProgramSettings {
 export interface Settings {
   id: 'main'
   programs: Record<ProgramId, ProgramSettings>
+  /** Date du dernier export JSON, pour rappeler de sauvegarder. */
+  lastBackupAt?: string
 }
 
 export const defaultSettings = (): Settings => ({

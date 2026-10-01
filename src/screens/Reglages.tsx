@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { notificationsSupported, requestNotifications } from '../alarm'
+import { backupFileName, backupStats, checkBackup, exportBackup, importBackup, type Backup } from '../db/backup'
 import { catalogue, programShapes } from '../data'
 import { updateSettings } from '../db/db'
 import type { ProgramId, ProgramSettings } from '../db/models'
@@ -107,10 +108,7 @@ export function Reglages() {
 
       <NotificationsCard />
 
-      <section className="card">
-        <h2>Sauvegarde</h2>
-        <p className="small muted">Export et import JSON : à l'étape 6.</p>
-      </section>
+      <BackupCard lastBackupAt={settings.lastBackupAt} />
     </>
   )
 }
@@ -136,6 +134,94 @@ function NotificationsCard() {
           Autoriser les notifications
         </button>
       )}
+    </section>
+  )
+}
+
+const backupDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+
+function BackupCard({ lastBackupAt }: { lastBackupAt?: string }) {
+  const [message, setMessage] = useState<string>()
+  const days = lastBackupAt ? Math.floor((Date.now() - new Date(lastBackupAt).getTime()) / 86_400_000) : undefined
+
+  const doExport = async () => {
+    setMessage(undefined)
+    const backup = await exportBackup()
+    const file = new File([JSON.stringify(backup, null, 1)], backupFileName(), { type: 'application/json' })
+    try {
+      // Sur iPhone, le menu de partage permet « Enregistrer dans Fichiers ».
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Sauvegarde Muscu' })
+      } else {
+        const url = URL.createObjectURL(file)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = file.name
+        a.click()
+        setTimeout(() => URL.revokeObjectURL(url), 10_000)
+      }
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') return // partage annulé
+      setMessage('Export impossible : ' + (e as Error).message)
+      return
+    }
+    await updateSettings((s) => ({ ...s, lastBackupAt: backup.exportedAt }))
+    const st = backupStats(backup)
+    setMessage(`Sauvegarde créée : ${st.sessions} séances, ${st.sets} séries.`)
+  }
+
+  const doImport = async (file: File) => {
+    setMessage(undefined)
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(await file.text())
+    } catch {
+      return setMessage('Ce fichier n’est pas un fichier JSON lisible.')
+    }
+    const errors = checkBackup(parsed)
+    if (errors.length) return setMessage(errors.join(' '))
+    const backup = parsed as Backup
+    const st = backupStats(backup)
+    const ok = confirm(
+      `Remplacer toutes les données de l’appli par la sauvegarde du ${backupDate.format(new Date(backup.exportedAt))} ` +
+        `(${st.sessions} séances, ${st.sets} séries) ? Les données actuelles seront effacées.`,
+    )
+    if (!ok) return
+    try {
+      await importBackup(backup)
+      setMessage(`Sauvegarde restaurée : ${st.sessions} séances, ${st.sets} séries.`)
+    } catch (e) {
+      setMessage('Import impossible : ' + (e as Error).message)
+    }
+  }
+
+  return (
+    <section className="card stack">
+      <h2>Sauvegarde</h2>
+      <p className="small muted">
+        Tes données restent sur ce téléphone. Exporte-les de temps en temps dans un fichier (Fichiers, iCloud Drive…) pour ne rien perdre.
+      </p>
+      <p className={days === undefined || days > 14 ? 'warn-text' : ''}>
+        Dernière sauvegarde :{' '}
+        {lastBackupAt ? `${backupDate.format(new Date(lastBackupAt))}${days ? ` (il y a ${days} jour${days > 1 ? 's' : ''})` : ' (aujourd’hui)'}` : 'jamais'}
+      </p>
+      <button className="btn primary" onClick={doExport}>
+        Exporter mes données
+      </button>
+      <label className="btn">
+        Importer une sauvegarde
+        <input
+          type="file"
+          accept="application/json,.json"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            e.target.value = ''
+            if (file) void doImport(file)
+          }}
+        />
+      </label>
+      {message && <p className="small">{message}</p>}
     </section>
   )
 }

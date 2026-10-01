@@ -17,7 +17,8 @@ Appli personnelle pour assister mes séances de musculation à la salle, sur iPh
 - React + TypeScript + Vite, plugin PWA (vite-plugin-pwa).
 - Stockage local IndexedDB (Dexie). Pas de backend, pas de compte.
 - Export / import de toutes les données en un fichier JSON (sauvegarde manuelle), accessible depuis les réglages.
-- Déploiement statique gratuit sur GitHub Pages. Routeur par hash (`#/…`).
+- Déploiement statique gratuit sur GitHub Pages : `.github/workflows/deploy.yml` teste, construit et publie à chaque envoi sur `main`. Routeur par hash (`#/…`), chemins relatifs (`base: './'`).
+- Icônes générées par `node scripts/make-icons.mjs` (dans `public/`).
 - Mobile d'abord : gros boutons, saisie au pouce, mode sombre automatique, pas de clavier à ouvrir quand on peut l'éviter (boutons +/− pour charges et reps).
 
 ## Fichiers de données
