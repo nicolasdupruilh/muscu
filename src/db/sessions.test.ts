@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import { afterEach, describe, expect, it } from 'vitest'
 import { AppDB, syncCatalogue } from './db'
-import { abandonSession, activeSession, createExercise, deleteSet, finishSession, logSet, startUpperSession } from './sessions'
+import { abandonSession, activeSession, adjustRest, createExercise, deleteSet, endRest, finishSession, logSet, startUpperSession } from './sessions'
 
 let n = 0
 const dbs: AppDB[] = []
@@ -28,7 +28,7 @@ describe('séance haut du corps', () => {
   it("propose à chaque place l'exercice fait la dernière fois", async () => {
     const d = await freshDb()
     const id = await startUpperSession('pull', d)
-    await logSet({ sessionId: id, planKey: 'pull:3', templateKey: 'pull:3', exerciseId: 'rowing-haltere', setNumber: 1, loadKg: 30, reps: 10 }, d)
+    await logSet({ sessionId: id, planKey: 'pull:3', templateKey: 'pull:3', exerciseId: 'rowing-haltere', setNumber: 1, loadKg: 30, reps: 10 }, undefined, d)
     await finishSession(id, d)
     expect(await activeSession(d)).toBeUndefined()
     await startUpperSession('pull', d)
@@ -39,9 +39,9 @@ describe('séance haut du corps', () => {
     const d = await freshDb()
     const id = await startUpperSession('push', d)
     const base = { sessionId: id, planKey: 'push:0', exerciseId: 'dc-halteres', loadKg: 30, reps: 8 }
-    const first = await logSet({ ...base, setNumber: 1 }, d)
-    await logSet({ ...base, setNumber: 2 }, d)
-    await logSet({ ...base, setNumber: 3 }, d)
+    const first = await logSet({ ...base, setNumber: 1 }, undefined, d)
+    await logSet({ ...base, setNumber: 2 }, undefined, d)
+    await logSet({ ...base, setNumber: 3 }, undefined, d)
     await deleteSet(first, d)
     expect((await d.setLogs.toArray()).map((s) => s.setNumber).sort()).toEqual([1, 2])
   })
@@ -49,10 +49,30 @@ describe('séance haut du corps', () => {
   it('abandonner supprime la séance et ses séries', async () => {
     const d = await freshDb()
     const id = await startUpperSession('push', d)
-    await logSet({ sessionId: id, planKey: 'push:0', exerciseId: 'dc-halteres', setNumber: 1, loadKg: 30, reps: 8 }, d)
+    await logSet({ sessionId: id, planKey: 'push:0', exerciseId: 'dc-halteres', setNumber: 1, loadKg: 30, reps: 8 }, undefined, d)
     await abandonSession(id, d)
     expect(await d.sessions.count()).toBe(0)
     expect(await d.setLogs.count()).toBe(0)
+  })
+})
+
+describe('chrono de repos', () => {
+  it('démarre à la validation et mesure le repos réellement pris', async () => {
+    const d = await freshDb()
+    const id = await startUpperSession('push', d)
+    const base = { sessionId: id, planKey: 'push:0', exerciseId: 'dc-halteres', loadKg: 30, reps: 8, restPlannedSec: 120 }
+    await logSet({ ...base, setNumber: 1 }, 120, d)
+    const rest = (await d.sessions.get(id))!.rest!
+    expect(new Date(rest.endsAt).getTime() - new Date(rest.startedAt).getTime()).toBe(120_000)
+    await adjustRest(id, 15, d)
+    expect(new Date((await d.sessions.get(id))!.rest!.endsAt).getTime() - new Date(rest.startedAt).getTime()).toBe(135_000)
+    await endRest(id, d)
+    expect((await d.sessions.get(id))!.rest!.endedAt).toBeDefined()
+    await logSet({ ...base, setNumber: 2 }, undefined, d)
+    const sets = await d.setLogs.orderBy('id').toArray()
+    expect(sets[0].restTakenSec).toBeUndefined()
+    expect(sets[1].restTakenSec).toBeGreaterThanOrEqual(0)
+    expect((await d.sessions.get(id))!.rest).toBeUndefined()
   })
 })
 

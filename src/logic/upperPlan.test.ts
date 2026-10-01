@@ -30,6 +30,15 @@ describe('plan de séance haut du corps', () => {
   })
 })
 
+it('reprend le repos choisi la dernière fois pour cet exercice', () => {
+  const logs: SetLog[] = [
+    { sessionId: 1, planKey: 'x', exerciseId: 'dc-halteres', setNumber: 1, reps: 8, restPlannedSec: 180, done: true, at: '2026-10-01' },
+  ]
+  const plan = buildUpperPlan(push, logs, all)
+  expect(plan[0].restSec).toBe(180)
+  expect(plan[1].restSec).toBe(120)
+})
+
 describe('identifiant d’exercice', () => {
   it('est lisible et unique', () => {
     expect(slugify('Curl araignée', () => false)).toBe('curl-araignee')

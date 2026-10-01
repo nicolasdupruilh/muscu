@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { notificationsSupported, requestNotifications } from '../alarm'
 import { catalogue, programShapes } from '../data'
 import { updateSettings } from '../db/db'
 import type { ProgramId, ProgramSettings } from '../db/models'
@@ -104,10 +105,37 @@ export function Reglages() {
         </p>
       </section>
 
+      <NotificationsCard />
+
       <section className="card">
         <h2>Sauvegarde</h2>
         <p className="small muted">Export et import JSON : à l'étape 6.</p>
       </section>
     </>
+  )
+}
+
+function NotificationsCard() {
+  const [permission, setPermission] = useState(notificationsSupported() ? Notification.permission : 'unsupported')
+  const status: Record<string, string> = {
+    granted: 'Activées.',
+    denied: 'Refusées. Pour les réactiver : Réglages de l’iPhone › Notifications › Muscu.',
+    default: 'Pas encore autorisées.',
+    unsupported: 'Pas disponibles ici. Sur iPhone, il faut d’abord ajouter l’appli à l’écran d’accueil.',
+  }
+  return (
+    <section className="card stack">
+      <h2>Fin du repos</h2>
+      <p className="small muted">
+        Un son retentit à la fin du repos quand l’appli est ouverte. Si elle est en arrière-plan, une notification peut prévenir, quand
+        le téléphone le permet.
+      </p>
+      <p>Notifications : {status[permission]}</p>
+      {permission === 'default' && (
+        <button className="btn" onClick={async () => setPermission(await requestNotifications())}>
+          Autoriser les notifications
+        </button>
+      )}
+    </section>
   )
 }

@@ -42,6 +42,18 @@ export interface PlannedExercise {
   restSec: number
   note?: string
   skipped?: boolean
+  /** J'ai choisi d'ignorer l'ajustement de cible lié à un repos plus court. */
+  ignoreRestAdjust?: boolean
+}
+
+/** Chrono de repos en cours. Calculé à partir de l'heure de fin, pas d'un compteur. */
+export interface RestTimer {
+  /** Exercice après lequel le repos a démarré. */
+  planKey: string
+  startedAt: string
+  endsAt: string
+  /** Repos terminé (« Passer », « C'est parti ») : sert à mesurer le repos réellement pris. */
+  endedAt?: string
 }
 
 export interface Session {
@@ -57,6 +69,7 @@ export interface Session {
   parentSessionId?: number
   /** Exercices prévus, dans l'ordre (séances haut du corps et libres). */
   plan?: PlannedExercise[]
+  rest?: RestTimer
   notes?: string
   kneeCheck?: KneeCheck
 }
@@ -77,6 +90,8 @@ export interface SetLog {
   reps?: number
   /** Durée réalisée, pour un exercice en durée (loadUnit « time »). */
   durationSec?: number
+  /** Repos choisi pour cet exercice (prérempli la fois suivante). */
+  restPlannedSec?: number
   /** Repos réellement pris avant la série. */
   restTakenSec?: number
   done: boolean

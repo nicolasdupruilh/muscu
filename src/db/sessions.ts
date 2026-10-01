@@ -1,6 +1,7 @@
 // Actions sur les séances en cours : démarrer, enregistrer une série, modifier le plan, terminer.
 import { upperBody } from '../data'
 import type { LoadUnit } from '../data/types'
+import { restTaken } from '../logic/rest'
 import { buildUpperPlan, slugify } from '../logic/upperPlan'
 import { db, type AppDB } from './db'
 import type { Exercise, PlannedExercise, Session, SetLog } from './models'
@@ -29,9 +30,43 @@ export async function updatePlan(sessionId: number, update: (plan: PlannedExerci
   })
 }
 
-/** Enregistre une série validée et renvoie son id. */
-export async function logSet(set: Omit<SetLog, 'id' | 'at' | 'done'>, database: AppDB = db): Promise<number> {
-  return (await database.setLogs.add({ ...set, done: true, at: new Date().toISOString() })) as number
+/**
+ * Enregistre une série validée : le repos réellement pris avant elle est mesuré sur le chrono de la séance.
+ * Si `restSec` est donné, le chrono de repos suivant démarre. Renvoie l'id de la série.
+ */
+export async function logSet(
+  set: Omit<SetLog, 'id' | 'at' | 'done' | 'restTakenSec'>,
+  restSec?: number,
+  database: AppDB = db,
+): Promise<number> {
+  return database.transaction('rw', database.sessions, database.setLogs, async () => {
+    const now = Date.now()
+    const at = new Date(now).toISOString()
+    const session = await database.sessions.get(set.sessionId)
+    const id = (await database.setLogs.add({ ...set, restTakenSec: restTaken(session?.rest, now), done: true, at })) as number
+    await database.sessions.update(set.sessionId, {
+      rest: restSec ? { planKey: set.planKey, startedAt: at, endsAt: new Date(now + restSec * 1000).toISOString() } : undefined,
+    })
+    return id
+  })
+}
+
+/** Ajoute ou retire du temps au chrono de repos en cours (sans descendre sous maintenant). */
+export async function adjustRest(sessionId: number, deltaSec: number, database: AppDB = db) {
+  await database.transaction('rw', database.sessions, async () => {
+    const s = await database.sessions.get(sessionId)
+    if (!s?.rest) return
+    const ends = Math.max(Date.now(), new Date(s.rest.endsAt).getTime() + deltaSec * 1000)
+    await database.sessions.update(sessionId, { rest: { ...s.rest, endsAt: new Date(ends).toISOString() } })
+  })
+}
+
+/** Fin du repos (« Passer » ou « C'est parti ») : le repos réellement pris s'arrête ici. */
+export async function endRest(sessionId: number, database: AppDB = db) {
+  await database.transaction('rw', database.sessions, async () => {
+    const s = await database.sessions.get(sessionId)
+    if (s?.rest && !s.rest.endedAt) await database.sessions.update(sessionId, { rest: { ...s.rest, endedAt: new Date().toISOString() } })
+  })
 }
 
 export async function updateSet(id: number, changes: Partial<Pick<SetLog, 'loadKg' | 'reps' | 'durationSec'>>, database: AppDB = db) {
@@ -52,7 +87,7 @@ export async function deleteSet(id: number, database: AppDB = db) {
 }
 
 export async function finishSession(sessionId: number, database: AppDB = db) {
-  await database.sessions.update(sessionId, { status: 'terminee', endedAt: new Date().toISOString() })
+  await database.sessions.update(sessionId, { status: 'terminee', endedAt: new Date().toISOString(), rest: undefined })
 }
 
 /** Abandonne une séance en cours : la séance et ses séries sont supprimées. */

@@ -6,6 +6,9 @@ import { Historique } from './screens/Historique'
 import { Reglages } from './screens/Reglages'
 import { dataErrors } from './data'
 import { ScrollToTop } from './components/ScrollToTop'
+import { RestTimer } from './components/RestTimer'
+import { useActiveSession } from './hooks'
+import { useWakeLock } from './wakeLock'
 
 const tabs = [
   { to: '/', label: 'Accueil', icon: '⌂', end: true },
@@ -13,6 +16,13 @@ const tabs = [
   { to: '/historique', label: 'Historique', icon: '☰', end: false },
   { to: '/reglages', label: 'Réglages', icon: '⚙', end: false },
 ]
+
+/** Pendant une séance : écran gardé allumé et chrono de repos visible sur tous les écrans. */
+function SessionChrome() {
+  const session = useActiveSession()
+  useWakeLock(!!session)
+  return session ? <RestTimer session={session} /> : null
+}
 
 export function App() {
   return (
@@ -39,6 +49,7 @@ export function App() {
             <Route path="/reglages" element={<Reglages />} />
           </Routes>
         </main>
+        <SessionChrome />
         <nav className="tabbar">
           {tabs.map((t) => (
             <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => (isActive ? 'active' : '')}>

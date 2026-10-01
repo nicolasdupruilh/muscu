@@ -493,3 +493,133 @@ input.search {
 .exercise {
   scroll-margin-top: calc(env(safe-area-inset-top) + 8px);
 }
+
+.link.inline {
+  padding: 0;
+  font-size: inherit;
+}
+
+/* Choix du repos */
+
+.rest-chooser {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rest-value {
+  min-width: 76px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.rest-presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.rest-presets .chip {
+  padding: 0;
+}
+
+/* Chrono de repos */
+
+.rest-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 24px);
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.rest-top {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 8px);
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rest-clock {
+  font-size: clamp(5rem, 28vw, 9rem);
+  font-weight: 800;
+  text-align: center;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.rest-overlay.over .rest-clock {
+  color: var(--ok);
+}
+
+.rest-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.rest-progress > div {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.25s linear;
+}
+
+.rest-overlay.over .rest-progress > div {
+  background: var(--ok);
+}
+
+.rest-next {
+  text-align: center;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.rest-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.rest-buttons .btn {
+  min-height: 64px;
+  font-size: 1.2rem;
+}
+
+.rest-bar {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(env(safe-area-inset-bottom) + 68px);
+  z-index: 15;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: none;
+  background: var(--accent);
+  color: var(--accent-text);
+  font: inherit;
+  font-size: 1.1rem;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.25);
+}
+
+.rest-bar.over {
+  background: var(--ok);
+}
+
+.rest-bar strong {
+  font-size: 1.4rem;
+  font-variant-numeric: tabular-nums;
+}

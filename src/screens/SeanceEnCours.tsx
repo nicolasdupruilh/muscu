@@ -9,6 +9,8 @@ import { useActiveSession, useExercises, useSetLogs } from '../hooks'
 import { doubleProgression, type Target } from '../logic/doubleProgression'
 import { formatLoad, formatRest, formatSet, formatValue } from '../logic/format'
 import { hasLoad, lastPerformance, setValue, toPastSets, type LastPerformance } from '../logic/history'
+import { applyRestAdjustment, lastChosenRest, lastRestReference, REST_PRESETS, REST_STEP, restAdjustment } from '../logic/rest'
+import { unlockAudio } from '../alarm'
 import { ChoixSeance } from './ChoixSeance'
 
 const typeNames: Record<string, string> = { push: 'Push', pull: 'Pull', libre: 'Séance libre' }
@@ -66,7 +68,9 @@ function SeanceEnCours({ session }: { session: Session }) {
         onClose={() => setPicker(null)}
         onPick={async (exerciseId) => {
           if (pickerTarget) {
-            await patch(pickerTarget.key, { exerciseId })
+            // Nouvel exercice : son repos de la dernière fois, sinon celui de la place.
+            const restSec = lastChosenRest(logs, exerciseId, id) ?? pickerTarget.restSec
+            await patch(pickerTarget.key, { exerciseId, restSec, ignoreRestAdjust: false })
             setOpenKey(pickerTarget.key)
           } else {
             const ex = exercises.get(exerciseId)
@@ -78,7 +82,7 @@ function SeanceEnCours({ session }: { session: Session }) {
                 exerciseId,
                 sets: 3,
                 repRange: ex?.loadUnit === 'time' ? [20, 40] : [8, 12],
-                restSec: ex?.defaultRestSec || 90,
+                restSec: lastChosenRest(logs, exerciseId, id) ?? (ex?.defaultRestSec || 90),
               },
             ])
             setOpenKey(key)
@@ -111,6 +115,7 @@ function SeanceEnCours({ session }: { session: Session }) {
             open={open === p.key}
             first={i === 0}
             lastInPlan={i === plan.length - 1}
+            othersRemaining={plan.some((q) => q.key !== p.key && !q.skipped && !isComplete(q))}
             onToggle={() => setOpenKey(open === p.key ? '' : p.key)}
             onChange={() => setPicker({ mode: 'change', key: p.key })}
             onMove={(dir) => move(p.key, dir)}
@@ -120,6 +125,8 @@ function SeanceEnCours({ session }: { session: Session }) {
             }}
             onRemove={() => updatePlan(id, (pl) => pl.filter((x) => x.key !== p.key))}
             onSets={(sets) => patch(p.key, { sets })}
+            onRest={(restSec) => patch(p.key, { restSec })}
+            onIgnoreRestAdjust={(ignore) => patch(p.key, { ignoreRestAdjust: ignore })}
             onValidated={(completed) => completed && setOpenKey(null)}
           />
         )
@@ -164,12 +171,15 @@ function ExerciseCard({
   open,
   first,
   lastInPlan,
+  othersRemaining,
   onToggle,
   onChange,
   onMove,
   onSkip,
   onRemove,
   onSets,
+  onRest,
+  onIgnoreRestAdjust,
   onValidated,
 }: {
   sessionId: number
@@ -180,28 +190,37 @@ function ExerciseCard({
   open: boolean
   first: boolean
   lastInPlan: boolean
+  /** D'autres exercices restent à faire après celui-ci. */
+  othersRemaining: boolean
   onToggle: () => void
   onChange: () => void
   onMove: (dir: -1 | 1) => void
   onSkip: () => void
   onRemove: () => void
   onSets: (n: number) => void
+  onRest: (sec: number) => void
+  onIgnoreRestAdjust: (ignore: boolean) => void
   onValidated: (completed: boolean) => void
 }) {
   const [editing, setEditing] = useState<number | null>(null)
+  const [showRest, setShowRest] = useState(false)
   const ref = useRef<HTMLElement>(null)
   // L'exercice qui s'ouvre vient se placer en haut de l'écran.
   useEffect(() => {
     if (open) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [open])
   const unit = exercise.loadUnit
-  const target = doubleProgression({
-    last: last ? toPastSets(last.sets, unit) : [],
+  const pastSets = last ? toPastSets(last.sets, unit) : []
+  const progression = doubleProgression({
+    last: pastSets,
     repRange: planned.repRange,
     sets: planned.sets,
     incrementKg: hasLoad(unit) ? exercise.loadIncrementKg ?? 2.5 : undefined,
     unit: unit === 'time' ? 's' : 'reps',
   })
+  // Repos nettement plus court que la dernière fois : cible revue à la baisse (ignorable).
+  const adjustment = last && restAdjustment(planned.restSec, lastRestReference(last.sets))
+  const target = adjustment && !planned.ignoreRestAdjust ? applyRestAdjustment(progression, pastSets, adjustment) : progression
   const done = sets.length >= planned.sets
   const valueUnit = unit === 'time' ? 's' : 'reps'
   const status = planned.skipped ? 'Sautée' : done ? 'Fait ✓' : sets.length ? `${sets.length}/${planned.sets}` : ''
@@ -233,6 +252,22 @@ function ExerciseCard({
 
           <LastTime last={last} unit={unit} />
           <TargetLine target={target} unit={unit} />
+          {adjustment && (
+            <button className="link" onClick={() => onIgnoreRestAdjust(!planned.ignoreRestAdjust)}>
+              {planned.ignoreRestAdjust ? 'Réappliquer l’ajustement au repos plus court' : 'Ignorer cet ajustement'}
+            </button>
+          )}
+          {!done &&
+            (sets.length === 0 || showRest ? (
+              <RestChooser value={planned.restSec} onChange={onRest} />
+            ) : (
+              <div className="small muted">
+                Repos {formatRest(planned.restSec)} ·{' '}
+                <button className="link inline" onClick={() => setShowRest(true)}>
+                  modifier
+                </button>
+              </div>
+            ))}
 
           {sets.map((s, i) =>
             editing === s.id ? (
@@ -272,6 +307,7 @@ function ExerciseCard({
               exercise={exercise}
               sets={sets}
               target={target}
+              othersRemaining={othersRemaining}
               onValidated={onValidated}
             />
           )}
@@ -319,6 +355,31 @@ function ExerciseCard({
   )
 }
 
+/** Choix du repos avant un exercice : boutons rapides et réglage fin. */
+function RestChooser({ value, onChange }: { value: number; onChange: (sec: number) => void }) {
+  return (
+    <div className="rest-chooser">
+      <div className="row">
+        <span className="stepper-label grow">Repos</span>
+        <button className="chip" onClick={() => onChange(Math.max(REST_STEP, value - REST_STEP))} aria-label="Repos moins 15 s">
+          −15
+        </button>
+        <strong className="rest-value">{formatRest(value)}</strong>
+        <button className="chip" onClick={() => onChange(value + REST_STEP)} aria-label="Repos plus 15 s">
+          +15
+        </button>
+      </div>
+      <div className="chips rest-presets">
+        {REST_PRESETS.map((r) => (
+          <button key={r} className={`chip ${value === r ? 'on' : ''}`} onClick={() => onChange(r)}>
+            {formatRest(r)}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function LastTime({ last, unit }: { last?: LastPerformance; unit: LoadUnit }) {
   if (!last) return <div className="info">Jamais fait.</div>
   return (
@@ -355,6 +416,7 @@ function NextSet({
   exercise,
   sets,
   target,
+  othersRemaining,
   onValidated,
 }: {
   sessionId: number
@@ -362,6 +424,7 @@ function NextSet({
   exercise: Exercise
   sets: SetLog[]
   target: Target
+  othersRemaining: boolean
   onValidated: (completed: boolean) => void
 }) {
   const unit = exercise.loadUnit
@@ -379,7 +442,12 @@ function NextSet({
       targetValue={t?.value ?? planned.repRange[0]}
       submitLabel={`Valider la série ${n + 1}`}
       onSubmit={async (loadKg, value) => {
-        await logSet({
+        unlockAudio()
+        const completed = n + 1 >= planned.sets
+        // Le chrono démarre, sauf après la toute dernière série de la séance.
+        const restSec = !completed || othersRemaining ? planned.restSec : undefined
+        await logSet(
+          {
           sessionId,
           planKey: planned.key,
           templateKey: planned.templateKey,
@@ -387,9 +455,12 @@ function NextSet({
           setNumber: n + 1,
           targetLoadKg: t?.loadKg,
           targetReps: t?.value,
+          restPlannedSec: planned.restSec,
           ...valueFields(unit, loadKg, value),
-        })
-        onValidated(n + 1 >= planned.sets)
+          },
+          restSec,
+        )
+        onValidated(completed)
       }}
     />
   )
