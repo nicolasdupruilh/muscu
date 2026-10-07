@@ -65,22 +65,43 @@
        "exerciseId": "echauffement-jambes",
        "sets": 1,
        "reps": "10 min",
-       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×10, exercices de kiné",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, exercices de kiné",
        "restSec": 0
+      },
+      {
+       "exerciseId": "pogos",
+       "sets": 3,
+       "reps": 15,
+       "note": "Échauffement réactif, contacts les plus courts possible",
+       "restSec": 45
+      },
+      {
+       "exerciseId": "sauts-lateraux-ligne",
+       "sets": 3,
+       "reps": 10,
+       "note": "Contacts rapides",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "drop-landing-unipodal",
+       "sets": 3,
+       "reps": "8/jambe",
+       "note": "Commence par la droite, réception parfaite avant la vitesse",
+       "restSec": 60
       },
       {
        "exerciseId": "box-jump",
        "sets": 4,
-       "reps": 3,
-       "note": "Réception silencieuse, genoux dans l'axe",
+       "reps": 5,
+       "note": "Réception silencieuse sur la box",
        "restSec": 90
       },
       {
-       "exerciseId": "drop-landing-30",
+       "exerciseId": "skater-bound",
        "sets": 3,
-       "reps": 3,
-       "note": "Tiens 2 s en bas",
-       "restSec": 90
+       "reps": "5/côté",
+       "note": "Tiens 1 s à chaque réception",
+       "restSec": 60
       },
       {
        "exerciseId": "squat-arriere",
@@ -199,22 +220,43 @@
        "exerciseId": "echauffement-jambes",
        "sets": 1,
        "reps": "10 min",
-       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×10, exercices de kiné",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, exercices de kiné",
        "restSec": 0
+      },
+      {
+       "exerciseId": "pogos",
+       "sets": 3,
+       "reps": 15,
+       "note": "Échauffement réactif, contacts les plus courts possible",
+       "restSec": 45
+      },
+      {
+       "exerciseId": "sauts-lateraux-ligne",
+       "sets": 3,
+       "reps": 10,
+       "note": "Contacts rapides",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "drop-landing-unipodal",
+       "sets": 3,
+       "reps": "8/jambe",
+       "note": "Commence par la droite, réception parfaite avant la vitesse",
+       "restSec": 60
       },
       {
        "exerciseId": "box-jump",
        "sets": 4,
-       "reps": 3,
-       "note": "Réception silencieuse, genoux dans l'axe",
+       "reps": 5,
+       "note": "Réception silencieuse sur la box",
        "restSec": 90
       },
       {
-       "exerciseId": "drop-landing-30",
+       "exerciseId": "skater-bound",
        "sets": 3,
-       "reps": 3,
-       "note": "Tiens 2 s en bas",
-       "restSec": 90
+       "reps": "5/côté",
+       "note": "Tiens 1 s à chaque réception",
+       "restSec": 60
       },
       {
        "exerciseId": "squat-arriere",
@@ -333,22 +375,43 @@
        "exerciseId": "echauffement-jambes",
        "sets": 1,
        "reps": "10 min",
-       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×10, exercices de kiné",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, exercices de kiné",
        "restSec": 0
+      },
+      {
+       "exerciseId": "pogos",
+       "sets": 3,
+       "reps": 15,
+       "note": "Échauffement réactif, contacts les plus courts possible",
+       "restSec": 45
+      },
+      {
+       "exerciseId": "sauts-lateraux-ligne",
+       "sets": 3,
+       "reps": 10,
+       "note": "Contacts rapides",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "drop-landing-unipodal",
+       "sets": 3,
+       "reps": "8/jambe",
+       "note": "Commence par la droite, réception parfaite avant la vitesse",
+       "restSec": 60
       },
       {
        "exerciseId": "box-jump",
        "sets": 4,
-       "reps": 3,
-       "note": "Réception silencieuse, genoux dans l'axe",
+       "reps": 5,
+       "note": "Réception silencieuse sur la box",
        "restSec": 90
       },
       {
-       "exerciseId": "drop-landing-30",
+       "exerciseId": "skater-bound",
        "sets": 3,
-       "reps": 3,
-       "note": "Tiens 2 s en bas",
-       "restSec": 90
+       "reps": "5/côté",
+       "note": "Tiens 1 s à chaque réception",
+       "restSec": 60
       },
       {
        "exerciseId": "squat-arriere",
@@ -467,22 +530,43 @@
        "exerciseId": "echauffement-jambes",
        "sets": 1,
        "reps": "10 min",
-       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×10, exercices de kiné",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, exercices de kiné",
        "restSec": 0
+      },
+      {
+       "exerciseId": "pogos",
+       "sets": 2,
+       "reps": 15,
+       "note": "Échauffement réactif, contacts les plus courts possible",
+       "restSec": 45
+      },
+      {
+       "exerciseId": "sauts-lateraux-ligne",
+       "sets": 2,
+       "reps": 10,
+       "note": "Contacts rapides",
+       "restSec": 60
+      },
+      {
+       "exerciseId": "drop-landing-unipodal",
+       "sets": 2,
+       "reps": "8/jambe",
+       "note": "Commence par la droite, réception parfaite avant la vitesse",
+       "restSec": 60
       },
       {
        "exerciseId": "box-jump",
        "sets": 3,
-       "reps": 3,
-       "note": "Réception silencieuse, genoux dans l'axe",
+       "reps": 5,
+       "note": "Réception silencieuse sur la box",
        "restSec": 90
       },
       {
-       "exerciseId": "drop-landing-30",
+       "exerciseId": "skater-bound",
        "sets": 2,
-       "reps": 3,
-       "note": "Tiens 2 s en bas",
-       "restSec": 90
+       "reps": "5/côté",
+       "note": "Tiens 1 s à chaque réception",
+       "restSec": 60
       },
       {
        "exerciseId": "squat-arriere",
@@ -601,22 +685,43 @@
        "exerciseId": "echauffement-jambes",
        "sets": 1,
        "reps": "10 min",
-       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, exercices de kiné",
        "restSec": 0
+      },
+      {
+       "exerciseId": "pogos",
+       "sets": 3,
+       "reps": 20,
+       "note": "Contacts les plus courts possible",
+       "restSec": 45
+      },
+      {
+       "exerciseId": "hops-multidirectionnels",
+       "sets": 3,
+       "reps": 12,
+       "note": "Avant, arrière, côtés",
+       "restSec": 60
       },
       {
        "exerciseId": "cmj",
        "sets": 4,
-       "reps": 3,
+       "reps": 5,
        "note": "Hauteur max à chaque saut",
        "restSec": 90
       },
       {
        "exerciseId": "saut-attaque",
-       "sets": 3,
-       "reps": 3,
+       "sets": 4,
+       "reps": 4,
        "note": "Élan 3 pas, dernier appui comme au filet",
        "restSec": 120
+      },
+      {
+       "exerciseId": "bond-unipodal",
+       "sets": 3,
+       "reps": "5/jambe",
+       "note": "Réception stable 2 s",
+       "restSec": 90
       },
       {
        "exerciseId": "squat-arriere",
@@ -735,22 +840,43 @@
        "exerciseId": "echauffement-jambes",
        "sets": 1,
        "reps": "10 min",
-       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, exercices de kiné",
        "restSec": 0
+      },
+      {
+       "exerciseId": "pogos",
+       "sets": 3,
+       "reps": 20,
+       "note": "Contacts les plus courts possible",
+       "restSec": 45
+      },
+      {
+       "exerciseId": "hops-multidirectionnels",
+       "sets": 3,
+       "reps": 12,
+       "note": "Avant, arrière, côtés",
+       "restSec": 60
       },
       {
        "exerciseId": "cmj",
        "sets": 4,
-       "reps": 3,
+       "reps": 5,
        "note": "Hauteur max à chaque saut",
        "restSec": 90
       },
       {
        "exerciseId": "saut-attaque",
-       "sets": 3,
-       "reps": 3,
+       "sets": 4,
+       "reps": 4,
        "note": "Élan 3 pas, dernier appui comme au filet",
        "restSec": 120
+      },
+      {
+       "exerciseId": "bond-unipodal",
+       "sets": 3,
+       "reps": "5/jambe",
+       "note": "Réception stable 2 s",
+       "restSec": 90
       },
       {
        "exerciseId": "squat-arriere",
@@ -869,22 +995,43 @@
        "exerciseId": "echauffement-jambes",
        "sets": 1,
        "reps": "10 min",
-       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, exercices de kiné",
        "restSec": 0
+      },
+      {
+       "exerciseId": "pogos",
+       "sets": 3,
+       "reps": 20,
+       "note": "Contacts les plus courts possible",
+       "restSec": 45
+      },
+      {
+       "exerciseId": "hops-multidirectionnels",
+       "sets": 3,
+       "reps": 12,
+       "note": "Avant, arrière, côtés",
+       "restSec": 60
       },
       {
        "exerciseId": "cmj",
        "sets": 4,
-       "reps": 3,
+       "reps": 5,
        "note": "Hauteur max à chaque saut",
        "restSec": 90
       },
       {
        "exerciseId": "saut-attaque",
-       "sets": 3,
-       "reps": 3,
+       "sets": 4,
+       "reps": 4,
        "note": "Élan 3 pas, dernier appui comme au filet",
        "restSec": 120
+      },
+      {
+       "exerciseId": "bond-unipodal",
+       "sets": 3,
+       "reps": "5/jambe",
+       "note": "Réception stable 2 s",
+       "restSec": 90
       },
       {
        "exerciseId": "squat-arriere",
@@ -1003,22 +1150,43 @@
        "exerciseId": "echauffement-jambes",
        "sets": 1,
        "reps": "10 min",
-       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, exercices de kiné",
        "restSec": 0
+      },
+      {
+       "exerciseId": "pogos",
+       "sets": 2,
+       "reps": 20,
+       "note": "Contacts les plus courts possible",
+       "restSec": 45
+      },
+      {
+       "exerciseId": "hops-multidirectionnels",
+       "sets": 2,
+       "reps": 12,
+       "note": "Avant, arrière, côtés",
+       "restSec": 60
       },
       {
        "exerciseId": "cmj",
        "sets": 3,
-       "reps": 3,
+       "reps": 5,
        "note": "Hauteur max à chaque saut",
        "restSec": 90
       },
       {
        "exerciseId": "saut-attaque",
-       "sets": 2,
-       "reps": 3,
+       "sets": 3,
+       "reps": 4,
        "note": "Élan 3 pas, dernier appui comme au filet",
        "restSec": 120
+      },
+      {
+       "exerciseId": "bond-unipodal",
+       "sets": 2,
+       "reps": "5/jambe",
+       "note": "Réception stable 2 s",
+       "restSec": 90
       },
       {
        "exerciseId": "squat-arriere",
@@ -1137,22 +1305,43 @@
        "exerciseId": "echauffement-jambes",
        "sets": 1,
        "reps": "10 min",
-       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, exercices de kiné",
        "restSec": 0
+      },
+      {
+       "exerciseId": "pogos",
+       "sets": 2,
+       "reps": 20,
+       "note": "Contacts les plus courts possible",
+       "restSec": 45
+      },
+      {
+       "exerciseId": "hops-lateraux-unipodaux",
+       "sets": 3,
+       "reps": "8/jambe",
+       "note": "Genou dans l'axe",
+       "restSec": 60
       },
       {
        "exerciseId": "depth-jump-30",
        "sets": 4,
-       "reps": 3,
+       "reps": 5,
        "note": "Contact au sol le plus court possible",
        "restSec": 120
       },
       {
        "exerciseId": "saut-attaque",
        "sets": 4,
-       "reps": 3,
+       "reps": 4,
        "note": "Élan complet, vise une marque au mur",
        "restSec": 120
+      },
+      {
+       "exerciseId": "skater-bound",
+       "sets": 3,
+       "reps": "6/côté",
+       "note": "Explosif, réception contrôlée",
+       "restSec": 60
       },
       {
        "exerciseId": "squat-arriere",
@@ -1270,22 +1459,43 @@
        "exerciseId": "echauffement-jambes",
        "sets": 1,
        "reps": "10 min",
-       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, exercices de kiné",
        "restSec": 0
+      },
+      {
+       "exerciseId": "pogos",
+       "sets": 2,
+       "reps": 20,
+       "note": "Contacts les plus courts possible",
+       "restSec": 45
+      },
+      {
+       "exerciseId": "hops-lateraux-unipodaux",
+       "sets": 3,
+       "reps": "8/jambe",
+       "note": "Genou dans l'axe",
+       "restSec": 60
       },
       {
        "exerciseId": "depth-jump-30",
        "sets": 4,
-       "reps": 3,
+       "reps": 5,
        "note": "Contact au sol le plus court possible",
        "restSec": 120
       },
       {
        "exerciseId": "saut-attaque",
        "sets": 4,
-       "reps": 3,
+       "reps": 4,
        "note": "Élan complet, vise une marque au mur",
        "restSec": 120
+      },
+      {
+       "exerciseId": "skater-bound",
+       "sets": 3,
+       "reps": "6/côté",
+       "note": "Explosif, réception contrôlée",
+       "restSec": 60
       },
       {
        "exerciseId": "squat-arriere",
@@ -1403,22 +1613,43 @@
        "exerciseId": "echauffement-jambes",
        "sets": 1,
        "reps": "10 min",
-       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, exercices de kiné",
        "restSec": 0
+      },
+      {
+       "exerciseId": "pogos",
+       "sets": 2,
+       "reps": 20,
+       "note": "Contacts les plus courts possible",
+       "restSec": 45
+      },
+      {
+       "exerciseId": "hops-lateraux-unipodaux",
+       "sets": 3,
+       "reps": "8/jambe",
+       "note": "Genou dans l'axe",
+       "restSec": 60
       },
       {
        "exerciseId": "depth-jump-30",
        "sets": 4,
-       "reps": 3,
+       "reps": 5,
        "note": "Contact au sol le plus court possible",
        "restSec": 120
       },
       {
        "exerciseId": "saut-attaque",
        "sets": 4,
-       "reps": 3,
+       "reps": 4,
        "note": "Élan complet, vise une marque au mur",
        "restSec": 120
+      },
+      {
+       "exerciseId": "skater-bound",
+       "sets": 3,
+       "reps": "6/côté",
+       "note": "Explosif, réception contrôlée",
+       "restSec": 60
       },
       {
        "exerciseId": "squat-arriere",
@@ -1536,22 +1767,43 @@
        "exerciseId": "echauffement-jambes",
        "sets": 1,
        "reps": "10 min",
-       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, exercices de kiné",
        "restSec": 0
+      },
+      {
+       "exerciseId": "pogos",
+       "sets": 2,
+       "reps": 20,
+       "note": "Contacts les plus courts possible",
+       "restSec": 45
+      },
+      {
+       "exerciseId": "hops-lateraux-unipodaux",
+       "sets": 2,
+       "reps": "8/jambe",
+       "note": "Genou dans l'axe",
+       "restSec": 60
       },
       {
        "exerciseId": "depth-jump-30",
        "sets": 3,
-       "reps": 3,
+       "reps": 5,
        "note": "Contact au sol le plus court possible",
        "restSec": 120
       },
       {
        "exerciseId": "saut-attaque",
        "sets": 3,
-       "reps": 3,
+       "reps": 4,
        "note": "Élan complet, vise une marque au mur",
        "restSec": 120
+      },
+      {
+       "exerciseId": "skater-bound",
+       "sets": 2,
+       "reps": "6/côté",
+       "note": "Explosif, réception contrôlée",
+       "restSec": 60
       },
       {
        "exerciseId": "squat-arriere",
@@ -1669,13 +1921,20 @@
        "exerciseId": "echauffement-jambes",
        "sets": 1,
        "reps": "10 min",
-       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, exercices de kiné",
        "restSec": 0
+      },
+      {
+       "exerciseId": "pogos",
+       "sets": 2,
+       "reps": 20,
+       "note": "Contacts les plus courts possible",
+       "restSec": 45
       },
       {
        "exerciseId": "depth-jump-40",
        "sets": 4,
-       "reps": 3,
+       "reps": 4,
        "note": "Si la hauteur baisse, arrête la série",
        "restSec": 120
       },
@@ -1684,6 +1943,20 @@
        "sets": 4,
        "reps": 3,
        "note": "Pas chassé puis saut, trois fois de suite",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "saut-attaque",
+       "sets": 4,
+       "reps": 4,
+       "note": "Élan complet",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "bonds-unipodaux-enchaines",
+       "sets": 3,
+       "reps": "4/jambe",
+       "note": "Contacts courts",
        "restSec": 120
       },
       {
@@ -1802,13 +2075,20 @@
        "exerciseId": "echauffement-jambes",
        "sets": 1,
        "reps": "10 min",
-       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, exercices de kiné",
        "restSec": 0
+      },
+      {
+       "exerciseId": "pogos",
+       "sets": 2,
+       "reps": 20,
+       "note": "Contacts les plus courts possible",
+       "restSec": 45
       },
       {
        "exerciseId": "depth-jump-40",
        "sets": 4,
-       "reps": 3,
+       "reps": 4,
        "note": "Si la hauteur baisse, arrête la série",
        "restSec": 120
       },
@@ -1817,6 +2097,20 @@
        "sets": 4,
        "reps": 3,
        "note": "Pas chassé puis saut, trois fois de suite",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "saut-attaque",
+       "sets": 4,
+       "reps": 4,
+       "note": "Élan complet",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "bonds-unipodaux-enchaines",
+       "sets": 3,
+       "reps": "4/jambe",
+       "note": "Contacts courts",
        "restSec": 120
       },
       {
@@ -1935,13 +2229,20 @@
        "exerciseId": "echauffement-jambes",
        "sets": 1,
        "reps": "10 min",
-       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, exercices de kiné",
        "restSec": 0
+      },
+      {
+       "exerciseId": "pogos",
+       "sets": 2,
+       "reps": 20,
+       "note": "Contacts les plus courts possible",
+       "restSec": 45
       },
       {
        "exerciseId": "depth-jump-40",
        "sets": 4,
-       "reps": 3,
+       "reps": 4,
        "note": "Si la hauteur baisse, arrête la série",
        "restSec": 120
       },
@@ -1950,6 +2251,20 @@
        "sets": 4,
        "reps": 3,
        "note": "Pas chassé puis saut, trois fois de suite",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "saut-attaque",
+       "sets": 4,
+       "reps": 4,
+       "note": "Élan complet",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "bonds-unipodaux-enchaines",
+       "sets": 3,
+       "reps": "4/jambe",
+       "note": "Contacts courts",
        "restSec": 120
       },
       {
@@ -2068,13 +2383,20 @@
        "exerciseId": "echauffement-jambes",
        "sets": 1,
        "reps": "10 min",
-       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, pogos 2×15, exercices de kiné",
+       "note": "Vélo 5 min, Spanish squat isométrique 3×45 s, exercices de kiné",
        "restSec": 0
+      },
+      {
+       "exerciseId": "pogos",
+       "sets": 2,
+       "reps": 20,
+       "note": "Contacts les plus courts possible",
+       "restSec": 45
       },
       {
        "exerciseId": "depth-jump-40",
        "sets": 3,
-       "reps": 3,
+       "reps": 4,
        "note": "Si la hauteur baisse, arrête la série",
        "restSec": 120
       },
@@ -2083,6 +2405,20 @@
        "sets": 3,
        "reps": 3,
        "note": "Pas chassé puis saut, trois fois de suite",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "saut-attaque",
+       "sets": 3,
+       "reps": 4,
+       "note": "Élan complet",
+       "restSec": 120
+      },
+      {
+       "exerciseId": "bonds-unipodaux-enchaines",
+       "sets": 2,
+       "reps": "4/jambe",
+       "note": "Contacts courts",
        "restSec": 120
       },
       {
@@ -2188,5 +2524,9 @@
     }
    }
   }
+ ],
+ "version": 2,
+ "changelog": [
+  "v2 (oct. 2026) : pliométrie de la séance A plus volumineuse et plus variée dès le bloc 1 (réceptions unipodales, contacts rapides, changements de direction), suite au retour sur la semaine 1. Pogos sortis de l'échauffement de A pour devenir un exercice."
  ]
 }

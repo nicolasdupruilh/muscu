@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { absBlockForWeek, catalogue, legWeek } from '../data'
 import type { PlannedExercise, SetLog } from '../db/models'
+import { legProgram } from '../data'
 import { absTarget, buildAbsPlan, buildLegPlan, circuitNext, legTarget } from './structuredPlans'
 
 const isJump = (id: string) => catalogue.exercises.find((e) => e.id === id)?.category === 'plyo'
@@ -15,11 +16,25 @@ describe('séance jambes', () => {
     expect(plan.every((p) => !p.adjustmentNote && !p.skipped)).toBe(true)
   })
 
+  it('programme v2 : pliométrie de la séance A, reps par jambe et par côté', () => {
+    expect(legProgram.version).toBe(2)
+    const plan = buildLegPlan(w2A, w1A, undefined, isJump)
+    expect(plan.map((p) => p.exerciseId).slice(0, 6)).toEqual([
+      'echauffement-jambes',
+      'pogos',
+      'sauts-lateraux-ligne',
+      'drop-landing-unipodal',
+      'box-jump',
+      'skater-bound',
+    ])
+    expect(plan.find((p) => p.exerciseId === 'drop-landing-unipodal')).toMatchObject({ sets: 3, repRange: [8, 8], prescribedReps: '8/jambe' })
+  })
+
   it('genou orange : sauts divisés par deux, charges de la semaine précédente', () => {
     const plan = buildLegPlan(w2A, w1A, 'orange', isJump)
     const box = plan.find((p) => p.exerciseId === 'box-jump')!
     expect(box.sets).toBe(2) // 4 → 2
-    expect(plan.find((p) => p.exerciseId === 'drop-landing-30')!.sets).toBe(2) // 3 → 2 (arrondi au-dessus)
+    expect(plan.find((p) => p.exerciseId === 'pogos')!.sets).toBe(2) // 3 → 2 (arrondi au-dessus)
     const squat = plan.find((p) => p.exerciseId === 'squat-arriere')!
     expect(squat.targetLoadKg).toBe(72.5)
     expect(squat.adjustmentNote).toContain('72,5 kg au lieu de 75 kg')
@@ -28,23 +43,54 @@ describe('séance jambes', () => {
   it('genou rouge : sauts et réceptions sautés, le reste inchangé', () => {
     const plan = buildLegPlan(w2A, w1A, 'rouge', isJump)
     expect(plan.find((p) => p.exerciseId === 'box-jump')!.skipped).toBe(true)
-    expect(plan.find((p) => p.exerciseId === 'drop-landing-30')!.skipped).toBe(true)
+    expect(plan.find((p) => p.exerciseId === 'drop-landing-unipodal')!.skipped).toBe(true)
+    expect(plan.find((p) => p.exerciseId === 'pogos')!.skipped).toBe(true)
     const squat = plan.find((p) => p.exerciseId === 'squat-arriere')!
     expect(squat.skipped).toBeFalsy()
     expect(squat.targetLoadKg).toBe(75)
   })
 
-  it('cible : charge du programme, sinon celle de la dernière fois', () => {
+  describe('cible de charge', () => {
     const plan = buildLegPlan(w2A, w1A, undefined, isJump)
     const squat = plan.find((p) => p.exerciseId === 'squat-arriere')!
-    expect(legTarget(squat, [{ loadKg: 70, value: 6 }], 'kg').sets[0]).toEqual({ loadKg: 75, value: 6 })
-    const bulgare = plan.find((p) => p.exerciseId === 'fente-bulgare')!
-    const t = legTarget(bulgare, [{ loadKg: 16, value: 8 }], 'kg')
-    expect(t.sets[0]).toEqual({ loadKg: 16, value: 8 })
-    expect(t.reason).toBe('Charge de la dernière fois.')
-    expect(legTarget(bulgare, [], 'kg').reason).toBe('Première fois : choisis ta charge.')
-    const box = plan.find((p) => p.exerciseId === 'box-jump')!
-    expect(legTarget(box, [], 'none').sets[0]).toEqual({ loadKg: undefined, value: 3 })
+    const bulgare = plan.find((p) => p.exerciseId === 'fente-bulgare')! // 3 × 8, pas de charge cible
+    const sets = (loadKg: number, ...reps: number[]): SetLog[] =>
+      reps.map((r, i) => ({ sessionId: 1, planKey: 'k', exerciseId: 'x', setNumber: i + 1, loadKg, reps: r, targetReps: 8, done: true, at: '' }))
+
+    it('le programme fait foi quand il donne une charge, la dernière charge reste indiquée', () => {
+      const t = legTarget(squat, sets(74, 6, 6, 6, 6), 'kg', { incrementKg: 2.5 })
+      expect(t.sets[0]).toEqual({ loadKg: 75, value: 6 })
+      expect(t.reason).toBe('Charge cible du programme. Dernière fois : 74 kg.')
+    })
+
+    it('sans charge cible : +1 cran si toutes les séries étaient réussies', () => {
+      const t = legTarget(bulgare, sets(15, 8, 8, 9), 'kg', { incrementKg: 2 })
+      expect(t.sets[0]).toEqual({ loadKg: 17, value: 8 })
+      expect(t.increased).toBe(true)
+      expect(t.reason).toBe('Toutes les séries réussies la dernière fois (8, 8, 9 pour 8 visées) : +2 kg.')
+    })
+
+    it('le signale quand les séries étaient largement réussies', () => {
+      expect(legTarget(bulgare, sets(15, 10, 11, 10), 'kg', { incrementKg: 2 }).reason).toMatch(/^Séries largement réussies/)
+    })
+
+    it('même charge, non arrondie, si une série a manqué', () => {
+      const t = legTarget(bulgare, sets(15.5, 8, 7, 6), 'kg', { incrementKg: 2 })
+      expect(t.sets[0]).toEqual({ loadKg: 15.5, value: 8 })
+      expect(t.reason).toBe('Même charge que la dernière fois : toutes les séries n’étaient pas réussies (8, 7, 6 pour 8 visées).')
+    })
+
+    it('jamais d’augmentation en semaine allégée', () => {
+      const t = legTarget(bulgare, sets(15, 10, 10, 10), 'kg', { incrementKg: 2, deload: true })
+      expect(t.sets[0].loadKg).toBe(15)
+      expect(t.reason).toBe('Semaine allégée : même charge que la dernière fois.')
+    })
+
+    it('première fois, et exercice sans charge', () => {
+      expect(legTarget(bulgare, [], 'kg').reason).toBe('Première fois : choisis ta charge.')
+      const box = plan.find((p) => p.exerciseId === 'box-jump')!
+      expect(legTarget(box, [], 'none').sets[0]).toEqual({ loadKg: undefined, value: 5 })
+    })
   })
 })
 

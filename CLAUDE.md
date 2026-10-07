@@ -10,6 +10,7 @@ Appli personnelle pour assister mes séances de musculation à la salle, sur iPh
 - Après la semaine 16 : la trame haut du corps continue, un nouveau programme jambes (nouveau fichier dans `data/`) prendra le relais.
 - Genou droit fragile (tendinopathie rotulienne) : le suivi de la douleur fait partie du programme jambes. Leg extension interdit, ne jamais le proposer.
 - Les fichiers du dossier `data/` sont la source de vérité pour les programmes et le catalogue de départ. Ne pas les réécrire à la main dans le code : l'appli les importe.
+- **Lire `PRINCIPES.md` avant toute modification d'un fichier `data/programme-*.json`.**
 
 ## Stack technique
 
@@ -20,6 +21,7 @@ Appli personnelle pour assister mes séances de musculation à la salle, sur iPh
 - Déploiement statique gratuit sur GitHub Pages : `.github/workflows/deploy.yml` teste, construit et publie à chaque envoi sur `main`. Routeur par hash (`#/…`), chemins relatifs (`base: './'`).
 - Icônes générées par `node scripts/make-icons.mjs` (dans `public/`).
 - Mobile d'abord : gros boutons, saisie au pouce, mode sombre automatique, pas de clavier à ouvrir quand on peut l'éviter (boutons +/− pour charges et reps).
+- Charges : toute charge multiple de 0,5 kg. Boutons +/− au cran de l'exercice, ±0,5 et ±10, et saisie directe au clavier décimal (virgule acceptée, arrondi au 0,5). La charge saisie est enregistrée telle quelle, sans arrondi au cran.
 
 ## Fichiers de données
 
@@ -34,7 +36,7 @@ Notation du tempo : excentrique-pause bas-concentrique-pause haut, en secondes, 
 ## Modèle de données (à stocker dans IndexedDB)
 
 - `Exercise` : catalogue (celui de `data/` + ceux que je crée). Un exercice créé par moi a les mêmes champs, avec des valeurs par défaut raisonnables, et je choisis à quels slots il appartient.
-- `Session` : une séance réalisée. Date, type (`jambes`, `push`, `pull`, `abdos`, `libre`, `course`), position dans le programme si cadrée, notes, check genou si jambes. Un footing est une `Session` de type `course` sans détail.
+- `Session` : une séance réalisée. Date, type (`jambes`, `push`, `pull`, `abdos`, `libre`, `course`), position dans le programme si cadrée, notes, check genou si jambes. Un footing est une `Session` de type `course` sans détail. Une séance cadrée garde une copie de ce qui était prescrit à son démarrage (plan, et pour les jambes version du programme, nom de séance, bloc, semaine allégée) : une nouvelle version d'un programme ne change jamais une séance déjà faite.
 - `SetLog` : une série réalisée. Session, exercice, numéro de série, charge, reps réalisées (ou durée), repos réellement pris avant la série, cochée. Exercice unilatéral : une seule saisie par série, qui vaut pour chaque côté.
 - `Settings` : par programme (jambes, abdos) une date de début, indicative, et une éventuelle correction manuelle de position ; préférences.
 
@@ -78,6 +80,7 @@ L'historique est rattaché à l'exercice, pas au slot : si je fais « Rowing hal
 - L'appli affiche exactement ce qui est prévu pour la semaine et la séance : exercice, séries, reps, charge cible, tempo, repos, notes et consignes.
 - Même saisie série par série et même chrono que pour le haut du corps, avec le repos prérempli depuis le programme (modifiable).
 - La charge cible est préremplie mais je peux la changer. Garder la trace de la cible et du réalisé.
+- Exercice sans charge cible dans le programme : charge de la dernière fois, et +1 cran proposé si toutes les séries avaient atteint les reps visées (« largement réussies » si +2 reps ou plus), jamais en semaine allégée. La charge de la dernière fois reste toujours affichée.
 - Abdos en circuit : enchaîner les exercices d'un tour sans repos, puis le repos entre les tours. Afficher le tour en cours. La progression du bloc (+2 reps ou +5 s quand tous les tours sont propres) se propose comme pour la double progression.
 - Semaines allégées marquées comme telles.
 - Fin de séance jambes : check genou (douleur pendant, 0 à 10). Le lendemain : question sur le squat unipodal. Afficher le feu (vert / orange / rouge) et l'action associée selon `healthCheck.rules`. Si orange ou rouge, afficher l'ajustement dans la séance jambes suivante (sauts divisés par deux, charges de la semaine précédente, ou pas de sauts).

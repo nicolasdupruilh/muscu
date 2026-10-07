@@ -4,7 +4,6 @@ export function Stepper({
   value,
   onChange,
   step,
-  bigStep,
   min = 0,
   format = (v) => String(v),
 }: {
@@ -12,8 +11,6 @@ export function Stepper({
   value: number
   onChange: (v: number) => void
   step: number
-  /** Grand pas optionnel (boutons −10 / +10), pour aller vite à une charge éloignée. */
-  bigStep?: number
   min?: number
   format?: (v: number) => string
 }) {
@@ -31,16 +28,6 @@ export function Stepper({
           +
         </button>
       </div>
-      {bigStep && (
-        <div className="stepper-big">
-          <button type="button" className="chip" onClick={() => set(value - bigStep)}>
-            −{bigStep}
-          </button>
-          <button type="button" className="chip" onClick={() => set(value + bigStep)}>
-            +{bigStep}
-          </button>
-        </div>
-      )}
     </div>
   )
 }

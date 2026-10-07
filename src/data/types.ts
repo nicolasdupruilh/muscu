@@ -76,6 +76,9 @@ export interface LegProgramFile {
     note: string
   }
   volleyAdjustments: string
+  /** Version du programme, incrémentée à chaque modification (voir PRINCIPES.md). Absente = version 1. */
+  version?: number
+  changelog?: string[]
   weeks: LegWeek[]
 }
 

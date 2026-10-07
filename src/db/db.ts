@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import { catalogue } from '../data'
+import { catalogue, legPrescription } from '../data'
 import type { CatalogueExercise } from '../data/types'
 import { defaultSettings, type Exercise, type Session, type SetLog, type Settings } from './models'
 
@@ -21,7 +21,20 @@ export class AppDB extends Dexie {
       sessions: '++id, date, type, status, [type+date]',
       setLogs: '++id, sessionId, exerciseId, templateKey, [exerciseId+at]',
     })
+    // Programme jambes v2 : les séances jambes déjà en base reçoivent une copie du prescrit (version 1).
+    this.version(3).upgrade((tx) => tx.table('sessions').toCollection().modify(fillLegPrescription))
   }
+}
+
+/**
+ * Complète une séance jambes enregistrée avant que la copie du prescrit existe : elle date du programme v1.
+ * Son plan (exercices, séries, charges) était déjà enregistré ; seuls le nom de séance et le bloc manquaient,
+ * identiques en v1 et v2.
+ */
+export function fillLegPrescription(s: Session) {
+  if (s.type !== 'jambes' || !s.program || s.prescription) return
+  const p = legPrescription(s.program.index, 1)
+  if (p) s.prescription = p
 }
 
 export const db = new AppDB()

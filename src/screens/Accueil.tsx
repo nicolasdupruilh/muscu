@@ -1,11 +1,11 @@
 import { Link, useNavigate } from 'react-router'
 import { KneeScale } from '../components/KneeScale'
-import { legProgram, legWeek, programShapes } from '../data'
-import { db } from '../db/db'
+import { legProgram, legProgramVersion, legWeek, programShapes } from '../data'
+import { db, updateSettings } from '../db/db'
 import { logFooting } from '../db/queries'
 import { saveKneeNextDay, startLegSession } from '../db/sessions'
 import { kneeRule, lastKneeSession, needsNextDayCheck } from '../logic/knee'
-import { useActiveSession, useProgramStatus, useSessions } from '../hooks'
+import { useActiveSession, useProgramStatus, useSessions, useSettings } from '../hooks'
 import { formatDay, isSameWeek } from '../logic/dates'
 import { nextUpperType } from '../logic/upperBody'
 import { ProgramWeek } from '../components/ProgramWeek'
@@ -17,7 +17,8 @@ export function Accueil() {
   const legs = useProgramStatus('jambes')
   const abs = useProgramStatus('abdos')
   const navigate = useNavigate()
-  if (!sessions || !legs || !abs || active === undefined) return null
+  const settings = useSettings()
+  if (!sessions || !legs || !abs || active === undefined || !settings) return null
 
   const now = new Date()
   const footings = sessions.filter((s) => s.type === 'course' && isSameWeek(new Date(s.date), now))
@@ -26,6 +27,10 @@ export function Accueil() {
   const kneeSession = lastKneeSession(sessions)
   const kneeStatus = kneeRule(kneeSession?.kneeCheck, legProgram.healthCheck.rules)
   const askNextDay = needsNextDayCheck(kneeSession, now)
+  // Annonce d'une nouvelle version du programme, une seule fois, si j'ai déjà fait des séances avec l'ancienne.
+  const programUpdated =
+    legProgramVersion > (settings.seenLegProgramVersion ?? 1) &&
+    sessions.some((s) => s.type === 'jambes' && (s.prescription?.programVersion ?? 1) < legProgramVersion)
 
   return (
     <>
@@ -37,6 +42,21 @@ export function Accueil() {
           <strong>Séance en cours : {active.type === 'push' ? 'Push' : active.type === 'pull' ? 'Pull' : active.type}</strong>
           <span className="btn primary">Reprendre</span>
         </Link>
+      )}
+
+      {programUpdated && (
+        <section className="card update">
+          <h2>Programme jambes mis à jour (v{legProgramVersion})</h2>
+          {(legProgram.changelog ?? []).slice(-1).map((line) => (
+            <p key={line} className="small">
+              {line}
+            </p>
+          ))}
+          <p className="small muted">Tes séances déjà faites gardent ce qui était prescrit à l’époque.</p>
+          <button className="btn block" onClick={() => updateSettings((s) => ({ ...s, seenLegProgramVersion: legProgramVersion }))}>
+            Compris
+          </button>
+        </section>
       )}
 
       {askNextDay && kneeSession && (

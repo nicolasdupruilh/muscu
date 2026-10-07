@@ -4,7 +4,7 @@ import { unlockAudio } from '../alarm'
 import { ExercisePicker } from '../components/ExercisePicker'
 import { KneeScale } from '../components/KneeScale'
 import { defaultMode, doneValue, formatDone, LastTime, RestChooser, SetEditor, TargetLine, valueFields } from '../components/SetEntry'
-import { legProgram, legWeek, programShapes } from '../data'
+import { legPrescription, legProgram } from '../data'
 import type { Exercise, PlannedExercise, Session, SetLog } from '../db/models'
 import {
   abandonSession,
@@ -20,7 +20,6 @@ import { useActiveSession, useExercises, useProgramStatus, useSetLogs } from '..
 import { doubleProgression, type Target } from '../logic/doubleProgression'
 import { formatKg, formatLoad, formatRest } from '../logic/format'
 import { hasLoad, lastPerformance, toPastSets, type LastPerformance } from '../logic/history'
-import { positionOf } from '../logic/programs'
 import { describeReps, entryMode, parseReps, type EntryMode } from '../logic/reps'
 import { applyRestAdjustment, lastChosenRest, lastRestReference, restAdjustment } from '../logic/rest'
 import { legTarget } from '../logic/structuredPlans'
@@ -181,6 +180,7 @@ function SeanceEnCours({ session }: { session: Session }) {
             onRest={(restSec) => patch(p.key, { restSec })}
             onIgnoreRestAdjust={(ignore) => patch(p.key, { ignoreRestAdjust: ignore })}
             onValidated={(completed) => completed && setOpenKey(null)}
+            deload={session.prescription?.deload}
           />
         )
       })}
@@ -210,14 +210,14 @@ function SeanceEnCours({ session }: { session: Session }) {
 
 /** En-tête d'une séance jambes : semaine, bloc, semaine allégée, ajustement genou, règle de charge. */
 function LegHeader({ session }: { session: Session }) {
-  const pos = positionOf(programShapes.jambes, session.program?.index ?? 0)
-  const week = legWeek(pos.week)
+  // Ce qui était prescrit au démarrage de la séance, même si le programme a changé depuis.
+  const p = session.prescription ?? legPrescription(session.program?.index ?? 0)
   const rule = session.kneeAdjustment && legProgram.healthCheck.rules.find((r) => r.level === session.kneeAdjustment)
   return (
     <>
-      <h1>{week?.sessions[pos.label]?.name ?? 'Jambes'}</h1>
+      <h1>{p?.name ?? 'Jambes'}</h1>
       <p className="muted">
-        Semaine {pos.week} · {week?.blockName} {week?.deload && <span className="badge warn">Semaine allégée</span>}
+        Semaine {p?.week} · {p?.blockName} {p?.deload && <span className="badge warn">Semaine allégée</span>}
       </p>
       {rule && (
         <div className={`card knee ${rule.level}`}>
@@ -253,6 +253,7 @@ function ExerciseCard({
   onRest,
   onIgnoreRestAdjust,
   onValidated,
+  deload,
 }: {
   sessionId: number
   planned: PlannedExercise
@@ -274,6 +275,8 @@ function ExerciseCard({
   onRest: (sec: number) => void
   onIgnoreRestAdjust: (ignore: boolean) => void
   onValidated: (completed: boolean) => void
+  /** Semaine allégée du programme jambes : pas de proposition d'augmenter la charge. */
+  deload?: boolean
 }) {
   const [editing, setEditing] = useState<number | null>(null)
   const [showRest, setShowRest] = useState(false)
@@ -290,7 +293,7 @@ function ExerciseCard({
   let target: Target
   let adjustment: ReturnType<typeof restAdjustment> | undefined
   if (prescribed) {
-    target = legTarget(planned, pastSets, unit)
+    target = legTarget(planned, last?.sets ?? [], unit, { incrementKg: exercise.loadIncrementKg, deload })
   } else {
     const progression = doubleProgression({
       last: pastSets,

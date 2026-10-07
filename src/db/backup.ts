@@ -1,6 +1,6 @@
 // Sauvegarde manuelle : toutes les données dans un fichier JSON, et restauration depuis ce fichier.
 import { toLocalDate } from '../logic/dates'
-import { db, syncCatalogue, type AppDB } from './db'
+import { db, fillLegPrescription, syncCatalogue, type AppDB } from './db'
 import type { Exercise, Session, SetLog, Settings } from './models'
 
 export const BACKUP_APP = 'appli-sport'
@@ -73,6 +73,8 @@ export async function importBackup(b: Backup, database: AppDB = db): Promise<voi
   await database.transaction('rw', database.exercises, database.sessions, database.setLogs, database.settings, async () => {
     await Promise.all([database.exercises.clear(), database.sessions.clear(), database.setLogs.clear(), database.settings.clear()])
     await database.exercises.bulkAdd(b.data.exercises)
+    // Une sauvegarde plus ancienne n'a pas toujours la copie du prescrit.
+    b.data.sessions.forEach(fillLegPrescription)
     await database.sessions.bulkAdd(b.data.sessions)
     await database.setLogs.bulkAdd(b.data.setLogs)
     await database.settings.bulkAdd(b.data.settings)

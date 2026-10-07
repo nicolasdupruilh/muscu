@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { notificationsSupported, requestNotifications } from '../alarm'
 import { backupFileName, backupStats, checkBackup, exportBackup, importBackup, type Backup } from '../db/backup'
-import { catalogue, programShapes } from '../data'
+import { catalogue, legProgram, legProgramVersion, programShapes } from '../data'
 import { updateSettings } from '../db/db'
 import type { ProgramId, ProgramSettings } from '../db/models'
 import { useExercises, useProgramStatus, useSettings } from '../hooks'
@@ -38,6 +38,17 @@ function ProgramSettingsCard({ id, settings }: { id: ProgramId; settings: Progra
         />
       </label>
       {settings.startDate && <p className="small muted">Commencé le {formatLocalDate(settings.startDate)}</p>}
+      {id === 'jambes' && (
+        <details className="small muted">
+          <summary>Programme version {legProgramVersion}</summary>
+          <ul>
+            {(legProgram.changelog ?? []).map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          <p>Les séances déjà faites gardent ce qui était prescrit le jour où tu les as faites.</p>
+        </details>
+      )}
 
       <p>
         Prochaine séance :{' '}

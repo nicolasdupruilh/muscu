@@ -1,4 +1,4 @@
-// Lecture des reps prescrites dans les programmes : 6, "8/côté", "6-8", "20 s", "25 s/côté", "10 min", "15 m".
+// Lecture des reps prescrites dans les programmes : 6, "8/côté", "8/jambe", "6-8", "20 s", "25 s/côté", "10 min", "15 m".
 
 import type { LoadUnit, Reps } from '../data/types'
 
@@ -9,6 +9,8 @@ export interface ParsedReps {
   /** Haut de la fourchette pour « 6-8 ». */
   max?: number
   perSide: boolean
+  /** Mot employé pour « par côté » : « côté » ou « jambe ». */
+  side?: 'côté' | 'jambe'
   /** Texte d'origine. */
   text: string
 }
@@ -16,20 +18,22 @@ export interface ParsedReps {
 export function parseReps(reps: Reps): ParsedReps {
   if (typeof reps === 'number') return { kind: 'reps', value: reps, perSide: false, text: String(reps) }
   const text = reps.trim()
-  const perSide = /\/\s*c[ôo]t[ée]/i.test(text)
-  const core = text.replace(/\/\s*c[ôo]t[ée]/i, '').trim()
+  const sideMatch = text.match(/\/\s*(c[ôo]t[ée]|jambe)/i)
+  const side = sideMatch ? (sideMatch[1].toLowerCase() === 'jambe' ? 'jambe' : 'côté') : undefined
+  const core = (sideMatch ? text.replace(sideMatch[0], '') : text).trim()
+  const parsed = (p: Pick<ParsedReps, 'kind' | 'value' | 'max'>): ParsedReps => ({ ...p, perSide: !!side, ...(side && { side }), text })
   let m: RegExpMatchArray | null
-  if ((m = core.match(/^(\d+)\s*-\s*(\d+)$/))) return { kind: 'reps', value: +m[1], max: +m[2], perSide, text }
-  if ((m = core.match(/^(\d+)$/))) return { kind: 'reps', value: +m[1], perSide, text }
-  if ((m = core.match(/^(\d+)\s*s$/))) return { kind: 'time', value: +m[1], perSide, text }
-  if ((m = core.match(/^(\d+)\s*min$/))) return { kind: 'time', value: +m[1] * 60, perSide, text }
-  if ((m = core.match(/^(\d+)\s*m$/))) return { kind: 'distance', value: +m[1], perSide, text }
-  return { kind: 'text', perSide, text }
+  if ((m = core.match(/^(\d+)\s*-\s*(\d+)$/))) return parsed({ kind: 'reps', value: +m[1], max: +m[2] })
+  if ((m = core.match(/^(\d+)$/))) return parsed({ kind: 'reps', value: +m[1] })
+  if ((m = core.match(/^(\d+)\s*s$/))) return parsed({ kind: 'time', value: +m[1] })
+  if ((m = core.match(/^(\d+)\s*min$/))) return parsed({ kind: 'time', value: +m[1] * 60 })
+  if ((m = core.match(/^(\d+)\s*m$/))) return parsed({ kind: 'distance', value: +m[1] })
+  return parsed({ kind: 'text' })
 }
 
-/** Prescription en clair : « 8 reps par côté », « 6 à 8 reps », « 25 s par côté », « 10 min », « 15 m ». */
+/** Prescription en clair : « 8 reps par côté », « 8 reps par jambe », « 6 à 8 reps », « 25 s par côté », « 10 min », « 15 m ». */
 export function describeReps(p: ParsedReps): string {
-  const side = p.perSide ? ' par côté' : ''
+  const side = p.perSide ? ` par ${p.side ?? 'côté'}` : ''
   if (p.kind === 'reps') return p.max !== undefined ? `${p.value} à ${p.max} reps${side}` : `${p.value} rep${p.value! > 1 ? 's' : ''}${side}`
   if (p.kind === 'time') return p.value! >= 120 && p.value! % 60 === 0 ? `${p.value! / 60} min${side}` : `${p.value} s${side}`
   if (p.kind === 'distance') return `${p.value} m${side}`

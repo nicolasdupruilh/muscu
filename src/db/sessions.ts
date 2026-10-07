@@ -1,5 +1,5 @@
 // Actions sur les séances en cours : démarrer, enregistrer une série, modifier le plan, terminer.
-import { absBlockForWeek, legProgram, legWeek, programShapes, upperBody } from '../data'
+import { absBlockForWeek, legPrescription, legProgram, legWeek, programShapes, upperBody } from '../data'
 import type { LoadUnit } from '../data/types'
 import { kneeRule, lastKneeSession } from '../logic/knee'
 import { positionOf } from '../logic/programs'
@@ -47,6 +47,7 @@ export async function startLegSession(index: number, database: AppDB = db): Prom
       type: 'jambes',
       status: 'en-cours',
       program: { programId: 'jambes', index },
+      prescription: legPrescription(index),
       plan,
       kneeAdjustment,
     })) as number

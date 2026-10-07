@@ -11,10 +11,13 @@ describe('reps prescrites', () => {
     expect(parseReps('10 min')).toMatchObject({ kind: 'time', value: 600 })
     expect(parseReps('15 m')).toMatchObject({ kind: 'distance', value: 15 })
     expect(parseReps('max')).toMatchObject({ kind: 'text', text: 'max' })
+    expect(parseReps('8/jambe')).toMatchObject({ kind: 'reps', value: 8, perSide: true, side: 'jambe' })
+    expect(parseReps('25 s/côté')).toMatchObject({ side: 'côté' })
   })
 
   it("s'affichent en clair", () => {
     expect(describeReps(parseReps('8/côté'))).toBe('8 reps par côté')
+    expect(describeReps(parseReps('5/jambe'))).toBe('5 reps par jambe')
     expect(describeReps(parseReps('6-10'))).toBe('6 à 10 reps')
     expect(describeReps(parseReps('25 s/côté'))).toBe('25 s par côté')
     expect(describeReps(parseReps('10 min'))).toBe('10 min')

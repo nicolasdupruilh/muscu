@@ -63,6 +63,16 @@ export interface RestTimer {
   endedAt?: string
 }
 
+export interface LegPrescription {
+  programVersion: number
+  /** « Jambes A : force et sauts ». */
+  name: string
+  week: number
+  label: string
+  blockName: string
+  deload: boolean
+}
+
 export interface Session {
   id?: number
   /** Début de la séance, ISO. */
@@ -77,6 +87,8 @@ export interface Session {
   /** Exercices prévus, dans l'ordre (séances haut du corps et libres). */
   plan?: PlannedExercise[]
   rest?: RestTimer
+  /** Séance jambes : copie de ce qui était prescrit au démarrage (le fichier du programme peut changer ensuite). */
+  prescription?: LegPrescription
   /** Séance jambes ajustée à cause du dernier check genou. */
   kneeAdjustment?: 'orange' | 'rouge'
   notes?: string
@@ -120,6 +132,8 @@ export interface Settings {
   programs: Record<ProgramId, ProgramSettings>
   /** Date du dernier export JSON, pour rappeler de sauvegarder. */
   lastBackupAt?: string
+  /** Dernière version du programme jambes dont j'ai vu l'annonce sur l'accueil. */
+  seenLegProgramVersion?: number
 }
 
 export const defaultSettings = (): Settings => ({

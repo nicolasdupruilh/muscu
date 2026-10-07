@@ -2,7 +2,7 @@
 
 import type { AbsBlock, LegSession, LoadUnit } from '../data/types'
 import type { PlannedExercise, SetLog } from '../db/models'
-import type { PastSet, Target } from './doubleProgression'
+import type { Target } from './doubleProgression'
 import { formatKg } from './format'
 import type { KneeLevel } from './knee'
 import { parseReps } from './reps'
@@ -56,18 +56,49 @@ export function buildLegPlan(
 
 const hasLoad = (unit: LoadUnit) => unit === 'kg' || unit === 'bodyweight+kg'
 
-/** Cible d'un exercice jambes : reps prescrites, charge du programme, sinon celle de la dernière fois. */
-export function legTarget(planned: PlannedExercise, last: PastSet[], unit: LoadUnit): Target {
+/**
+ * Cible d'un exercice jambes : reps prescrites, et pour la charge :
+ * - la charge cible du programme quand il en donne une (le programme fait foi) ;
+ * - sinon la charge de la dernière fois, avec +1 cran si toutes les séries avaient atteint les reps visées
+ *   (jamais en semaine allégée). Proposition affichée et modifiable, comme la double progression.
+ * `last` : séries de la dernière séance où l'exercice a été fait.
+ */
+export function legTarget(
+  planned: PlannedExercise,
+  last: SetLog[],
+  unit: LoadUnit,
+  { incrementKg, deload = false }: { incrementKg?: number; deload?: boolean } = {},
+): Target {
   const value = planned.repRange[0]
-  const withLoad = hasLoad(unit)
-  const sets = Array.from({ length: Math.max(planned.sets, 1) }, (_, i) => {
-    const ref = last[Math.min(i, last.length - 1)]
-    const loadKg = !withLoad ? undefined : planned.targetLoadKg ?? ref?.loadKg ?? (unit === 'bodyweight+kg' ? 0 : undefined)
-    return { loadKg, value }
+  const count = Math.max(planned.sets, 1)
+  const make = (loadOf: (i: number) => number | undefined, reason: string, increased = false): Target => ({
+    sets: Array.from({ length: count }, (_, i) => ({ loadKg: loadOf(i), value })),
+    reason,
+    increased,
   })
-  const reason =
-    !withLoad ? '' : planned.targetLoadKg !== undefined ? 'Charge cible du programme.' : last.length ? 'Charge de la dernière fois.' : 'Première fois : choisis ta charge.'
-  return { sets, reason, increased: false }
+  if (!hasLoad(unit)) return make(() => undefined, '')
+
+  const lastLoad = (i: number) => last[Math.min(i, last.length - 1)]?.loadKg ?? (unit === 'bodyweight+kg' ? 0 : undefined)
+  const maxLast = last.length ? Math.max(...last.map((s) => s.loadKg ?? 0)) : undefined
+
+  if (planned.targetLoadKg !== undefined) {
+    const before = maxLast !== undefined && maxLast !== planned.targetLoadKg ? ` Dernière fois : ${formatKg(maxLast)}.` : ''
+    return make(() => planned.targetLoadKg, `Charge cible du programme.${before}`)
+  }
+  if (last.length === 0) return make(() => (unit === 'bodyweight+kg' ? 0 : undefined), 'Première fois : choisis ta charge.')
+  if (deload) return make(lastLoad, 'Semaine allégée : même charge que la dernière fois.')
+
+  // Séries de la dernière fois comparées aux reps qui étaient visées ce jour-là.
+  const withReps = last.filter((s) => s.reps !== undefined)
+  if (withReps.length === 0) return make(lastLoad, 'Charge de la dernière fois.')
+  const goal = (s: SetLog) => s.targetReps ?? value
+  const margins = withReps.map((s) => s.reps! - goal(s))
+  const detail = `${withReps.map((s) => s.reps).join(', ')} pour ${[...new Set(withReps.map(goal))].join('/')} visées`
+  if (margins.every((m) => m >= 0) && incrementKg) {
+    const how = margins.every((m) => m >= 2) ? 'Séries largement réussies' : 'Toutes les séries réussies'
+    return make((i) => (lastLoad(i) ?? 0) + incrementKg, `${how} la dernière fois (${detail}) : +${formatKg(incrementKg)}.`, true)
+  }
+  return make(lastLoad, `Même charge que la dernière fois : toutes les séries n’étaient pas réussies (${detail}).`)
 }
 
 /** Plan d'une séance abdos : les exercices du bloc, un « tour » = une série de chaque. */

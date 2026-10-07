@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, NavLink, useNavigate, useParams } from 'react-router'
 import { LineChart } from '../components/LineChart'
 import { formatDone } from '../components/SetEntry'
-import { legProgram, legWeek, programShapes } from '../data'
+import { legPrescription, legProgram, programShapes } from '../data'
 import type { Exercise, Session, SetLog } from '../db/models'
 import { abandonSession } from '../db/sessions'
 import { useExercises, useSessions, useSetLogs } from '../hooks'
@@ -43,7 +43,7 @@ function HistoryTabs() {
 /** Titre d'une séance : « Jambes A · S3 », « Abdos · S2 », « Push ». */
 function sessionTitle(s: Session): string {
   if (s.type === 'jambes' && s.program) {
-    const p = positionOf(programShapes.jambes, s.program.index)
+    const p = s.prescription ?? positionOf(programShapes.jambes, s.program.index)
     return `Jambes ${p.label} · semaine ${p.week}`
   }
   if (s.type === 'abdos' && s.program) return `Abdos · semaine ${positionOf(programShapes.abdos, s.program.index).week}`
@@ -111,18 +111,17 @@ export function SeanceDetail() {
   const keys = (s.plan ?? []).map((p) => p.key).filter((k) => mine.some((l) => l.planKey === k))
   for (const l of mine) if (!keys.includes(l.planKey)) keys.push(l.planKey)
   const knee = kneeRule(s.kneeCheck, legProgram.healthCheck.rules)
-  const legName = s.type === 'jambes' && s.program && (() => {
-    const p = positionOf(programShapes.jambes, s.program!.index)
-    return legWeek(p.week)?.sessions[p.label]?.name
-  })()
+  // Nom de la séance tel qu'il était prescrit le jour où elle a été faite.
+  const legP = s.type === 'jambes' && s.program ? s.prescription ?? legPrescription(s.program.index) : undefined
 
   return (
     <>
       <p>
         <Link to="/historique">‹ Historique</Link>
       </p>
-      <h1>{legName || sessionTitle(s)}</h1>
+      <h1>{legP?.name || sessionTitle(s)}</h1>
       <p className="muted">
+        {legP && `Semaine ${legP.week} · ${legP.blockName}${legP.deload ? ' (allégée)' : ''} · programme v${legP.programVersion} · `}
         {formatDay(new Date(s.date))}
         {sum.minutes ? ` · ${sum.minutes} min` : ''}
         {s.type !== 'course' && ` · ${plural(sum.sets, 'série')}`}

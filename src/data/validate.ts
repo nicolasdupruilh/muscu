@@ -79,6 +79,8 @@ export function validateData(raw: RawData): string[] {
     })
     const hc = legs.healthCheck
     if (!isObj(hc) || !Array.isArray(hc.rules) || hc.rules.length === 0) err('programme-jambes.json : healthCheck.rules absent')
+    if (legs.version !== undefined && !(Number.isInteger(legs.version) && (legs.version as number) >= 1)) err('programme-jambes.json : version doit être un entier à partir de 1')
+    if (legs.changelog !== undefined && !(Array.isArray(legs.changelog) && legs.changelog.every(isStr))) err('programme-jambes.json : changelog doit être une liste de textes')
   }
 
   // Programme abdos

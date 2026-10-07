@@ -7,6 +7,7 @@ import { formatLoad, formatRest, formatSet, formatValue } from '../logic/format'
 import { hasLoad, setValue } from '../logic/history'
 import { REST_PRESETS, REST_STEP } from '../logic/rest'
 import type { EntryMode } from '../logic/reps'
+import { LoadStepper } from './LoadStepper'
 import { Stepper } from './Stepper'
 
 const dayFormat = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
@@ -119,11 +120,10 @@ export function SetEditor({
     <div className="set-editor">
       <div className="small muted">{title}</div>
       {hasLoad(unit) && (
-        <Stepper
+        <LoadStepper
           label={unit === 'bodyweight+kg' ? 'Lest' : 'Charge'}
           value={load}
           step={exercise.loadIncrementKg ?? 2.5}
-          bigStep={10}
           onChange={setLoad}
           format={(v) => (unit === 'bodyweight+kg' && v === 0 ? 'PDC' : `${v.toLocaleString('fr-FR')} kg`)}
         />

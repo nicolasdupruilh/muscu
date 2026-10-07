@@ -1,5 +1,5 @@
 {
- "version": 1,
+ "version": 2,
  "note": "Catalogue de départ. L'utilisateur peut ajouter ses propres exercices depuis l'appli.",
  "exercises": [
   {
@@ -790,6 +790,94 @@
    "slots": [],
    "cues": "",
    "loadIncrementKg": 1
+  },
+  {
+   "id": "pogos",
+   "name": "Pogos (contacts rapides)",
+   "category": "plyo",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 45,
+   "slots": [],
+   "cues": "Genoux presque tendus, rebond sur l'avant du pied, contact au sol le plus court possible"
+  },
+  {
+   "id": "sauts-lateraux-ligne",
+   "name": "Sauts latéraux rapides par-dessus une ligne",
+   "category": "plyo",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 60,
+   "slots": [],
+   "cues": "Pieds joints, contacts rapides"
+  },
+  {
+   "id": "drop-landing-unipodal",
+   "name": "Réception unipodale depuis un step (20 à 30 cm)",
+   "category": "plyo",
+   "equipment": "step",
+   "loadUnit": "none",
+   "unilateral": true,
+   "defaultRestSec": 60,
+   "slots": [],
+   "cues": "Tiens 2 s, genou dans l'axe du pied, sans bruit"
+  },
+  {
+   "id": "skater-bound",
+   "name": "Skater bound avec stabilisation",
+   "category": "plyo",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": true,
+   "defaultRestSec": 60,
+   "slots": [],
+   "cues": "Saut latéral sur une jambe, tiens 1 s à la réception"
+  },
+  {
+   "id": "hops-multidirectionnels",
+   "name": "Hops multidirectionnels (avant, arrière, côtés)",
+   "category": "plyo",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 60,
+   "slots": [],
+   "cues": "Pieds joints, changements de direction, contacts rapides"
+  },
+  {
+   "id": "bond-unipodal",
+   "name": "Bond unipodal avec réception",
+   "category": "plyo",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": true,
+   "defaultRestSec": 90,
+   "slots": [],
+   "cues": "Saut vers l'avant sur une jambe, réception stable 2 s"
+  },
+  {
+   "id": "hops-lateraux-unipodaux",
+   "name": "Hops latéraux unipodaux",
+   "category": "plyo",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": true,
+   "defaultRestSec": 60,
+   "slots": [],
+   "cues": "Sur une jambe, contacts rapides, genou dans l'axe"
+  },
+  {
+   "id": "bonds-unipodaux-enchaines",
+   "name": "Bonds unipodaux enchaînés",
+   "category": "plyo",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": true,
+   "defaultRestSec": 120,
+   "slots": [],
+   "cues": "Enchaîne sans pause, contacts courts"
   }
  ]
 }

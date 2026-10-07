@@ -7,7 +7,8 @@ import planningJson from '../../data/planning.json'
 import type { AbsProgramFile, ExercisesFile, LegProgramFile, PlanningFile, UpperBodyFile } from './types'
 import { validateData } from './validate'
 import type { ProgramShape } from '../logic/programs'
-import type { ProgramId } from '../db/models'
+import type { LegPrescription, ProgramId } from '../db/models'
+import { positionOf } from '../logic/programs'
 
 export const dataErrors = validateData({
   exercises: exercisesJson,
@@ -43,3 +44,15 @@ export const slotOptions: { slot: string; label: string }[] = (() => {
   }
   return [...seen].map(([slot, label]) => ({ slot, label }))
 })()
+
+/** Version du programme jambes (1 si le fichier n'en indique pas). */
+export const legProgramVersion = legProgram.version ?? 1
+
+/** Copie de ce qui est prescrit à cette position du programme jambes, à enregistrer dans la séance. */
+export function legPrescription(index: number, programVersion = legProgramVersion): LegPrescription | undefined {
+  const pos = positionOf(programShapes.jambes, index)
+  const week = legWeek(pos.week)
+  const session = week?.sessions[pos.label]
+  if (!week || !session) return undefined
+  return { programVersion, name: session.name, week: pos.week, label: pos.label, blockName: week.blockName, deload: week.deload }
+}
