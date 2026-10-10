@@ -12,6 +12,7 @@ import { kneeRule } from '../logic/knee'
 import { positionOf } from '../logic/programs'
 import { entryMode, parseReps, type EntryMode } from '../logic/reps'
 import { exerciseHistory, kneeHistory, metricsFor, sessionSummary } from '../logic/stats'
+import { formatDuration, realDurationMin } from '../logic/variants'
 
 export const typeLabels: Record<string, string> = {
   jambes: 'Jambes',
@@ -50,6 +51,16 @@ function sessionTitle(s: Session): string {
   return typeLabels[s.type] ?? s.type
 }
 
+/** « · 1 h 12 (prévu 1 h 05, +11 %) » pour une séance faite avec une variante, sinon la durée seule. */
+function durationLabel(s: Session, sessions: Session[], fallbackMin?: number): string {
+  if (s.type === 'course') return ''
+  const real = s.variant ? realDurationMin(s, sessions) : fallbackMin
+  if (!real) return ''
+  if (!s.variant) return ` · ${formatDuration(real)}`
+  const pct = Math.round((real / s.variant.estimatedMin - 1) * 100)
+  return ` · ${formatDuration(real)} (variante ${s.variant.label}, prévu ${formatDuration(s.variant.estimatedMin)}, ${pct >= 0 ? '+' : ''}${pct} %)`
+}
+
 export function Historique() {
   const sessions = useSessions()
   const logs = useSetLogs()
@@ -75,7 +86,7 @@ export function Historique() {
                     <span className="small muted">
                       {formatDay(new Date(s.date))}
                       {s.type !== 'course' && ` · ${plural(sum.exercises, 'exercice')} · ${plural(sum.sets, 'série')}`}
-                      {sum.minutes && s.type !== 'course' ? ` · ${sum.minutes} min` : ''}
+                      {durationLabel(s, sessions, sum.minutes)}
                     </span>
                   </span>
                   {knee && <span className={`badge knee-badge ${knee.level}`}>Genou {knee.level}</span>}
@@ -123,7 +134,7 @@ export function SeanceDetail() {
       <p className="muted">
         {legP && `Semaine ${legP.week} · ${legP.blockName}${legP.deload ? ' (allégée)' : ''} · programme v${legP.programVersion} · `}
         {formatDay(new Date(s.date))}
-        {sum.minutes ? ` · ${sum.minutes} min` : ''}
+        {durationLabel(s, sessions, sum.minutes)}
         {s.type !== 'course' && ` · ${plural(sum.sets, 'série')}`}
       </p>
 
@@ -150,6 +161,9 @@ export function SeanceDetail() {
                 <strong>{ex?.name ?? sets[0].exerciseId}</strong>
               </Link>
               {planned?.label && <span className="small muted">{planned.label}</span>}
+              {planned?.replaced && (
+                <span className="small muted">à la place de {exercises.get(planned.replaced.exerciseId)?.name ?? planned.replaced.exerciseId}</span>
+              )}
             </div>
             <ul className="list">
               {sets.map((l) => {

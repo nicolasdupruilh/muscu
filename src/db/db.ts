@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import { catalogue, legPrescription } from '../data'
+import { placeKey } from '../logic/upperPlan'
 import type { CatalogueExercise } from '../data/types'
 import { defaultSettings, type Exercise, type Session, type SetLog, type Settings } from './models'
 
@@ -23,7 +24,34 @@ export class AppDB extends Dexie {
     })
     // Programme jambes v2 : les séances jambes déjà en base reçoivent une copie du prescrit (version 1).
     this.version(3).upgrade((tx) => tx.table('sessions').toCollection().modify(fillLegPrescription))
+    // Trame haut du corps v2 (variantes) : les places « push:5 » deviennent « push:triceps:2 ».
+    this.version(4).upgrade(async (tx) => {
+      await tx.table('setLogs').toCollection().modify((l: SetLog) => {
+        if (l.templateKey) l.templateKey = upperPlaceKey(l.templateKey)
+      })
+      await tx.table('sessions').toCollection().modify((s: Session) => {
+        s.plan?.forEach((p) => {
+          if (p.templateKey) p.templateKey = upperPlaceKey(p.templateKey)
+        })
+      })
+    })
   }
+}
+
+/** Ordre des slots de la trame haut du corps v1 (une seule variante), pour convertir ses anciennes places. */
+const UPPER_V1_SLOTS: Record<string, string[]> = {
+  push: ['push-horizontal', 'push-incline', 'push-vertical', 'pec-isolation', 'lateral-raise', 'triceps', 'triceps'],
+  pull: ['skill', 'pull-vertical-heavy', 'pull-vertical', 'row', 'biceps', 'biceps-2', 'rear-delt'],
+}
+
+/** « push:6 » (6e position de la trame v1) → « push:triceps:2 » (2e place triceps). Les autres clés restent telles quelles. */
+export function upperPlaceKey(key: string): string {
+  const m = key.match(/^(push|pull):(\d+)$/)
+  const slots = m && UPPER_V1_SLOTS[m[1]]
+  if (!m || !slots || +m[2] >= slots.length) return key
+  const slot = slots[+m[2]]
+  const occurrence = slots.slice(0, +m[2] + 1).filter((x) => x === slot).length
+  return placeKey(m[1], slot, occurrence)
 }
 
 /**

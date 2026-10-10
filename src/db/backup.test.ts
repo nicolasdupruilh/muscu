@@ -21,7 +21,7 @@ describe('sauvegarde', () => {
     const a = await freshDb()
     await createExercise({ name: 'Curl araignée', loadUnit: 'kg', loadIncrementKg: 1, unilateral: false, defaultRestSec: 60, slots: ['biceps'] }, a)
     await a.exercises.update('dc-halteres', { name: 'DC haltères', userModified: true })
-    const id = await startUpperSession('push', a)
+    const id = await startUpperSession('push', undefined, a)
     await logSet({ sessionId: id, planKey: 'push:0', exerciseId: 'dc-halteres', setNumber: 1, loadKg: 30, reps: 10 }, undefined, a)
     await finishSession(id, a)
     await updateSettings((s) => ({ ...s, programs: { ...s.programs, jambes: { startDate: '2026-10-05' } } }), a)
@@ -31,7 +31,7 @@ describe('sauvegarde', () => {
     expect(backupStats(backup)).toEqual({ sessions: 1, sets: 1, userExercises: 1 })
 
     const b = await freshDb()
-    await startUpperSession('pull', b) // données qui doivent disparaître
+    await startUpperSession('pull', undefined, b) // données qui doivent disparaître
     await importBackup(backup, b)
     expect(await b.sessions.count()).toBe(1)
     expect((await b.sessions.toArray())[0].type).toBe('push')

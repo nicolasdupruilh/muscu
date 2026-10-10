@@ -1,5 +1,5 @@
 {
- "version": 2,
+ "version": 3,
  "note": "Catalogue de départ. L'utilisateur peut ajouter ses propres exercices depuis l'appli.",
  "exercises": [
   {
@@ -242,7 +242,10 @@
    "unilateral": true,
    "defaultRestSec": 60,
    "slots": [],
-   "cues": ""
+   "cues": "",
+   "alternatives": [
+    "adducteurs-machine"
+   ]
   },
   {
    "id": "traineau",
@@ -878,6 +881,37 @@
    "defaultRestSec": 120,
    "slots": [],
    "cues": "Enchaîne sans pause, contacts courts"
+  },
+  {
+   "id": "epaule",
+   "name": "Épaulé (clean) depuis le sol",
+   "category": "olympic",
+   "equipment": "barre",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 150,
+   "slots": [],
+   "cues": "Réception en squat ou en power selon les sensations du genou",
+   "loadIncrementKg": 2.5,
+   "alternatives": [
+    "power-clean",
+    "hang-power-clean"
+   ]
+  },
+  {
+   "id": "adducteurs-machine",
+   "name": "Adducteurs à la machine",
+   "category": "strength",
+   "equipment": "machine",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 75,
+   "slots": [],
+   "cues": "",
+   "loadIncrementKg": 2.5,
+   "alternatives": [
+    "copenhague"
+   ]
   }
  ]
 }

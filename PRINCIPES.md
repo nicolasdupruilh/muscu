@@ -8,6 +8,8 @@
 - Antécédent de tendinopathie rotulienne au genou droit, avec une rechute à la reprise du volley. Douleur actuelle 0/10, fait encore ses exercices de kiné.
 - A déjà fait en rééducation des réceptions unipodales par séries de 10, de la pliométrie à contacts rapides sur step et des changements de direction. Le niveau de départ de la pliométrie en tient compte.
 - Perfs de départ : squat 80 kg 3×5, RDL 80 kg 3×10, leg curl 55 kg 3×10.
+- A fait de l'haltérophilie au lycée : maîtrise l'épaulé complet depuis le sol, qui remplace donc la progression hang high pull → hang power clean.
+- Disponibilité variable : les séances complètes (environ 2 h) ne sont possibles que moins d'une fois sur deux.
 - Programme jambes sur 16 semaines, jusqu'à fin janvier 2027.
 
 ## Programme jambes
@@ -22,6 +24,14 @@ Objectif : améliorer la détente (attaque et contre) en gardant le tendon rotul
 - **Check genou** : douleur pendant la séance et le lendemain (squat unipodal), règles vert/orange/rouge dans `healthCheck`. Ces règles ne doivent pas être assouplies.
 - **Volley** : quand les entraînements reprennent, la pliométrie baisse (voir `volleyAdjustments`), pas de séance jambes la veille d'un match.
 
+## Variantes par durée
+
+Chaque séance existe en plusieurs variantes (`variants`), de la plus courte à la complète. Règles pour les variantes courtes :
+- Garder en priorité : les sauts clés du bloc (un de réception ou de contacts rapides, un saut principal), l'exercice principal (squat, épaulé, développé, tractions), le travail tendon (reverse nordic, Spanish squat), et les abdos en haut du corps.
+- Réduire d'abord le nombre de séries des accessoires, puis utiliser des supersets, puis retirer les exercices redondants (ex. trap bar quand l'épaulé et le RDL sont déjà là). Le traîneau n'existe que dans les séances complètes.
+- Ne jamais augmenter l'intensité d'un exercice pour compenser le temps perdu.
+- `estimatedMin` est une estimation calibrée sur un retour réel (séance B complète sans traîneau ≈ 2 h). Recalibrer si les durées réelles s'en écartent.
+
 ## Haut du corps
 
 - Trame fixe (push, pull) avec des slots ; l'exercice de chaque slot est libre.
@@ -29,7 +39,7 @@ Objectif : améliorer la détente (attaque et contre) en gardant le tendon rotul
 
 ## Abdos
 
-- Circuit d'environ 10 min en fin de push et de pull. Quatre fonctions à garder dans chaque bloc : anti-extension, bas du ventre, anti-rotation ou latéral, puissance en rotation (frappe au volley).
+- Circuit d'environ 8 à 12 min (2 tours en variante 1 h, 3 en complète) en fin de push et de pull. Quatre fonctions à garder dans chaque bloc : anti-extension, bas du ventre, anti-rotation ou latéral, puissance en rotation (frappe au volley).
 
 ## Modifier un programme
 

@@ -17,6 +17,8 @@ export function ExercisePicker({
   logs,
   currentId,
   defaultRestSec,
+  suggested = [],
+  original,
   onPick,
   onClose,
 }: {
@@ -26,6 +28,10 @@ export function ExercisePicker({
   logs: SetLog[]
   currentId?: string
   defaultRestSec: number
+  /** Remplacement en séance cadrée : alternatives prévues, affichées en tête. */
+  suggested?: string[]
+  /** Remplacement : exercice prévu par le programme, pour pouvoir y revenir. */
+  original?: string
   onPick: (id: string) => void
   onClose: () => void
 }) {
@@ -76,6 +82,38 @@ export function ExercisePicker({
           </button>
           {exercises.length > 8 && (
             <input className="search" type="search" placeholder="Chercher…" value={query} onChange={(e) => setQuery(e.target.value)} />
+          )}
+          {(suggested.length > 0 || (original && original !== currentId)) && (
+            <>
+              <h3 className="picker-section">Alternatives prévues</h3>
+              <ul className="list card">
+                {original && original !== currentId && (
+                  <li>
+                    <button className="pick" onClick={() => onPick(original)}>
+                      <strong>{exercises.find((e) => e.id === original)?.name ?? original}</strong>
+                      <span className="small muted">Exercice prévu par le programme</span>
+                    </button>
+                  </li>
+                )}
+                {suggested
+                  .filter((id) => id !== currentId && id !== original)
+                  .map((id) => {
+                    const e = exercises.find((x) => x.id === id)
+                    const last = lastPerformance(logs, id)?.at
+                    return (
+                      e && (
+                        <li key={id}>
+                          <button className="pick" onClick={() => onPick(id)}>
+                            <strong>{e.name}</strong>
+                            <span className="small muted">{last ? `Fait le ${shortDate.format(new Date(last))}` : 'Jamais fait'}</span>
+                          </button>
+                        </li>
+                      )
+                    )
+                  })}
+              </ul>
+              <h3 className="picker-section">Autre exercice</h3>
+            </>
           )}
           <ul className="list card">
             {list.map(({ e, last }) => (

@@ -11,7 +11,9 @@ import {
   deleteSet,
   finishLegSession,
   finishSession,
+  alternativesFor,
   logSet,
+  replaceExercise,
   startAbsSession,
   updatePlan,
   updateSet,
@@ -23,6 +25,8 @@ import { hasLoad, lastPerformance, toPastSets, type LastPerformance } from '../l
 import { describeReps, entryMode, parseReps, type EntryMode } from '../logic/reps'
 import { applyRestAdjustment, lastChosenRest, lastRestReference, restAdjustment } from '../logic/rest'
 import { legTarget } from '../logic/structuredPlans'
+import { groupRounds, groupsOf, nextSet, restAfter } from '../logic/supersets'
+import { formatDuration } from '../logic/variants'
 import { describeTempo } from '../logic/tempo'
 import { AbsCircuit } from './AbsCircuit'
 import { ChoixSeance } from './ChoixSeance'
@@ -30,7 +34,17 @@ import { ChoixSeance } from './ChoixSeance'
 const typeNames: Record<string, string> = { push: 'Push', pull: 'Pull', libre: 'Séance libre' }
 const timeFormat = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
-type PickerState = { mode: 'change'; key: string } | { mode: 'add' } | null
+type PickerState = { mode: 'change'; key: string } | { mode: 'replace'; key: string } | { mode: 'add' } | null
+
+/** Temps écoulé depuis le début de la séance, rafraîchi toutes les 20 s. */
+function Elapsed({ since }: { since: string }) {
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 20_000)
+    return () => clearInterval(id)
+  }, [])
+  return <>{formatDuration(Math.max(0, (now - new Date(since).getTime()) / 60000))}</>
+}
 
 /** Saisie d'un exercice : selon la prescription pour une séance cadrée, selon l'unité sinon. */
 export const modeOf = (planned: PlannedExercise, exercise: Exercise): EntryMode =>
@@ -60,7 +74,10 @@ function SeanceEnCours({ session }: { session: Session }) {
   const sessionLogs = logs.filter((l) => l.sessionId === id)
   const setsOf = (key: string) => sessionLogs.filter((l) => l.planKey === key).sort((a, b) => a.setNumber - b.setNumber)
   const isComplete = (p: PlannedExercise) => setsOf(p.key).length >= p.sets
-  const open = openKey ?? plan.find((p) => !p.skipped && !isComplete(p))?.key
+  const count = (key: string) => setsOf(key).length
+  // Exercice ouvert : celui que j'ai touché, sinon la prochaine série dans l'ordre de la séance (supersets compris).
+  const next = nextSet(plan, count)
+  const open = openKey ?? next?.key
   const remaining = plan.filter((p) => !p.skipped && !isComplete(p)).length
 
   const move = (key: string, dir: -1 | 1) =>
@@ -106,7 +123,28 @@ function SeanceEnCours({ session }: { session: Session }) {
     )
   }
 
-  const pickerTarget = picker?.mode === 'change' ? plan.find((p) => p.key === picker.key) : undefined
+  const pickerTarget = picker && picker.mode !== 'add' ? plan.find((p) => p.key === picker.key) : undefined
+
+  if (picker?.mode === 'replace' && pickerTarget) {
+    const original = pickerTarget.replaced?.exerciseId ?? pickerTarget.exerciseId
+    return (
+      <ExercisePicker
+        title={`Remplacer ${exercises.get(pickerTarget.exerciseId)?.name ?? ''}`}
+        exercises={[...exercises.values()]}
+        logs={logs}
+        currentId={pickerTarget.exerciseId}
+        defaultRestSec={pickerTarget.restSec}
+        suggested={alternativesFor(original, [...exercises.values()])}
+        original={original}
+        onClose={() => setPicker(null)}
+        onPick={async (exerciseId) => {
+          await replaceExercise(id, pickerTarget.key, exerciseId)
+          setOpenKey(pickerTarget.key)
+          setPicker(null)
+        }}
+      />
+    )
+  }
 
   if (picker) {
     return (
@@ -149,14 +187,17 @@ function SeanceEnCours({ session }: { session: Session }) {
     <>
       {isLegs ? <LegHeader session={session} /> : <h1>{typeNames[session.type] ?? session.type}</h1>}
       <p className="muted">
-        Commencée à {timeFormat.format(new Date(session.date))} ·{' '}
+        {session.variant && <>Variante {session.variant.label} (prévu {formatDuration(session.variant.estimatedMin)}) · </>}
+        Commencée à {timeFormat.format(new Date(session.date))}, il y a <Elapsed since={session.date} /> ·{' '}
         {remaining === 0 ? 'tout est fait' : `${remaining} exercice${remaining > 1 ? 's' : ''} restant${remaining > 1 ? 's' : ''}`}
       </p>
 
-      {plan.map((p, i) => {
-        const ex = exercises.get(p.exerciseId)
-        if (!ex) return null
-        return (
+      {groupsOf(plan).map((group) => {
+        const cards = group.map((p) => {
+          const i = plan.indexOf(p)
+          const ex = exercises.get(p.exerciseId)
+          if (!ex) return null
+          return (
           <ExerciseCard
             key={p.key}
             sessionId={id}
@@ -167,9 +208,11 @@ function SeanceEnCours({ session }: { session: Session }) {
             open={open === p.key}
             first={i === 0}
             lastInPlan={i === plan.length - 1}
-            othersRemaining={plan.some((q) => q.key !== p.key && !q.skipped && !isComplete(q))}
+            restFor={() => restAfter(plan, count, p.key)}
+            originalName={p.replaced && exercises.get(p.replaced.exerciseId)?.name}
             onToggle={() => setOpenKey(open === p.key ? '' : p.key)}
             onChange={p.prescribedReps === undefined ? () => setPicker({ mode: 'change', key: p.key }) : undefined}
+            onReplace={p.prescribedReps !== undefined ? () => setPicker({ mode: 'replace', key: p.key }) : undefined}
             onMove={(dir) => move(p.key, dir)}
             onSkip={() => {
               patch(p.key, { skipped: !p.skipped })
@@ -179,9 +222,24 @@ function SeanceEnCours({ session }: { session: Session }) {
             onSets={(sets) => patch(p.key, { sets })}
             onRest={(restSec) => patch(p.key, { restSec })}
             onIgnoreRestAdjust={(ignore) => patch(p.key, { ignoreRestAdjust: ignore })}
-            onValidated={(completed) => completed && setOpenKey(null)}
+            // Après chaque série, on suit l'ordre de la séance : l'exercice suivant d'un superset s'ouvre tout seul.
+            onValidated={() => setOpenKey(null)}
             deload={session.prescription?.deload}
           />
+          )
+        })
+        if (group.length === 1) return cards
+        const inGroup = next !== undefined && group.some((p) => p.key === next.key)
+        return (
+          <section key={group[0].key} className={`superset-group ${inGroup ? 'current' : ''}`}>
+            <div className="superset-head">
+              <strong>Superset</strong>
+              <span className="small">
+                {inGroup ? `Tour ${next.round} / ${groupRounds(group)}` : `${groupRounds(group)} tours`} · enchaîne sans pause, repos après le dernier
+              </span>
+            </div>
+            {cards}
+          </section>
         )
       })}
 
@@ -243,9 +301,11 @@ function ExerciseCard({
   open,
   first,
   lastInPlan,
-  othersRemaining,
+  restFor,
+  originalName,
   onToggle,
   onChange,
+  onReplace,
   onMove,
   onSkip,
   onRemove,
@@ -263,11 +323,15 @@ function ExerciseCard({
   open: boolean
   first: boolean
   lastInPlan: boolean
-  /** D'autres exercices restent à faire après celui-ci. */
-  othersRemaining: boolean
+  /** Repos à lancer après la prochaine série (aucun au milieu d'un tour de superset, ni à la fin de la séance). */
+  restFor: () => number | undefined
+  /** Exercice remplacé : celui que le programme prévoyait. */
+  originalName?: string
   onToggle: () => void
-  /** Absent pour un exercice prescrit par le programme. */
+  /** Changer l'exercice d'un slot (haut du corps). */
   onChange?: () => void
+  /** Remplacer un exercice prescrit par une alternative (séance cadrée). */
+  onReplace?: () => void
   onMove: (dir: -1 | 1) => void
   onSkip: () => void
   onRemove: () => void
@@ -319,6 +383,7 @@ function ExerciseCard({
         <span>
           {planned.label && <span className="small muted">{planned.label}</span>}
           <strong className="exercise-name">{exercise.name}</strong>
+          {originalName && <span className="small muted">à la place de {originalName}</span>}
           {!open && (
             <span className="small muted">
               {planned.sets} × {prescription}
@@ -412,7 +477,7 @@ function ExerciseCard({
               mode={mode}
               sets={sets}
               target={target}
-              othersRemaining={othersRemaining}
+              restFor={restFor}
               onValidated={onValidated}
             />
           )}
@@ -438,6 +503,11 @@ function ExerciseCard({
             {onChange && sets.length === 0 && (
               <button className="btn" onClick={onChange}>
                 Changer
+              </button>
+            )}
+            {onReplace && sets.length === 0 && (
+              <button className="btn" onClick={onReplace}>
+                Remplacer
               </button>
             )}
             <button className="btn" onClick={onSkip}>
@@ -471,7 +541,7 @@ function NextSet({
   mode,
   sets,
   target,
-  othersRemaining,
+  restFor,
   onValidated,
 }: {
   sessionId: number
@@ -480,7 +550,7 @@ function NextSet({
   mode: EntryMode
   sets: SetLog[]
   target: Target
-  othersRemaining: boolean
+  restFor: () => number | undefined
   onValidated: (completed: boolean) => void
 }) {
   const unit = exercise.loadUnit
@@ -501,8 +571,8 @@ function NextSet({
       onSubmit={async (loadKg, value) => {
         unlockAudio()
         const completed = n + 1 >= planned.sets
-        // Le chrono démarre, sauf après la toute dernière série de la séance ou sans repos prévu.
-        const restSec = (!completed || othersRemaining) && planned.restSec > 0 ? planned.restSec : undefined
+        // Le chrono démarre, sauf au milieu d'un tour de superset, après la dernière série de la séance, ou sans repos prévu.
+        const restSec = restFor()
         await logSet(
           {
             sessionId,

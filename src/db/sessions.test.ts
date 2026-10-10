@@ -32,26 +32,26 @@ afterEach(async () => {
 describe('séance haut du corps', () => {
   it('démarre une seule séance à la fois', async () => {
     const d = await freshDb()
-    const id = await startUpperSession('push', d)
-    expect(await startUpperSession('pull', d)).toBe(id)
+    const id = await startUpperSession('push', undefined, d)
+    expect(await startUpperSession('pull', undefined, d)).toBe(id)
     const s = await activeSession(d)
     expect(s).toMatchObject({ type: 'push', status: 'en-cours' })
-    expect(s?.plan?.[0]).toMatchObject({ key: 'push:0', exerciseId: 'dc-halteres' })
+    expect(s?.plan?.[0]).toMatchObject({ key: 'push:push-horizontal:1', exerciseId: 'dc-halteres' })
   })
 
   it("propose à chaque place l'exercice fait la dernière fois", async () => {
     const d = await freshDb()
-    const id = await startUpperSession('pull', d)
-    await logSet({ sessionId: id, planKey: 'pull:3', templateKey: 'pull:3', exerciseId: 'rowing-haltere', setNumber: 1, loadKg: 30, reps: 10 }, undefined, d)
+    const id = await startUpperSession('pull', undefined, d)
+    await logSet({ sessionId: id, planKey: 'pull:row:1', templateKey: 'pull:row:1', exerciseId: 'rowing-haltere', setNumber: 1, loadKg: 30, reps: 10 }, undefined, d)
     await finishSession(id, d)
     expect(await activeSession(d)).toBeUndefined()
-    await startUpperSession('pull', d)
+    await startUpperSession('pull', undefined, d)
     expect((await activeSession(d))?.plan?.[3].exerciseId).toBe('rowing-haltere')
   })
 
   it('renumérote les séries après une suppression', async () => {
     const d = await freshDb()
-    const id = await startUpperSession('push', d)
+    const id = await startUpperSession('push', undefined, d)
     const base = { sessionId: id, planKey: 'push:0', exerciseId: 'dc-halteres', loadKg: 30, reps: 8 }
     const first = await logSet({ ...base, setNumber: 1 }, undefined, d)
     await logSet({ ...base, setNumber: 2 }, undefined, d)
@@ -62,7 +62,7 @@ describe('séance haut du corps', () => {
 
   it('abandonner supprime la séance et ses séries', async () => {
     const d = await freshDb()
-    const id = await startUpperSession('push', d)
+    const id = await startUpperSession('push', undefined, d)
     await logSet({ sessionId: id, planKey: 'push:0', exerciseId: 'dc-halteres', setNumber: 1, loadKg: 30, reps: 8 }, undefined, d)
     await abandonSession(id, d)
     expect(await d.sessions.count()).toBe(0)
@@ -73,7 +73,7 @@ describe('séance haut du corps', () => {
 describe('chrono de repos', () => {
   it('démarre à la validation et mesure le repos réellement pris', async () => {
     const d = await freshDb()
-    const id = await startUpperSession('push', d)
+    const id = await startUpperSession('push', undefined, d)
     const base = { sessionId: id, planKey: 'push:0', exerciseId: 'dc-halteres', loadKg: 30, reps: 8, restPlannedSec: 120 }
     await logSet({ ...base, setNumber: 1 }, 120, d)
     const rest = (await d.sessions.get(id))!.rest!
@@ -107,7 +107,7 @@ describe("création d'exercice", () => {
 describe('séances cadrées', () => {
   it('démarre la séance jambes prescrite et la termine avec le check genou', async () => {
     const d = await freshDb()
-    const id = await startLegSession(3, d) // semaine 2, séance B
+    const id = await startLegSession(3, undefined, d) // semaine 2, séance B
     const s = (await d.sessions.get(id))!
     expect(s).toMatchObject({ type: 'jambes', program: { programId: 'jambes', index: 3 } })
     expect(s.plan?.find((p) => p.exerciseId === 'rdl')?.targetLoadKg).toBe(82.5)
@@ -119,8 +119,8 @@ describe('séances cadrées', () => {
 
   it('ajuste la séance jambes suivante si le genou était orange', async () => {
     const d = await freshDb()
-    await finishLegSession(await startLegSession(2, d), 4, d) // semaine 2 A, douleur 4 → orange
-    const id = await startLegSession(3, d) // semaine 2 B
+    await finishLegSession(await startLegSession(2, undefined, d), 4, d) // semaine 2 A, douleur 4 → orange
+    const id = await startLegSession(3, undefined, d) // semaine 2 B
     const s = (await d.sessions.get(id))!
     expect(s.kneeAdjustment).toBe('orange')
     expect(s.plan?.find((p) => p.exerciseId === 'rdl')?.targetLoadKg).toBe(80) // charge de la semaine 1
@@ -128,7 +128,7 @@ describe('séances cadrées', () => {
 
   it('démarre les abdos enchaînés après un push', async () => {
     const d = await freshDb()
-    const push = await startUpperSession('push', d)
+    const push = await startUpperSession('push', undefined, d)
     await finishSession(push, d)
     const id = await startAbsSession(0, push, d)
     expect(await d.sessions.get(id)).toMatchObject({ type: 'abdos', parentSessionId: push, program: { programId: 'abdos', index: 0 } })

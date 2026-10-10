@@ -1,6 +1,6 @@
 // Séances cadrées : jambes (programme semaine par semaine) et abdos (circuit par blocs).
 
-import type { AbsBlock, LegSession, LoadUnit } from '../data/types'
+import type { AbsBlock, LegItem, LoadUnit } from '../data/types'
 import type { PlannedExercise, SetLog } from '../db/models'
 import type { Target } from './doubleProgression'
 import { formatKg } from './format'
@@ -14,18 +14,19 @@ const rangeOf = (reps: PlannedExercise['prescribedReps']): [number, number] => {
 }
 
 /**
- * Plan d'une séance jambes tel que prescrit. Si le dernier check genou est orange ou rouge,
+ * Plan d'une séance jambes tel que prescrit, pour la variante choisie. Si le dernier check genou est orange ou rouge,
  * les ajustements sont appliqués et notés sur chaque exercice concerné :
  * - orange : sauts divisés par deux, charges de la semaine précédente ;
  * - rouge : pas de sauts ni de réceptions (exercices sautés, réactivables).
  */
 export function buildLegPlan(
-  session: LegSession,
-  previousWeek: LegSession | undefined,
+  items: LegItem[],
+  /** Mêmes exercices la semaine précédente (même variante), pour l'ajustement « charges de la semaine précédente ». */
+  previousWeek: LegItem[] | undefined,
   knee: KneeLevel | undefined,
   isJump: (exerciseId: string) => boolean,
 ): PlannedExercise[] {
-  return session.items.map((it, i) => {
+  return items.map((it, i) => {
     const planned: PlannedExercise = {
       key: `jambes:${i}`,
       exerciseId: it.exerciseId,
@@ -36,6 +37,7 @@ export function buildLegPlan(
       prescribedReps: it.reps,
       targetLoadKg: it.targetLoadKg,
       tempo: it.tempo,
+      superset: it.superset,
     }
     const jump = isJump(it.exerciseId)
     if (knee === 'rouge' && jump) {
@@ -45,7 +47,7 @@ export function buildLegPlan(
       if (jump) {
         return { ...planned, sets: Math.ceil(it.sets / 2), adjustmentNote: `Genou orange : sauts divisés par deux (${Math.ceil(it.sets / 2)} séries au lieu de ${it.sets}).` }
       }
-      const prev = previousWeek?.items.find((p) => p.exerciseId === it.exerciseId)?.targetLoadKg
+      const prev = previousWeek?.find((p) => p.exerciseId === it.exerciseId)?.targetLoadKg
       if (it.targetLoadKg !== undefined && prev !== undefined && prev !== it.targetLoadKg) {
         return { ...planned, targetLoadKg: prev, adjustmentNote: `Genou orange : charge de la semaine précédente (${formatKg(prev)} au lieu de ${formatKg(it.targetLoadKg)}).` }
       }
@@ -101,16 +103,20 @@ export function legTarget(
   return make(lastLoad, `Même charge que la dernière fois : toutes les séries n’étaient pas réussies (${detail}).`)
 }
 
-/** Plan d'une séance abdos : les exercices du bloc, un « tour » = une série de chaque. */
-export function buildAbsPlan(block: AbsBlock): PlannedExercise[] {
+/**
+ * Plan d'une séance abdos : les exercices du bloc en circuit (un seul groupe, un « tour » = une série de chaque),
+ * avec le repos entre les tours. `rounds` remplace le nombre de tours du programme (abdosRounds d'une variante).
+ */
+export function buildAbsPlan(block: AbsBlock, restBetweenRoundsSec: number, rounds?: number): PlannedExercise[] {
   return block.items.map((it, i) => ({
     key: `abdos:${i}`,
     exerciseId: it.exerciseId,
-    sets: it.rounds,
+    sets: rounds ?? it.rounds,
     repRange: rangeOf(it.reps),
-    restSec: 0,
+    restSec: restBetweenRoundsSec,
     note: it.note || undefined,
     prescribedReps: it.reps,
+    superset: 'circuit',
   }))
 }
 
@@ -139,14 +145,26 @@ export function absTarget(planned: PlannedExercise, lastInBlock: SetLog[], unit:
     : make(lastGoal, 'Même objectif que la dernière fois (tous les tours n’étaient pas propres).')
 }
 
-/** Prochaine série du circuit : on fait un tour de tous les exercices, puis le suivant. */
-export function circuitNext(plan: PlannedExercise[], doneCount: (key: string) => number): { round: number; key: string } | undefined {
-  const active = plan.filter((p) => !p.skipped)
-  const rounds = Math.max(0, ...active.map((p) => p.sets))
-  for (let round = 1; round <= rounds; round++) {
-    for (const p of active) if (p.sets >= round && doneCount(p.key) < round) return { round, key: p.key }
-  }
-  return undefined
-}
 
-export const circuitRounds = (plan: PlannedExercise[]) => Math.max(0, ...plan.filter((p) => !p.skipped).map((p) => p.sets))
+/**
+ * Remplace l'exercice d'une place de séance cadrée. La place garde ce que le programme prévoyait (« replaced »).
+ * La charge cible du programme ne vaut que pour l'exercice prévu. Si le remplaçant ne se mesure pas pareil
+ * (durée au lieu de reps, ou l'inverse), la prescription devient une fourchette neutre (8 à 12 reps, ou 30 s).
+ * Revenir à l'exercice prévu rétablit tout.
+ */
+export function replacePlanned(p: PlannedExercise, exerciseId: string, unitOf: (id: string) => LoadUnit | undefined): PlannedExercise {
+  const original = p.replaced ?? { exerciseId: p.exerciseId, targetLoadKg: p.targetLoadKg, prescribedReps: p.prescribedReps, repRange: p.repRange }
+  if (exerciseId === original.exerciseId) {
+    const { replaced: _, ...rest } = p
+    return { ...rest, exerciseId, targetLoadKg: original.targetLoadKg, prescribedReps: original.prescribedReps, repRange: original.repRange ?? p.repRange }
+  }
+  const kind = original.prescribedReps !== undefined ? parseReps(original.prescribedReps).kind : undefined
+  const timed = unitOf(exerciseId) === 'time'
+  const dosage: Pick<PlannedExercise, 'prescribedReps' | 'repRange'> =
+    kind === 'time' && !timed
+      ? { prescribedReps: '8-12', repRange: [8, 12] }
+      : kind === 'reps' && timed
+        ? { prescribedReps: '30 s', repRange: [30, 30] }
+        : { prescribedReps: original.prescribedReps, repRange: original.repRange ?? p.repRange }
+  return { ...p, exerciseId, targetLoadKg: undefined, ...dosage, replaced: original }
+}

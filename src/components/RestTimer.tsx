@@ -6,7 +6,7 @@ import type { Session } from '../db/models'
 import { adjustRest, endRest } from '../db/sessions'
 import { formatRest } from '../logic/format'
 import { formatClock, REST_STEP, remainingMs } from '../logic/rest'
-import { circuitNext } from '../logic/structuredPlans'
+import { nextSet, sequencedPlan } from '../logic/supersets'
 
 /** Heure courante, rafraîchie plusieurs fois par seconde. */
 function useNow(active: boolean) {
@@ -24,24 +24,17 @@ function useNow(active: boolean) {
   return now
 }
 
-/** Ce qui vient après le repos : « Tractions, série 2 », ou l'exercice suivant. */
+/** Ce qui vient après le repos : « Tractions, série 2 », « Tour 2 : Dead bug », dans l'ordre des supersets. */
 function useNextLabel(session: Session): string | undefined {
   return useLiveQuery(async () => {
-    const plan = session.plan ?? []
+    const plan = sequencedPlan(session.plan ?? [], session.type)
     const logs = await db.setLogs.where('sessionId').equals(session.id!).toArray()
     const count = (key: string) => logs.filter((l) => l.planKey === key).length
     const names = new Map((await db.exercises.bulkGet(plan.map((p) => p.exerciseId))).map((e) => [e?.id, e?.name]))
-    if (session.type === 'abdos') {
-      const n = circuitNext(plan, count)
-      const p = n && plan.find((x) => x.key === n.key)
-      return p && `Tour ${n.round} : ${names.get(p.exerciseId)}`
-    }
-    const current = plan.find((p) => p.key === session.rest?.planKey)
-    if (current && !current.skipped && count(current.key) < current.sets) {
-      return `${names.get(current.exerciseId)}, série ${count(current.key) + 1}`
-    }
-    const next = plan.find((p) => !p.skipped && count(p.key) < p.sets)
-    return next && `${names.get(next.exerciseId)}, série ${count(next.key) + 1}`
+    const n = nextSet(plan, count)
+    const p = n && plan.find((x) => x.key === n.key)
+    if (!n || !p) return undefined
+    return n.superset ? `Tour ${n.round} : ${names.get(p.exerciseId)}` : `${names.get(p.exerciseId)}, série ${n.round}`
   }, [session])
 }
 

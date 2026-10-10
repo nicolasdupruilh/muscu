@@ -36,9 +36,9 @@ const unitLabels: Record<string, string> = {
 const programUses = (() => {
   const uses = new Map<string, string[]>()
   const add = (id: string, what: string) => uses.set(id, [...new Set([...(uses.get(id) ?? []), what])])
-  for (const w of legProgram.weeks) for (const s of Object.values(w.sessions)) for (const it of s.items) add(it.exerciseId, 'programme jambes')
+  for (const w of legProgram.weeks) for (const s of Object.values(w.sessions)) for (const v of s.variants) for (const it of v.items) add(it.exerciseId, 'programme jambes')
   for (const b of absProgram.blocks) for (const it of b.items) add(it.exerciseId, 'programme abdos')
-  for (const t of upperBody.templates) for (const s of t.slots) add(s.defaultExerciseId, `exercice par défaut (${t.name})`)
+  for (const t of upperBody.templates) for (const v of t.variants) for (const s of v.slots) add(s.defaultExerciseId, `exercice par défaut (${t.name})`)
   return uses
 })()
 

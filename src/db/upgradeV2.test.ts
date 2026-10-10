@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import Dexie from 'dexie'
 import { afterEach, describe, expect, it } from 'vitest'
-import { catalogue } from '../data'
+import { catalogue, legProgramVersion } from '../data'
 import { AppDB, syncCatalogue } from './db'
 import { updateExercise } from './catalogue'
 import { createExercise, startLegSession } from './sessions'
@@ -21,9 +21,9 @@ describe('mise à jour du programme jambes v2', () => {
   it('une séance démarrée enregistre une copie de ce qui est prescrit', async () => {
     const d = new AppDB(newName())
     await syncCatalogue(d)
-    const id = await startLegSession(0, d)
+    const id = await startLegSession(0, undefined, d)
     const s = (await d.sessions.get(id))!
-    expect(s.prescription).toEqual({ programVersion: 2, name: 'Jambes A : force et sauts', week: 1, label: 'A', blockName: 'Base tendon', deload: false })
+    expect(s.prescription).toEqual({ programVersion: legProgramVersion, name: 'Jambes A : force et sauts', week: 1, label: 'A', blockName: 'Base tendon', deload: false })
     expect(s.plan?.map((p) => p.exerciseId)).toContain('pogos')
     d.close()
   })

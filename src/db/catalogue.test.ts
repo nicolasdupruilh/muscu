@@ -57,7 +57,7 @@ describe('catalogue', () => {
     await syncCatalogue(d)
     expect((await d.exercises.get('dc-halteres'))?.archived).toBe(true)
     // La place « développé horizontal » propose un autre exercice disponible de son slot.
-    const id = await startUpperSession('push', d)
+    const id = await startUpperSession('push', undefined, d)
     expect((await d.sessions.get(id))?.plan?.[0].exerciseId).toBe('dc-barre')
   })
 })

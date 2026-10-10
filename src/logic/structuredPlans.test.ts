@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { absBlockForWeek, catalogue, legWeek } from '../data'
+import { absBlockForWeek, absProgram, catalogue, legProgram, legWeek } from '../data'
 import type { PlannedExercise, SetLog } from '../db/models'
-import { legProgram } from '../data'
-import { absTarget, buildAbsPlan, buildLegPlan, circuitNext, legTarget } from './structuredPlans'
+import { absTarget, buildAbsPlan, buildLegPlan, legTarget } from './structuredPlans'
+import { nextSet } from './supersets'
 
 const isJump = (id: string) => catalogue.exercises.find((e) => e.id === id)?.category === 'plyo'
-const w2A = legWeek(2)!.sessions.A
-const w1A = legWeek(1)!.sessions.A
+const complete = (week: number, label: 'A' | 'B') => legWeek(week)!.sessions[label].variants.find((v) => v.id === 'complete')!.items
+const w2A = complete(2, 'A')
+const w1A = complete(1, 'A')
 
 describe('séance jambes', () => {
   it('reprend exactement la prescription', () => {
@@ -17,7 +18,7 @@ describe('séance jambes', () => {
   })
 
   it('programme v2 : pliométrie de la séance A, reps par jambe et par côté', () => {
-    expect(legProgram.version).toBe(2)
+    expect(legProgram.version).toBe(3)
     const plan = buildLegPlan(w2A, w1A, undefined, isJump)
     expect(plan.map((p) => p.exerciseId).slice(0, 6)).toEqual([
       'echauffement-jambes',
@@ -94,8 +95,30 @@ describe('séance jambes', () => {
   })
 })
 
+describe('variantes jambes', () => {
+  it('la variante 1 h garde les sauts clés et l’exercice principal, avec ses supersets', () => {
+    const v1h = legWeek(1)!.sessions.A.variants.find((v) => v.id === '1h')!
+    const plan = buildLegPlan(v1h.items, undefined, undefined, isJump)
+    expect(plan.map((p) => `${p.exerciseId}${p.superset ? `[${p.superset}]` : ''}`)).toEqual([
+      'echauffement-jambes',
+      'drop-landing-unipodal[S0]',
+      'box-jump[S0]',
+      'squat-arriere',
+      'fente-bulgare',
+      'reverse-nordic[S1]',
+      'mollets-debout[S1]',
+    ])
+  })
+
+  it('genou orange : charges de la semaine précédente prises dans la même variante', () => {
+    const b1h = (week: number) => legWeek(week)!.sessions.B.variants.find((v) => v.id === '1h')!.items
+    const plan = buildLegPlan(b1h(2), b1h(1), 'orange', isJump)
+    expect(plan.find((p) => p.exerciseId === 'rdl')?.targetLoadKg).toBe(80) // 82,5 en semaine 2, 80 en semaine 1
+  })
+})
+
 describe('séance abdos', () => {
-  const plan = buildAbsPlan(absBlockForWeek(1)!)
+  const plan = buildAbsPlan(absBlockForWeek(1)!, absProgram.restBetweenRoundsSec)
   const deadBug = plan[0]
   const set = (round: number, reps: number, targetReps = 8): SetLog => ({
     sessionId: 1,
@@ -111,7 +134,9 @@ describe('séance abdos', () => {
   it('suit le bloc de la semaine', () => {
     expect(plan.map((p) => p.exerciseId)).toEqual(['dead-bug', 'releves-genoux', 'planche-laterale', 'pallof-press'])
     expect(deadBug).toMatchObject({ sets: 3, repRange: [8, 8], prescribedReps: '8/côté' })
-    expect(buildAbsPlan(absBlockForWeek(9)!).map((p) => p.exerciseId)).toContain('slam')
+    expect(buildAbsPlan(absBlockForWeek(9)!, 60).map((p) => p.exerciseId)).toContain('slam')
+    // Variante du haut du corps : abdosRounds remplace le nombre de tours.
+    expect(buildAbsPlan(absBlockForWeek(1)!, 60, 2).map((p) => p.sets)).toEqual([2, 2, 2, 2])
   })
 
   it('+2 reps quand tous les tours étaient propres, sinon même objectif', () => {
@@ -132,7 +157,7 @@ describe('séance abdos', () => {
     const counts: Record<string, number> = {}
     const order: string[] = []
     let next
-    while ((next = circuitNext(plan, (k) => counts[k] ?? 0))) {
+    while ((next = nextSet(plan, (k) => counts[k] ?? 0))) {
       order.push(`${next.round}:${next.key}`)
       counts[next.key] = (counts[next.key] ?? 0) + 1
     }
@@ -142,6 +167,6 @@ describe('séance abdos', () => {
 
   it('ignore un exercice sauté', () => {
     const skipped: PlannedExercise[] = plan.map((p, i) => (i === 1 ? { ...p, skipped: true } : p))
-    expect(circuitNext(skipped, (k) => (k === 'abdos:0' ? 1 : 0))).toEqual({ round: 1, key: 'abdos:2' })
+    expect(nextSet(skipped, (k) => (k === 'abdos:0' ? 1 : 0))).toEqual({ round: 1, key: 'abdos:2', superset: 'circuit' })
   })
 })

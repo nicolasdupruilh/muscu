@@ -25,10 +25,10 @@ Appli personnelle pour assister mes séances de musculation à la salle, sur iPh
 
 ## Fichiers de données
 
-- `data/exercises.json` : catalogue de départ. Chaque exercice a un `id`, un nom, une catégorie, un équipement, une unité de charge (`kg`, `bodyweight`, `bodyweight+kg`, `time`, `none`), un incrément de charge, un repos par défaut, des `slots` (emplacements de la trame haut du corps où il peut être choisi) et des consignes.
-- `data/programme-jambes.json` : 16 semaines × séances A et B, entièrement prescrites (séries, reps, charge cible, tempo, repos, notes). Contient aussi le check genou (`healthCheck`) avec les règles vert/orange/rouge et les ajustements volley.
+- `data/exercises.json` : catalogue de départ. Chaque exercice a un `id`, un nom, une catégorie, un équipement, une unité de charge (`kg`, `bodyweight`, `bodyweight+kg`, `time`, `none`), un incrément de charge, un repos par défaut, des `slots` (emplacements de la trame haut du corps où il peut être choisi), des consignes et éventuellement des `alternatives` (remplaçants proposés en séance cadrée).
+- `data/programme-jambes.json` : 16 semaines × séances A et B, entièrement prescrites (séries, reps, charge cible, tempo, repos, notes), chacune en plusieurs `variants` par durée (`id`, `label`, `estimatedMin`, `items`), de la plus courte à la complète. Les exercices qui partagent la même valeur `superset` s'enchaînent. Contient aussi le check genou (`healthCheck`) avec les règles vert/orange/rouge et les ajustements volley.
 - `data/programme-abdos.json` : circuit abdos par blocs de semaines, à enchaîner après les séances push et pull.
-- `data/programme-haut-du-corps.json` : trames push et pull composées de slots (fourchette de reps, nombre de séries, repos, exercice par défaut) + règle de double progression.
+- `data/programme-haut-du-corps.json` : trames push et pull, chacune en `variants` par durée (`estimatedMin` abdos compris, `abdosRounds` = tours du circuit abdos qui suit) composées de slots (fourchette de reps, nombre de séries, repos, exercice par défaut, `superset`) + règle de double progression.
 - `data/planning.json` : rythme hebdomadaire indicatif (2 jambes, push, pull, footing). Il ne décide pas de la séance proposée.
 
 Notation du tempo : excentrique-pause bas-concentrique-pause haut, en secondes, X = explosif. L'afficher aussi en clair (ex. « Descente 3 s, remontée explosive »).
@@ -47,6 +47,15 @@ Notation du tempo : excentrique-pause bas-concentrique-pause haut, en secondes, 
 - Abdos : deux séances avec abdos (après push et après pull) font une semaine du programme abdos.
 - Haut du corps : on propose push ou pull, celui des deux fait le moins récemment.
 - La mise à jour de `data/exercises.json` ajoute les nouveaux exercices et met à jour ceux du catalogue que je n'ai pas modifiés. Mes exercices et mes modifications ne sont jamais écrasés.
+
+### Variantes, supersets, durées
+- Au démarrage d'une séance jambes, push ou pull : « Combien de temps tu as ? » (45 min, 1 h, 1 h 30, 2 h, sans limite). Un appui lance la variante la plus complète dont la durée estimée × coefficient tient dans ce temps (sinon la plus courte). Les variantes sont listées dessous avec leur durée pour en prendre une autre. Pas de changement de variante en cours de séance.
+- La séance enregistre sa variante (`Session.variant`). Les ajustements genou s'appliquent à la variante choisie (charges de la semaine précédente prises dans la même variante).
+- Supersets : série 1 de chaque exercice du groupe sans pause, puis le repos du groupe (le plus long de ses repos), puis la série 2… Un exercice qui a moins de séries sort du tour. Le circuit abdos suit la même logique (un seul groupe, repos entre les tours).
+- Abdos enchaînés après push ou pull : `abdosRounds` tours. Abdos seuls : tours du programme abdos.
+- Durée réelle = de l'heure de début à la fin (abdos enchaînés compris pour push/pull), comparée à `estimatedMin` dans l'historique. Coefficient de correction : médiane de réel ÷ estimé sur les 8 dernières séances avec variante, en écartant les rapports hors de 0,5–2 ; remise à 1 possible dans les réglages.
+- Places de la trame haut du corps repérées par slot et rang (`push:triceps:2`), pas par position : la mémoire « dernier exercice fait à cette place » suit d'une variante à l'autre.
+- Remplacement en séance cadrée : alternatives du catalogue d'abord, puis tout le catalogue. La place garde l'exercice prévu (`replaced`) ; la charge cible du programme ne vaut que pour lui ; si le remplaçant ne se mesure pas pareil (durée ↔ reps), la prescription devient 8 à 12 reps ou 30 s.
 
 L'historique est rattaché à l'exercice, pas au slot : si je fais « Rowing haltère » dans le slot Rowing, je retrouve ma dernière perf de « Rowing haltère », peu importe le slot.
 

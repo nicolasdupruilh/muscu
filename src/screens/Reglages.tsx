@@ -5,7 +5,8 @@ import { backupFileName, backupStats, checkBackup, exportBackup, importBackup, t
 import { catalogue, legProgram, legProgramVersion, programShapes } from '../data'
 import { updateSettings } from '../db/db'
 import type { ProgramId, ProgramSettings } from '../db/models'
-import { useExercises, useProgramStatus, useSettings } from '../hooks'
+import { useDurationFactor, useExercises, useProgramStatus, useSettings } from '../hooks'
+import { DURATION_SAMPLES, lastSessionsLabel } from '../logic/variants'
 import { formatLocalDate } from '../logic/dates'
 import { toIndex } from '../logic/programs'
 
@@ -120,6 +121,8 @@ export function Reglages() {
           Catalogue de départ version {catalogue.version}.
         </p>
       </section>
+
+      <DurationCard resetAt={settings.durationFactorResetAt} />
 
       <NotificationsCard />
 
@@ -237,6 +240,40 @@ function BackupCard({ lastBackupAt }: { lastBackupAt?: string }) {
         />
       </label>
       {message && <p className="small">{message}</p>}
+    </section>
+  )
+}
+
+/** Coefficient de correction des durées estimées des variantes, calculé sur mes dernières séances. */
+function DurationCard({ resetAt }: { resetAt?: string }) {
+  const factor = useDurationFactor()
+  if (!factor) return null
+  const pct = Math.round((factor.factor - 1) * 100)
+  return (
+    <section className="card stack">
+      <h2>Durée des séances</h2>
+      <p>
+        Coefficient : <strong>×{factor.factor.toLocaleString('fr-FR')}</strong>
+        {factor.count > 0 && (
+          <span className="muted">
+            {' '}
+            ({pct === 0 ? 'pile à l’heure' : pct > 0 ? `séances ${pct} % plus longues que prévu` : `séances ${-pct} % plus courtes que prévu`})
+          </span>
+        )}
+      </p>
+      <p className="small muted">
+        {factor.count > 0
+          ? `Calculé sur ${lastSessionsLabel(factor.count)} (médiane de la durée réelle sur la durée prévue, ${DURATION_SAMPLES} séances au plus).`
+          : resetAt
+            ? `Remis à 1 le ${formatLocalDate(resetAt.slice(0, 10))} : il se recalculera avec tes prochaines séances.`
+            : 'Il se calculera tout seul avec tes prochaines séances.'}{' '}
+        Il corrige les durées estimées quand l’appli choisit la variante qui tient dans ton temps.
+      </p>
+      {(factor.count > 0 || factor.factor !== 1) && (
+        <button className="btn" onClick={() => updateSettings((s) => ({ ...s, durationFactorResetAt: new Date().toISOString() }))}>
+          Remettre à 1
+        </button>
+      )}
     </section>
   )
 }

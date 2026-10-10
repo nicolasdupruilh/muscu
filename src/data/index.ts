@@ -37,7 +37,7 @@ export const absBlockForWeek = (week: number) => absProgram.blocks.find((b) => w
 export const slotOptions: { slot: string; label: string }[] = (() => {
   const seen = new Map<string, string>()
   for (const t of upperBody.templates) {
-    for (const s of t.slots) {
+    for (const s of t.variants.flatMap((v) => v.slots)) {
       // Deux places sur le même slot (Triceps 1 et 2) : un seul libellé, sans numéro.
       if (!seen.has(s.slot)) seen.set(s.slot, `${t.name} · ${s.label.replace(/\s\d$/, '')}`)
     }
@@ -56,3 +56,14 @@ export function legPrescription(index: number, programVersion = legProgramVersio
   if (!week || !session) return undefined
   return { programVersion, name: session.name, week: pos.week, label: pos.label, blockName: week.blockName, deload: week.deload }
 }
+
+/** Séance jambes à une position du programme (nom et variantes). */
+export function legSessionAt(index: number) {
+  const pos = positionOf(programShapes.jambes, index)
+  return legWeek(pos.week)?.sessions[pos.label]
+}
+
+export const upperTemplate = (type: 'push' | 'pull') => upperBody.templates.find((t) => t.id === type)!
+
+/** Version de la trame haut du corps (1 si le fichier n'en indique pas). */
+export const upperBodyVersion = upperBody.version ?? 1

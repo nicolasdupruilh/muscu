@@ -51,6 +51,19 @@ export interface PlannedExercise {
   tempo?: string
   /** Ajustement appliqué à cause du genou (affiché sur l'exercice). */
   adjustmentNote?: string
+  /** Les exercices consécutifs qui partagent cette valeur s'enchaînent sans pause (superset, ou circuit abdos). */
+  superset?: string
+  /** Exercice remplacé pendant la séance : ce que le programme prévoyait à l'origine. */
+  replaced?: { exerciseId: string; targetLoadKg?: number; prescribedReps?: Reps; repRange?: [number, number] }
+}
+
+/** Variante de la séance choisie au démarrage selon le temps disponible. */
+export interface SessionVariant {
+  id: string
+  label: string
+  estimatedMin: number
+  /** Haut du corps : nombre de tours du circuit abdos qui suit. */
+  abdosRounds?: number
 }
 
 /** Chrono de repos en cours. Calculé à partir de l'heure de fin, pas d'un compteur. */
@@ -87,6 +100,8 @@ export interface Session {
   /** Exercices prévus, dans l'ordre (séances haut du corps et libres). */
   plan?: PlannedExercise[]
   rest?: RestTimer
+  /** Variante choisie au démarrage (séances jambes, push, pull). */
+  variant?: SessionVariant
   /** Séance jambes : copie de ce qui était prescrit au démarrage (le fichier du programme peut changer ensuite). */
   prescription?: LegPrescription
   /** Séance jambes ajustée à cause du dernier check genou. */
@@ -134,6 +149,8 @@ export interface Settings {
   lastBackupAt?: string
   /** Dernière version du programme jambes dont j'ai vu l'annonce sur l'accueil. */
   seenLegProgramVersion?: number
+  /** Coefficient des durées remis à 1 à cette date : seules les séances suivantes comptent. */
+  durationFactorResetAt?: string
 }
 
 export const defaultSettings = (): Settings => ({

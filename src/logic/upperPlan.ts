@@ -1,10 +1,16 @@
-import type { UpperTemplate } from '../data/types'
+import type { UpperTemplate, UpperVariant } from '../data/types'
 import type { PlannedExercise, SetLog } from '../db/models'
 import { lastExerciseAt } from './history'
 import { lastChosenRest } from './rest'
 
 /**
- * Plan d'une séance push ou pull : la trame slot par slot, avec pour chaque place
+ * Repère d'une place de la trame, indépendant de la variante : « push:triceps:2 » = 2e place triceps du push.
+ * (Les positions changent d'une variante à l'autre ; le slot et son rang, non.)
+ */
+export const placeKey = (templateId: string, slot: string, occurrence: number) => `${templateId}:${slot}:${occurrence}`
+
+/**
+ * Plan d'une séance push ou pull pour la variante choisie : la trame slot par slot, avec pour chaque place
  * l'exercice fait la dernière fois à cette place (sinon l'exercice par défaut de la trame),
  * et le repos choisi la dernière fois pour cet exercice (sinon celui du slot).
  * `isAvailable` écarte un exercice archivé ou supprimé ; si l'exercice par défaut l'est aussi,
@@ -12,12 +18,16 @@ import { lastChosenRest } from './rest'
  */
 export function buildUpperPlan(
   template: UpperTemplate,
+  variant: UpperVariant,
   logs: SetLog[],
   isAvailable: (id: string) => boolean,
   alternativeFor: (slot: string) => string | undefined = () => undefined,
 ): PlannedExercise[] {
-  return template.slots.map((s, i) => {
-    const templateKey = `${template.id}:${i}`
+  const seen = new Map<string, number>()
+  return variant.slots.map((s) => {
+    const occurrence = (seen.get(s.slot) ?? 0) + 1
+    seen.set(s.slot, occurrence)
+    const templateKey = placeKey(template.id, s.slot, occurrence)
     const last = lastExerciseAt(logs, templateKey)
     const exerciseId =
       last && isAvailable(last) ? last : isAvailable(s.defaultExerciseId) ? s.defaultExerciseId : alternativeFor(s.slot) ?? s.defaultExerciseId
@@ -31,6 +41,7 @@ export function buildUpperPlan(
       repRange: s.repRange,
       restSec: lastChosenRest(logs, exerciseId) ?? s.restSec,
       note: s.note || undefined,
+      superset: s.superset,
     }
   })
 }

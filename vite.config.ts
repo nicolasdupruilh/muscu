@@ -32,6 +32,8 @@ export default defineConfig({
       },
     }),
   ],
+  // Les programmes de data/ sont intégrés au code (≈ 550 Ko) : un seul fichier, mis en cache pour le hors ligne.
+  build: { chunkSizeWarningLimit: 1000 },
   test: {
     environment: 'node',
   },

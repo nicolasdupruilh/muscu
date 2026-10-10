@@ -47,6 +47,46 @@ export function validateData(raw: RawData): string[] {
   const checkRef = (id: unknown, where: string) => {
     if (!isStr(id) || !ids.has(id)) err(`${where} : exercice « ${String(id)} » absent du catalogue`)
   }
+  // Alternatives proposées en remplacement : elles doivent exister, et jamais le leg extension.
+  ;(Array.isArray(exs) ? exs : []).forEach((e) => {
+    if (!isObj(e) || e.alternatives === undefined) return
+    const where = `exercises.json (${String(e.id)}), alternatives`
+    if (!Array.isArray(e.alternatives)) return err(`${where} : doit être une liste`)
+    e.alternatives.forEach((a) => {
+      checkRef(a, where)
+      if (a === e.id) err(`${where} : un exercice ne peut pas être sa propre alternative`)
+      if (a === 'leg-extension') err(`${where} : leg extension interdit`)
+    })
+  })
+
+  /**
+   * Variantes d'une séance : non vides, identifiants uniques, durée estimée positive et croissante
+   * (de la plus courte à la complète), supersets d'au moins deux exercices qui se suivent.
+   */
+  const checkVariants = (where: string, variants: unknown, listKey: 'items' | 'slots', checkLine: (line: Obj, where: string) => void) => {
+    if (!Array.isArray(variants) || variants.length === 0) return err(`${where} : variantes absentes`)
+    const seen = new Set<unknown>()
+    let previous = -Infinity
+    variants.forEach((v, k) => {
+      const w = `${where}, variante n°${k + 1}`
+      if (!isObj(v)) return err(`${w} : pas un objet`)
+      if (!isStr(v.id) || seen.has(v.id)) err(`${w} : id manquant ou en double`)
+      seen.add(v.id)
+      if (!isStr(v.label)) err(`${w} (${String(v.id)}) : label manquant`)
+      if (!isNum(v.estimatedMin) || v.estimatedMin <= 0) err(`${w} (${String(v.id)}) : estimatedMin manquant`)
+      else if (v.estimatedMin < previous) err(`${w} (${String(v.id)}) : les variantes doivent aller de la plus courte à la plus longue`)
+      else previous = v.estimatedMin
+      const lines = v[listKey]
+      if (!Array.isArray(lines) || lines.length === 0) return err(`${w} (${String(v.id)}) : ${listKey} absent`)
+      lines.forEach((line, j) => (isObj(line) ? checkLine(line, `${w} (${String(v.id)}), ligne ${j + 1}`) : err(`${w}, ligne ${j + 1} : pas un objet`)))
+      const groups = new Map<string, number[]>()
+      lines.forEach((line, j) => isObj(line) && isStr(line.superset) && groups.set(line.superset, [...(groups.get(line.superset) ?? []), j]))
+      for (const [g, idx] of groups) {
+        if (idx.length < 2) err(`${w} (${String(v.id)}) : superset « ${g} » avec un seul exercice`)
+        if (idx.some((x, n) => n > 0 && x !== idx[n - 1] + 1)) err(`${w} (${String(v.id)}) : les exercices du superset « ${g} » doivent se suivre`)
+      }
+    })
+  }
 
   // Programme jambes
   const legs = raw.legs
@@ -62,13 +102,11 @@ export function validateData(raw: RawData): string[] {
       for (const name of names) {
         const s = (w.sessions as Obj)[name as string]
         const where = `programme-jambes.json, semaine ${i + 1} séance ${String(name)}`
-        if (!isObj(s) || !Array.isArray(s.items)) {
+        if (!isObj(s) || !isStr(s.name)) {
           err(`${where} : absente`)
           continue
         }
-        s.items.forEach((it, j) => {
-          const w2 = `${where}, ligne ${j + 1}`
-          if (!isObj(it)) return err(`${w2} : pas un objet`)
+        checkVariants(where, s.variants, 'items', (it, w2) => {
           checkRef(it.exerciseId, w2)
           if (it.exerciseId === 'leg-extension') err(`${w2} : leg extension interdit`)
           if (!isNum(it.sets)) err(`${w2} : sets manquant`)
@@ -113,13 +151,18 @@ export function validateData(raw: RawData): string[] {
   } else {
     for (const id of ['push', 'pull']) {
       const t = ub.templates.find((t) => isObj(t) && t.id === id)
-      if (!isObj(t) || !Array.isArray(t.slots)) {
+      if (!isObj(t)) {
         err(`programme-haut-du-corps.json : trame « ${id} » absente`)
         continue
       }
-      t.slots.forEach((s, j) => {
-        const where = `programme-haut-du-corps.json, ${id} slot n°${j + 1}`
-        if (!isObj(s)) return err(`${where} : pas un objet`)
+      if (Array.isArray(t.variants)) {
+        t.variants.forEach((v, k) => {
+          if (isObj(v) && !(Number.isInteger(v.abdosRounds) && (v.abdosRounds as number) >= 1)) {
+            err(`programme-haut-du-corps.json, ${id} variante n°${k + 1} : abdosRounds doit être un entier à partir de 1`)
+          }
+        })
+      }
+      checkVariants(`programme-haut-du-corps.json, ${id}`, t.variants, 'slots', (s, where) => {
         checkRef(s.defaultExerciseId, where)
         const range = s.repRange
         if (!Array.isArray(range) || range.length !== 2 || !isNum(range[0]) || !isNum(range[1]) || range[0] > range[1]) {
@@ -134,6 +177,7 @@ export function validateData(raw: RawData): string[] {
         }
       })
     }
+    if (ub.version !== undefined && !(Number.isInteger(ub.version) && (ub.version as number) >= 1)) err('programme-haut-du-corps.json : version doit être un entier à partir de 1')
   }
 
   return errors

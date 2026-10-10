@@ -937,3 +937,74 @@ textarea.textarea {
 .card.update {
   border-color: var(--accent);
 }
+
+.picker-section {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin: 8px 0 -4px;
+}
+
+/* Combien de temps tu as ? */
+
+.time-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.time-choice {
+  min-height: 72px;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.time-choice strong {
+  font-size: 1.25rem;
+}
+
+.time-choices .time-choice:last-child {
+  grid-column: 1 / -1;
+}
+
+.variant-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 0;
+  text-align: left;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Supersets */
+
+.superset-group {
+  margin-top: 16px;
+  padding: 8px;
+  border-radius: calc(var(--radius) + 4px);
+  border: 2px dashed var(--border);
+}
+
+.superset-group.current {
+  border-color: var(--accent);
+  border-style: solid;
+}
+
+.superset-group > .card {
+  margin-top: 8px;
+}
+
+.superset-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  padding: 4px 8px 0;
+  color: var(--muted);
+}
+
+.superset-group.current .superset-head strong {
+  color: var(--accent);
+}

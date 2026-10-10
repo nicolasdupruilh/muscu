@@ -2,192 +2,359 @@
  "id": "haut-du-corps",
  "name": "Haut du corps",
  "type": "template-slots",
+ "version": 2,
  "progressionRule": {
   "type": "double-progression",
   "text": "Même charge tant que toutes les séries n'atteignent pas le haut de la fourchette. Quand c'est le cas : +1 cran de charge (incrément de l'exercice) et repartir du bas de la fourchette."
  },
+ "variantRule": "Au début de la séance, l'utilisateur choisit le temps dont il dispose. L'appli propose la variante la plus complète dont estimatedMin est inférieur ou égal à ce temps (sinon la plus courte), et permet d'en choisir une autre.",
+ "supersetRule": "Les exercices qui partagent la même valeur 'superset' s'enchaînent sans pause ; le repos se prend après le dernier exercice du groupe.",
+ "abdosRule": "Les abdos (programme-abdos.json) font partie de chaque variante et sont comptés dans estimatedMin. abdosRounds = nombre de tours du circuit pour cette variante (remplace le nombre de tours du programme abdos).",
  "templates": [
   {
    "id": "push",
    "name": "Push",
-   "slots": [
+   "thenProgram": "abdos",
+   "variants": [
     {
-     "slot": "push-horizontal",
-     "label": "Développé horizontal lourd",
-     "sets": 3,
-     "repRange": [
-      6,
-      10
-     ],
-     "restSec": 150,
-     "defaultExerciseId": "dc-halteres",
-     "note": "3 à 4 séries"
+     "id": "1h",
+     "label": "1 h",
+     "abdosRounds": 2,
+     "estimatedMin": 65,
+     "slots": [
+      {
+       "slot": "push-horizontal",
+       "label": "Développé horizontal lourd",
+       "sets": 3,
+       "repRange": [
+        6,
+        10
+       ],
+       "restSec": 150,
+       "defaultExerciseId": "dc-halteres",
+       "note": ""
+      },
+      {
+       "slot": "push-incline",
+       "label": "Développé incliné",
+       "sets": 3,
+       "repRange": [
+        8,
+        12
+       ],
+       "restSec": 120,
+       "defaultExerciseId": "incline-halteres",
+       "note": ""
+      },
+      {
+       "slot": "push-vertical",
+       "label": "Développé vertical",
+       "sets": 3,
+       "repRange": [
+        6,
+        10
+       ],
+       "restSec": 120,
+       "defaultExerciseId": "militaire-halteres",
+       "note": ""
+      },
+      {
+       "slot": "lateral-raise",
+       "label": "Élévations latérales",
+       "sets": 3,
+       "repRange": [
+        12,
+        20
+       ],
+       "restSec": 75,
+       "defaultExerciseId": "elevations-laterales",
+       "note": "",
+       "superset": "S1"
+      },
+      {
+       "slot": "triceps",
+       "label": "Triceps",
+       "sets": 3,
+       "repRange": [
+        8,
+        12
+       ],
+       "restSec": 75,
+       "defaultExerciseId": "skull-crusher",
+       "note": "",
+       "superset": "S1"
+      }
+     ]
     },
     {
-     "slot": "push-incline",
-     "label": "Développé incliné",
-     "sets": 3,
-     "repRange": [
-      8,
-      12
-     ],
-     "restSec": 120,
-     "defaultExerciseId": "incline-halteres",
-     "note": ""
-    },
-    {
-     "slot": "push-vertical",
-     "label": "Développé vertical",
-     "sets": 3,
-     "repRange": [
-      6,
-      10
-     ],
-     "restSec": 120,
-     "defaultExerciseId": "militaire-halteres",
-     "note": ""
-    },
-    {
-     "slot": "pec-isolation",
-     "label": "Isolation pecs",
-     "sets": 3,
-     "repRange": [
-      10,
-      15
-     ],
-     "restSec": 75,
-     "defaultExerciseId": "ecartes-halteres",
-     "note": ""
-    },
-    {
-     "slot": "lateral-raise",
-     "label": "Élévations latérales",
-     "sets": 3,
-     "repRange": [
-      12,
-      20
-     ],
-     "restSec": 60,
-     "defaultExerciseId": "elevations-laterales",
-     "note": ""
-    },
-    {
-     "slot": "triceps",
-     "label": "Triceps 1",
-     "sets": 3,
-     "repRange": [
-      8,
-      12
-     ],
-     "restSec": 75,
-     "defaultExerciseId": "skull-crusher",
-     "note": ""
-    },
-    {
-     "slot": "triceps",
-     "label": "Triceps 2",
-     "sets": 3,
-     "repRange": [
-      8,
-      12
-     ],
-     "restSec": 60,
-     "defaultExerciseId": "triceps-corde",
-     "note": ""
+     "id": "complete",
+     "label": "Complète",
+     "abdosRounds": 3,
+     "estimatedMin": 95,
+     "slots": [
+      {
+       "slot": "push-horizontal",
+       "label": "Développé horizontal lourd",
+       "sets": 4,
+       "repRange": [
+        6,
+        10
+       ],
+       "restSec": 150,
+       "defaultExerciseId": "dc-halteres",
+       "note": ""
+      },
+      {
+       "slot": "push-incline",
+       "label": "Développé incliné",
+       "sets": 3,
+       "repRange": [
+        8,
+        12
+       ],
+       "restSec": 120,
+       "defaultExerciseId": "incline-halteres",
+       "note": ""
+      },
+      {
+       "slot": "push-vertical",
+       "label": "Développé vertical",
+       "sets": 3,
+       "repRange": [
+        6,
+        10
+       ],
+       "restSec": 120,
+       "defaultExerciseId": "militaire-halteres",
+       "note": ""
+      },
+      {
+       "slot": "pec-isolation",
+       "label": "Isolation pecs",
+       "sets": 3,
+       "repRange": [
+        10,
+        15
+       ],
+       "restSec": 75,
+       "defaultExerciseId": "ecartes-halteres",
+       "note": "",
+       "superset": "S1"
+      },
+      {
+       "slot": "lateral-raise",
+       "label": "Élévations latérales",
+       "sets": 3,
+       "repRange": [
+        12,
+        20
+       ],
+       "restSec": 75,
+       "defaultExerciseId": "elevations-laterales",
+       "note": "",
+       "superset": "S1"
+      },
+      {
+       "slot": "triceps",
+       "label": "Triceps 1",
+       "sets": 3,
+       "repRange": [
+        8,
+        12
+       ],
+       "restSec": 75,
+       "defaultExerciseId": "skull-crusher",
+       "note": ""
+      },
+      {
+       "slot": "triceps",
+       "label": "Triceps 2",
+       "sets": 2,
+       "repRange": [
+        10,
+        15
+       ],
+       "restSec": 60,
+       "defaultExerciseId": "triceps-corde",
+       "note": ""
+      }
+     ]
     }
-   ],
-   "thenProgram": "abdos"
+   ]
   },
   {
    "id": "pull",
    "name": "Pull",
-   "slots": [
+   "thenProgram": "abdos",
+   "variants": [
     {
-     "slot": "skill",
-     "label": "Front lever",
-     "sets": 5,
-     "repRange": [
-      5,
-      10
-     ],
-     "restSec": 120,
-     "defaultExerciseId": "front-lever",
-     "note": "Tenues de 5 à 10 s + 3 descentes lentes. En premier, frais"
+     "id": "1h",
+     "label": "1 h",
+     "abdosRounds": 2,
+     "estimatedMin": 65,
+     "slots": [
+      {
+       "slot": "skill",
+       "label": "Front lever",
+       "sets": 3,
+       "repRange": [
+        5,
+        10
+       ],
+       "restSec": 90,
+       "defaultExerciseId": "front-lever",
+       "note": "3 tenues de 5 à 10 s + 2 descentes lentes. En premier, frais"
+      },
+      {
+       "slot": "pull-vertical-heavy",
+       "label": "Tractions",
+       "sets": 3,
+       "repRange": [
+        5,
+        8
+       ],
+       "restSec": 150,
+       "defaultExerciseId": "tractions",
+       "note": "1 à 2 reps en réserve. À 4×8 : ajouter du lest"
+      },
+      {
+       "slot": "row",
+       "label": "Rowing",
+       "sets": 3,
+       "repRange": [
+        8,
+        12
+       ],
+       "restSec": 120,
+       "defaultExerciseId": "rowing-poulie",
+       "note": ""
+      },
+      {
+       "slot": "biceps",
+       "label": "Biceps",
+       "sets": 3,
+       "repRange": [
+        8,
+        12
+       ],
+       "restSec": 75,
+       "defaultExerciseId": "curl-incline",
+       "note": "",
+       "superset": "S1"
+      },
+      {
+       "slot": "rear-delt",
+       "label": "Deltoïde postérieur",
+       "sets": 3,
+       "repRange": [
+        12,
+        15
+       ],
+       "restSec": 75,
+       "defaultExerciseId": "oiseau-poulie",
+       "note": "",
+       "superset": "S1"
+      }
+     ]
     },
     {
-     "slot": "pull-vertical-heavy",
-     "label": "Tractions",
-     "sets": 4,
-     "repRange": [
-      5,
-      8
-     ],
-     "restSec": 150,
-     "defaultExerciseId": "tractions",
-     "note": "1 à 2 reps en réserve. À 4×8 : ajouter du lest"
-    },
-    {
-     "slot": "pull-vertical",
-     "label": "Tirage vertical",
-     "sets": 3,
-     "repRange": [
-      10,
-      12
-     ],
-     "restSec": 90,
-     "defaultExerciseId": "tirage-uni-supination",
-     "note": ""
-    },
-    {
-     "slot": "row",
-     "label": "Rowing",
-     "sets": 3,
-     "repRange": [
-      8,
-      12
-     ],
-     "restSec": 120,
-     "defaultExerciseId": "rowing-poulie",
-     "note": ""
-    },
-    {
-     "slot": "biceps",
-     "label": "Biceps 1",
-     "sets": 3,
-     "repRange": [
-      8,
-      12
-     ],
-     "restSec": 75,
-     "defaultExerciseId": "curl-incline",
-     "note": ""
-    },
-    {
-     "slot": "biceps-2",
-     "label": "Biceps 2",
-     "sets": 3,
-     "repRange": [
-      8,
-      12
-     ],
-     "restSec": 60,
-     "defaultExerciseId": "curl-marteau",
-     "note": ""
-    },
-    {
-     "slot": "rear-delt",
-     "label": "Deltoïde postérieur",
-     "sets": 3,
-     "repRange": [
-      12,
-      15
-     ],
-     "restSec": 60,
-     "defaultExerciseId": "oiseau-poulie",
-     "note": ""
+     "id": "complete",
+     "label": "Complète",
+     "abdosRounds": 3,
+     "estimatedMin": 105,
+     "slots": [
+      {
+       "slot": "skill",
+       "label": "Front lever",
+       "sets": 5,
+       "repRange": [
+        5,
+        10
+       ],
+       "restSec": 120,
+       "defaultExerciseId": "front-lever",
+       "note": "Tenues de 5 à 10 s + 3 descentes lentes. En premier, frais"
+      },
+      {
+       "slot": "pull-vertical-heavy",
+       "label": "Tractions",
+       "sets": 4,
+       "repRange": [
+        5,
+        8
+       ],
+       "restSec": 150,
+       "defaultExerciseId": "tractions",
+       "note": "1 à 2 reps en réserve. À 4×8 : ajouter du lest"
+      },
+      {
+       "slot": "pull-vertical",
+       "label": "Tirage vertical",
+       "sets": 3,
+       "repRange": [
+        10,
+        12
+       ],
+       "restSec": 90,
+       "defaultExerciseId": "tirage-uni-supination",
+       "note": ""
+      },
+      {
+       "slot": "row",
+       "label": "Rowing",
+       "sets": 3,
+       "repRange": [
+        8,
+        12
+       ],
+       "restSec": 120,
+       "defaultExerciseId": "rowing-poulie",
+       "note": ""
+      },
+      {
+       "slot": "biceps",
+       "label": "Biceps 1",
+       "sets": 3,
+       "repRange": [
+        8,
+        12
+       ],
+       "restSec": 75,
+       "defaultExerciseId": "curl-incline",
+       "note": "",
+       "superset": "S1"
+      },
+      {
+       "slot": "rear-delt",
+       "label": "Deltoïde postérieur",
+       "sets": 3,
+       "repRange": [
+        12,
+        15
+       ],
+       "restSec": 75,
+       "defaultExerciseId": "oiseau-poulie",
+       "note": "",
+       "superset": "S1"
+      },
+      {
+       "slot": "biceps-2",
+       "label": "Biceps 2",
+       "sets": 2,
+       "repRange": [
+        8,
+        12
+       ],
+       "restSec": 60,
+       "defaultExerciseId": "curl-marteau",
+       "note": ""
+      }
+     ]
     }
-   ],
-   "thenProgram": "abdos"
+   ]
   }
+ ],
+ "changelog": [
+  "v2 (oct. 2026) : variantes 1 h et complète, supersets, abdos inclus dans la durée (2 tours en 1 h, 3 en complète)."
  ]
 }

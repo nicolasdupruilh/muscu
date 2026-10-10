@@ -1,9 +1,9 @@
 import { Link, useNavigate } from 'react-router'
 import { KneeScale } from '../components/KneeScale'
-import { legProgram, legProgramVersion, legWeek, programShapes } from '../data'
+import { legProgram, legProgramVersion, legWeek, programShapes, upperBody } from '../data'
 import { db, updateSettings } from '../db/db'
 import { logFooting } from '../db/queries'
-import { saveKneeNextDay, startLegSession } from '../db/sessions'
+import { saveKneeNextDay } from '../db/sessions'
 import { kneeRule, lastKneeSession, needsNextDayCheck } from '../logic/knee'
 import { useActiveSession, useProgramStatus, useSessions, useSettings } from '../hooks'
 import { formatDay, isSameWeek } from '../logic/dates'
@@ -46,8 +46,8 @@ export function Accueil() {
 
       {programUpdated && (
         <section className="card update">
-          <h2>Programme jambes mis à jour (v{legProgramVersion})</h2>
-          {(legProgram.changelog ?? []).slice(-1).map((line) => (
+          <h2>Programmes mis à jour</h2>
+          {[...(legProgram.changelog ?? []).slice(-1), ...(upperBody.changelog ?? []).slice(-1).map((l) => `Haut du corps ${l}`)].map((line) => (
             <p key={line} className="small">
               {line}
             </p>
@@ -88,10 +88,7 @@ export function Accueil() {
             <button
               className="btn primary block"
               style={{ marginTop: 12 }}
-              onClick={async () => {
-                await startLegSession(legs.next!.index)
-                navigate('/seance')
-              }}
+              onClick={() => navigate('/demarrer/jambes')}
             >
               Démarrer la séance {legs.next.label}
             </button>

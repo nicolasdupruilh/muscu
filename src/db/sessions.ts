@@ -1,73 +1,97 @@
 // Actions sur les séances en cours : démarrer, enregistrer une série, modifier le plan, terminer.
-import { absBlockForWeek, legPrescription, legProgram, legWeek, programShapes, upperBody } from '../data'
-import type { LoadUnit } from '../data/types'
+import { absBlockForWeek, absProgram, legPrescription, legProgram, legWeek, programShapes, upperTemplate } from '../data'
+import type { LoadUnit, Variant } from '../data/types'
 import { kneeRule, lastKneeSession } from '../logic/knee'
 import { positionOf } from '../logic/programs'
 import { restTaken } from '../logic/rest'
-import { buildAbsPlan, buildLegPlan } from '../logic/structuredPlans'
+import { buildAbsPlan, buildLegPlan, replacePlanned } from '../logic/structuredPlans'
 import { buildUpperPlan, slugify } from '../logic/upperPlan'
 import { db, type AppDB } from './db'
-import type { Exercise, PlannedExercise, Session, SetLog } from './models'
+import type { Exercise, PlannedExercise, Session, SessionVariant, SetLog } from './models'
 
 export async function activeSession(database: AppDB = db): Promise<Session | undefined> {
   return database.sessions.where('status').equals('en-cours').first()
 }
 
-/** Démarre une séance push ou pull, ou renvoie la séance déjà en cours. */
-export async function startUpperSession(type: 'push' | 'pull', database: AppDB = db): Promise<number> {
+/** Variante d'une liste par son identifiant ; à défaut, la complète (la dernière). */
+const variantById = <V extends { id: string }>(variants: V[], id?: string): V => variants.find((v) => v.id === id) ?? variants[variants.length - 1]
+
+const sessionVariant = (v: Variant & { abdosRounds?: number }): SessionVariant => ({
+  id: v.id,
+  label: v.label,
+  estimatedMin: v.estimatedMin,
+  ...(v.abdosRounds !== undefined && { abdosRounds: v.abdosRounds }),
+})
+
+/** Démarre une séance push ou pull dans la variante choisie, ou renvoie la séance déjà en cours. */
+export async function startUpperSession(type: 'push' | 'pull', variantId?: string, database: AppDB = db): Promise<number> {
   return database.transaction('rw', database.sessions, database.setLogs, database.exercises, async () => {
     const current = await activeSession(database)
     if (current) return current.id!
-    const template = upperBody.templates.find((t) => t.id === type)!
+    const template = upperTemplate(type)
+    const variant = variantById(template.variants, variantId)
     const exercises = new Map((await database.exercises.toArray()).map((e) => [e.id, e]))
     const available = (id: string) => !!exercises.get(id) && !exercises.get(id)!.archived
     const alternativeFor = (slot: string) => [...exercises.values()].find((e) => !e.archived && e.slots.includes(slot))?.id
-    const plan = buildUpperPlan(template, await database.setLogs.toArray(), available, alternativeFor)
-    return (await database.sessions.add({ date: new Date().toISOString(), type, status: 'en-cours', plan })) as number
+    const plan = buildUpperPlan(template, variant, await database.setLogs.toArray(), available, alternativeFor)
+    return (await database.sessions.add({
+      date: new Date().toISOString(),
+      type,
+      status: 'en-cours',
+      plan,
+      variant: sessionVariant(variant),
+    })) as number
   })
 }
 
 /**
- * Démarre la séance jambes à cette position du programme (ou renvoie la séance en cours).
+ * Démarre la séance jambes à cette position du programme, dans la variante choisie (ou renvoie la séance en cours).
  * Le dernier check genou orange ou rouge ajuste la séance.
  */
-export async function startLegSession(index: number, database: AppDB = db): Promise<number> {
+export async function startLegSession(index: number, variantId?: string, database: AppDB = db): Promise<number> {
   return database.transaction('rw', database.sessions, database.exercises, async () => {
     const current = await activeSession(database)
     if (current) return current.id!
     const pos = positionOf(programShapes.jambes, index)
     const session = legWeek(pos.week)?.sessions[pos.label]
     if (!session) throw new Error(`Séance jambes introuvable : semaine ${pos.week} ${pos.label}`)
+    const variant = variantById(session.variants, variantId)
+    const previous = legWeek(pos.week - 1)?.sessions[pos.label]
     const level = kneeRule(lastKneeSession(await database.sessions.toArray())?.kneeCheck, legProgram.healthCheck.rules)?.level
     const kneeAdjustment = level === 'orange' || level === 'rouge' ? level : undefined
     const jumps = new Set((await database.exercises.where('category').equals('plyo').primaryKeys()) as string[])
-    const plan = buildLegPlan(session, legWeek(pos.week - 1)?.sessions[pos.label], kneeAdjustment, (id) => jumps.has(id))
+    const plan = buildLegPlan(variant.items, previous && variantById(previous.variants, variant.id).items, kneeAdjustment, (id) => jumps.has(id))
     return (await database.sessions.add({
       date: new Date().toISOString(),
       type: 'jambes',
       status: 'en-cours',
       program: { programId: 'jambes', index },
       prescription: legPrescription(index),
+      variant: sessionVariant(variant),
       plan,
       kneeAdjustment,
     })) as number
   })
 }
 
-/** Démarre la séance abdos à cette position du programme, éventuellement enchaînée après un push ou un pull. */
+/**
+ * Démarre la séance abdos à cette position du programme. Enchaînée après un push ou un pull,
+ * elle prend le nombre de tours de la variante de cette séance (abdosRounds).
+ */
 export async function startAbsSession(index: number, parentSessionId?: number, database: AppDB = db): Promise<number> {
   return database.transaction('rw', database.sessions, async () => {
     const current = await activeSession(database)
     if (current) return current.id!
     const block = absBlockForWeek(positionOf(programShapes.abdos, index).week)
     if (!block) throw new Error('Bloc abdos introuvable')
+    const parent = parentSessionId !== undefined ? await database.sessions.get(parentSessionId) : undefined
     return (await database.sessions.add({
       date: new Date().toISOString(),
       type: 'abdos',
       status: 'en-cours',
       program: { programId: 'abdos', index },
       parentSessionId,
-      plan: buildAbsPlan(block),
+      plan: buildAbsPlan(block, absProgram.restBetweenRoundsSec, parent?.variant?.abdosRounds),
     })) as number
   })
 }
@@ -198,4 +222,22 @@ export async function createExercise(input: NewExercise, database: AppDB = db): 
     await database.exercises.add(exercise)
     return exercise.id
   })
+}
+
+/**
+ * Remplace l'exercice prévu à cette place (séance cadrée) : la séance garde ce que le programme prévoyait
+ * (« replaced ») et ce que je fais vraiment. La charge cible du programme ne vaut que pour l'exercice prévu ;
+ * revenir à l'exercice prévu la rétablit.
+ */
+export async function replaceExercise(sessionId: number, key: string, exerciseId: string, database: AppDB = db) {
+  const units = new Map((await database.exercises.toArray()).map((e) => [e.id, e.loadUnit]))
+  await updatePlan(sessionId, (plan) => plan.map((p) => (p.key === key ? replacePlanned(p, exerciseId, (id) => units.get(id)) : p)), database)
+}
+
+/** Alternatives proposées pour remplacer un exercice : celles du catalogue, et les exercices qui le citent en alternative. */
+export function alternativesFor(exerciseId: string, exercises: Exercise[]): string[] {
+  const own = exercises.find((e) => e.id === exerciseId)?.alternatives ?? []
+  const reverse = exercises.filter((e) => e.alternatives?.includes(exerciseId)).map((e) => e.id)
+  const byId = new Map(exercises.map((e) => [e.id, e]))
+  return [...new Set([...own, ...reverse])].filter((id) => id !== exerciseId && byId.has(id) && !byId.get(id)!.archived)
 }

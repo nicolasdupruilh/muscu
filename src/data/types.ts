@@ -13,6 +13,8 @@ export interface CatalogueExercise {
   slots: string[]
   cues: string
   loadIncrementKg?: number
+  /** Exercices proposés en remplacement pendant une séance cadrée. */
+  alternatives?: string[]
 }
 
 export interface ExercisesFile {
@@ -32,11 +34,25 @@ export interface LegItem {
   restSec: number
   targetLoadKg?: number
   tempo?: string
+  /** Les exercices qui partagent la même valeur s'enchaînent sans pause (superset). */
+  superset?: string
+}
+
+/** Variante d'une séance selon le temps disponible, de la plus courte à la complète. */
+export interface Variant {
+  id: string
+  label: string
+  /** Durée estimée en minutes (abdos compris pour le haut du corps). */
+  estimatedMin: number
+}
+
+export interface LegVariant extends Variant {
+  items: LegItem[]
 }
 
 export interface LegSession {
   name: string
-  items: LegItem[]
+  variants: LegVariant[]
 }
 
 export interface LegWeek {
@@ -79,6 +95,8 @@ export interface LegProgramFile {
   /** Version du programme, incrémentée à chaque modification (voir PRINCIPES.md). Absente = version 1. */
   version?: number
   changelog?: string[]
+  variantRule?: string
+  supersetRule?: string
   weeks: LegWeek[]
 }
 
@@ -114,12 +132,19 @@ export interface TemplateSlot {
   restSec: number
   defaultExerciseId: string
   note: string
+  superset?: string
+}
+
+export interface UpperVariant extends Variant {
+  /** Nombre de tours du circuit abdos enchaîné après cette séance (remplace celui du programme abdos). */
+  abdosRounds: number
+  slots: TemplateSlot[]
 }
 
 export interface UpperTemplate {
   id: 'push' | 'pull'
   name: string
-  slots: TemplateSlot[]
+  variants: UpperVariant[]
   thenProgram?: string
 }
 
@@ -127,7 +152,12 @@ export interface UpperBodyFile {
   id: string
   name: string
   type: 'template-slots'
+  version?: number
+  changelog?: string[]
   progressionRule: { type: 'double-progression'; text: string }
+  variantRule?: string
+  supersetRule?: string
+  abdosRule?: string
   templates: UpperTemplate[]
 }
 

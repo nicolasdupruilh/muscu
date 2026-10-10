@@ -1,32 +1,37 @@
 // Séance abdos en circuit : un tour = une série de chaque exercice, sans repos ; repos entre les tours.
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { unlockAudio } from '../alarm'
+import { ExercisePicker } from '../components/ExercisePicker'
 import { formatDone, LastTime, SetEditor, TargetLine, valueFields } from '../components/SetEntry'
 import { absBlockForWeek, absProgram, programShapes } from '../data'
 import type { Exercise, PlannedExercise, Session, SetLog } from '../db/models'
-import { abandonSession, finishSession, logSet, updatePlan } from '../db/sessions'
+import { abandonSession, alternativesFor, finishSession, logSet, replaceExercise, updatePlan } from '../db/sessions'
 import { useExercises, useSessions, useSetLogs } from '../hooks'
 import { formatRest } from '../logic/format'
 import { lastPerformance } from '../logic/history'
 import { positionOf } from '../logic/programs'
 import { describeReps, entryMode, parseReps } from '../logic/reps'
-import { absTarget, circuitNext, circuitRounds } from '../logic/structuredPlans'
+import { absTarget } from '../logic/structuredPlans'
+import { groupRounds, nextSet, restAfter, sequencedPlan } from '../logic/supersets'
 
 export function AbsCircuit({ session }: { session: Session }) {
   const exercises = useExercises()
   const logs = useSetLogs()
   const sessions = useSessions()
   const navigate = useNavigate()
+  const [replacing, setReplacing] = useState<string | null>(null)
   if (!exercises || !logs || !sessions) return null
 
   const id = session.id!
   const pos = positionOf(programShapes.abdos, session.program?.index ?? 0)
   const block = absBlockForWeek(pos.week)
-  const plan = session.plan ?? []
+  // Circuit : repos du programme entre les tours (aussi pour les séances enregistrées avant les supersets).
+  const plan = sequencedPlan(session.plan ?? [], 'abdos').map((p) => ({ ...p, restSec: absProgram.restBetweenRoundsSec }))
   const sessionLogs = logs.filter((l) => l.sessionId === id)
   const setsOf = (key: string) => sessionLogs.filter((l) => l.planKey === key).sort((a, b) => a.setNumber - b.setNumber)
-  const next = circuitNext(plan, (k) => setsOf(k).length)
-  const rounds = circuitRounds(plan)
+  const next = nextSet(plan, (k) => setsOf(k).length)
+  const rounds = groupRounds(plan)
 
   // Progression dans un bloc : on compare à la dernière séance abdos du même bloc.
   const blockSessions = new Set(
@@ -42,6 +47,27 @@ export function AbsCircuit({ session }: { session: Session }) {
 
   const patch = (key: string, changes: Partial<PlannedExercise>) =>
     updatePlan(id, (pl) => pl.map((p) => (p.key === key ? { ...p, ...changes } : p)))
+
+  const target = replacing ? plan.find((p) => p.key === replacing) : undefined
+  if (target) {
+    const original = target.replaced?.exerciseId ?? target.exerciseId
+    return (
+      <ExercisePicker
+        title={`Remplacer ${exercises.get(target.exerciseId)?.name ?? ''}`}
+        exercises={[...exercises.values()]}
+        logs={logs}
+        currentId={target.exerciseId}
+        defaultRestSec={absProgram.restBetweenRoundsSec}
+        suggested={alternativesFor(original, [...exercises.values()])}
+        original={original}
+        onClose={() => setReplacing(null)}
+        onPick={async (exerciseId) => {
+          await replaceExercise(id, target.key, exerciseId)
+          setReplacing(null)
+        }}
+      />
+    )
+  }
 
   const finish = async () => {
     if (next && !confirm('Le circuit n’est pas terminé. Terminer quand même ?')) return
@@ -73,12 +99,11 @@ export function AbsCircuit({ session }: { session: Session }) {
             lastInBlock={lastPerformance(blockLogs, p.exerciseId)?.sets ?? []}
             lastAny={lastPerformance(logs, p.exerciseId, id)?.sets}
             current={next?.key === p.key ? next.round : undefined}
-            restAfter={() => {
-              // Repos seulement à la fin d'un tour, s'il en reste un.
-              const after = circuitNext(plan, (k) => setsOf(k).length + (k === p.key ? 1 : 0))
-              return after && next && after.round > next.round ? absProgram.restBetweenRoundsSec : undefined
-            }}
+            // Repos seulement à la fin d'un tour, s'il en reste un.
+            restAfter={() => restAfter(plan, (k) => setsOf(k).length, p.key)}
             onSkip={() => patch(p.key, { skipped: !p.skipped })}
+            onReplace={() => setReplacing(p.key)}
+            originalName={p.replaced && exercises.get(p.replaced.exerciseId)?.name}
           />
         )
       })}
@@ -102,6 +127,8 @@ function CircuitItem({
   current,
   restAfter,
   onSkip,
+  onReplace,
+  originalName,
 }: {
   sessionId: number
   planned: PlannedExercise
@@ -113,6 +140,9 @@ function CircuitItem({
   current?: number
   restAfter: () => number | undefined
   onSkip: () => void
+  onReplace: () => void
+  /** Exercice remplacé : celui que le programme prévoyait. */
+  originalName?: string
 }) {
   const unit = exercise.loadUnit
   const parsed = parseReps(planned.prescribedReps ?? planned.repRange[0])
@@ -126,6 +156,7 @@ function CircuitItem({
       <div className="exercise-head">
         <span>
           <strong className="exercise-name">{exercise.name}</strong>
+          {originalName && <span className="small muted">à la place de {originalName}</span>}
           <span className="small muted">
             {planned.sets} tours × {describeReps(parsed)}
           </span>
@@ -176,6 +207,11 @@ function CircuitItem({
             <button className="btn" onClick={onSkip}>
               {planned.skipped ? 'Reprendre' : 'Sauter'}
             </button>
+            {sets.length === 0 && (
+              <button className="btn" onClick={onReplace}>
+                Remplacer
+              </button>
+            )}
           </div>
         )}
       </div>

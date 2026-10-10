@@ -4,6 +4,7 @@ import { db, getSettings } from './db/db'
 import type { ProgramId } from './db/models'
 import { completionsOf } from './db/queries'
 import { programStatus } from './logic/programs'
+import { durationFactor, durationSamples } from './logic/variants'
 
 export const useSessions = () => useLiveQuery(() => db.sessions.orderBy('date').toArray(), [])
 
@@ -26,3 +27,11 @@ export const useActiveSession = () =>
   useLiveQuery(async () => (await db.sessions.where('status').equals('en-cours').first()) ?? null, [])
 
 export const useSetLogs = () => useLiveQuery(() => db.setLogs.toArray(), [])
+
+/** Coefficient de correction des durées estimées, d'après mes dernières séances (undefined pendant le chargement). */
+export function useDurationFactor() {
+  const sessions = useSessions()
+  const settings = useSettings()
+  if (!sessions || !settings) return undefined
+  return durationFactor(durationSamples(sessions), settings.durationFactorResetAt)
+}

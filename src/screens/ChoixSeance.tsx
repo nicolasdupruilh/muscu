@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router'
 import { StartUpperButton } from '../components/StartUpperButton'
-import { startAbsSession, startLegSession } from '../db/sessions'
+import { startAbsSession } from '../db/sessions'
 import { useProgramStatus } from '../hooks'
 
 export function ChoixSeance() {
@@ -19,7 +19,7 @@ export function ChoixSeance() {
       <h1>Choisir une séance</h1>
       <div className="card stack">
         {legs.next && (
-          <button className="btn block" onClick={start(() => startLegSession(legs.next!.index))}>
+          <button className="btn block" onClick={() => navigate('/demarrer/jambes')}>
             Jambes · semaine {legs.next.week}, séance {legs.next.label}
           </button>
         )}
