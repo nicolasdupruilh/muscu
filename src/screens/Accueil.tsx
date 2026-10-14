@@ -1,36 +1,69 @@
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { KneeScale } from '../components/KneeScale'
-import { legProgram, legProgramVersion, legWeek, programShapes, upperBody } from '../data'
-import { db, updateSettings } from '../db/db'
-import { logFooting } from '../db/queries'
-import { saveKneeNextDay } from '../db/sessions'
-import { kneeRule, lastKneeSession, needsNextDayCheck } from '../logic/knee'
-import { useActiveSession, useProgramStatus, useSessions, useSettings } from '../hooks'
-import { formatDay, isSameWeek } from '../logic/dates'
-import { nextUpperType } from '../logic/upperBody'
-import { ProgramWeek } from '../components/ProgramWeek'
 import { StartUpperButton } from '../components/StartUpperButton'
+import { legPhase, legProgram, legProgramVersion, upperBody } from '../data'
+import { db, updateSettings } from '../db/db'
+import type { Session } from '../db/models'
+import { saveNextDay, setIsoDone } from '../db/phases'
+import { logFooting } from '../db/queries'
+import { useActiveSession, usePhase, useProgramStatus, useSessions, useSetLogs, useSettings } from '../hooks'
+import { formatDay, isSameWeek, toLocalDate } from '../logic/dates'
+import { checkedSessions, kneeRule, pendingNextDay } from '../logic/knee'
+import { nextUpperType } from '../logic/upperBody'
+import { addDailyReminder, dailyOf, REMINDER_HOUR } from './Iso'
+
+const typeNames: Record<string, string> = { push: 'Push', pull: 'Pull', jambes: 'Jambes', abdos: 'Abdos', volley: 'Volley' }
+const shortDay = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' })
+const appliesTo = legProgram.healthCheck.appliesTo ?? ['jambes']
 
 export function Accueil() {
   const sessions = useSessions()
+  const logs = useSetLogs()
   const active = useActiveSession()
-  const legs = useProgramStatus('jambes')
+  const phase = usePhase()
   const abs = useProgramStatus('abdos')
-  const navigate = useNavigate()
   const settings = useSettings()
-  if (!sessions || !legs || !abs || active === undefined || !settings) return null
+  const navigate = useNavigate()
+  const [reminder, setReminder] = useState<string>()
 
   const now = new Date()
+  const today = toLocalDate(now)
+  const daily = phase && phase.pos.phase.daily ? dailyOf(phase.pos.phase.daily)[0] : undefined
+  // Isométriques faits aujourd'hui : cochés, ou les tenues faites dans une séance jambes du jour.
+  const isoDone =
+    !!sessions &&
+    !!logs &&
+    (sessions.some((s) => s.type === 'iso' && toLocalDate(new Date(s.date)) === today) ||
+      (!!daily &&
+        logs.filter((l) => l.done && l.exerciseId === daily.exerciseId && toLocalDate(new Date(l.at)) === today).length >= daily.sets))
+
+  // Pastille sur l'icône de l'appli tant que les isométriques du jour ne sont pas faits (quand iOS le permet).
+  useEffect(() => {
+    if (!daily) return
+    if (isoDone) void navigator.clearAppBadge?.().catch(() => {})
+    else void navigator.setAppBadge?.(1).catch(() => {})
+  }, [daily, isoDone])
+
+  if (!sessions || !logs || !phase || !abs || active === undefined || !settings) return null
+
   const footings = sessions.filter((s) => s.type === 'course' && isSameWeek(new Date(s.date), now))
   const upper = nextUpperType(sessions)
-  const legsWeek = legs.next && legWeek(legs.next.week)
-  const kneeSession = lastKneeSession(sessions)
-  const kneeStatus = kneeRule(kneeSession?.kneeCheck, legProgram.healthCheck.rules)
-  const askNextDay = needsNextDayCheck(kneeSession, now)
-  // Annonce d'une nouvelle version du programme, une seule fois, si j'ai déjà fait des séances avec l'ancienne.
+  const { pos, ladder, events } = phase
+  const rules = legProgram.healthCheck.rules
+  const pending = pendingNextDay(sessions, now, appliesTo)
+  const lastAnswered = checkedSessions(sessions, appliesTo)
+    .filter((s) => s.kneeCheck?.lendemain !== undefined)
+    .pop()
+  const knee = kneeRule(lastAnswered?.kneeCheck, rules, legProgram.healthCheck.decisionOn)
+  const lastEvent = events[events.length - 1]
+  const legsSinceEvent = sessions.some((s) => s.type === 'jambes' && s.phase?.entryId === lastEvent?.id && s.status === 'terminee')
   const programUpdated =
     legProgramVersion > (settings.seenLegProgramVersion ?? 1) &&
     sessions.some((s) => s.type === 'jambes' && (s.prescription?.programVersion ?? 1) < legProgramVersion)
+  const phaseShort = pos.phase.name.split(' :')[0]
+  const legsThisWeek = sessions.filter((s) => s.type === 'jambes' && s.status === 'terminee' && s.phase?.entryId === pos.entry.id && isSameWeek(new Date(s.date), now)).length
+  const describe = (s: Session) => `${s.type === 'volley' ? 'le volley' : 'la séance jambes'} du ${shortDay.format(new Date(s.date))}`
 
   return (
     <>
@@ -39,9 +72,27 @@ export function Accueil() {
 
       {active && (
         <Link className="card resume" to="/seance">
-          <strong>Séance en cours : {active.type === 'push' ? 'Push' : active.type === 'pull' ? 'Pull' : active.type}</strong>
+          <strong>Séance en cours : {typeNames[active.type] ?? active.type}</strong>
           <span className="btn primary">Reprendre</span>
         </Link>
+      )}
+
+      {lastEvent?.reason === 'regression' && !legsSinceEvent && (
+        <section className="card knee rouge">
+          <strong>Retour en {legPhase(lastEvent.phaseId)?.name}</strong>
+          <p className="small">Raison : {lastEvent.note}.</p>
+          <p className="small">{rules.find((r) => r.level === 'rouge')?.action}</p>
+        </section>
+      )}
+
+      {pending.length > 0 && (
+        <section className="card">
+          <h2>Genou : check du matin</h2>
+          <p>
+            {legProgram.healthCheck.questions.find((q) => q.id === 'lendemain')?.label}, après {pending.map(describe).join(' et ')} : douleur de 0 à 10.
+          </p>
+          <KneeScale onPick={(v) => void saveNextDay(pending.map((s) => s.id!), v)} />
+        </section>
       )}
 
       {programUpdated && (
@@ -52,48 +103,140 @@ export function Accueil() {
               {line}
             </p>
           ))}
-          <p className="small muted">Tes séances déjà faites gardent ce qui était prescrit à l’époque.</p>
+          <p className="small muted">Tes séances déjà faites gardent ce qui était prescrit à l’époque, et restent dans l’historique.</p>
           <button className="btn block" onClick={() => updateSettings((s) => ({ ...s, seenLegProgramVersion: legProgramVersion }))}>
             Compris
           </button>
         </section>
       )}
 
-      {askNextDay && kneeSession && (
-        <section className="card">
-          <h2>Genou : check du matin</h2>
-          <p>{legProgram.healthCheck.questions.find((q) => q.id === 'lendemain')?.label}, douleur de 0 à 10 :</p>
-          <KneeScale onPick={(v) => saveKneeNextDay(kneeSession.id!, v)} />
+      {daily && (
+        <section className={`card ${isoDone ? '' : 'update'}`}>
+          <div className="row">
+            <h2 className="grow">Isométriques du jour</h2>
+            <button className={`chip ${isoDone ? 'on' : ''}`} onClick={() => setIsoDone(!isoDone)} aria-pressed={isoDone}>
+              {isoDone ? 'Faits ✓' : 'À faire'}
+            </button>
+          </div>
+          <p className="small muted">
+            {daily.sets} × 45 s, tous les jours, même sans salle. {daily.note}
+          </p>
+          {!isoDone && (
+            <button className="btn primary block" onClick={() => navigate('/iso')}>
+              Lancer le minuteur
+            </button>
+          )}
+          <button
+            className="link"
+            onClick={async () => {
+              const ok = await addDailyReminder((pos.phase.maxWeeks ?? 2) * 7)
+              if (ok) setReminder(`Ouvre le fichier avec Calendrier et ajoute l’événement : alerte chaque jour à ${REMINDER_HOUR} h.`)
+            }}
+          >
+            Rappel chaque jour à {REMINDER_HOUR} h dans le Calendrier
+          </button>
+          {reminder && <p className="small">{reminder}</p>}
         </section>
       )}
 
       <section className="card">
         <div className="row">
-          <h2 className="grow">Jambes</h2>
-          {legsWeek?.deload && <span className="badge warn">Semaine allégée</span>}
+          <h2 className="grow">Jambes · {phaseShort}</h2>
+          {pos.weekData?.deload && <span className="badge warn">Semaine allégée</span>}
         </div>
-        {legs.finished || !legs.next ? (
-          <p>Programme de 16 semaines terminé.</p>
+        <p className="muted">{pos.phase.name.split(': ')[1] ?? pos.phase.name}</p>
+        {pos.finished ? (
+          <p>Programme terminé.</p>
         ) : (
           <>
-            <p className="muted">
-              Semaine {legs.next.week} / {programShapes.jambes.weeksCount} · {legsWeek?.blockName}
-            </p>
-            <ProgramWeek status={legs} labelOf={(p) => `Séance ${p.label}`} detailOf={(p) => legWeek(p.week)?.sessions[p.label]?.name} />
-            {kneeStatus && !askNextDay && (
-              <div className={`knee-line ${kneeStatus.level}`}>
-                <strong>Genou {kneeStatus.level}</strong> · {kneeStatus.action}
+            {pos.week ? (
+              <p>
+                Semaine {pos.instance}
+                {pos.repeat === 'orange' && ' : on refait la semaine (lendemain orange)'}
+                {pos.repeat === 'derniere' && ` : on répète la semaine ${pos.week}${pos.loadBonusKg ? ` (+${pos.loadBonusKg.toLocaleString('fr-FR')} kg)` : ''}`}
+                {pos.weekData?.blockName && pos.phase.id === 'p4' && ` · ${pos.weekData.blockName}`}
+              </p>
+            ) : (
+              <p>
+                {pos.phase.sessionsPerWeek?.length ?? 2} séances par semaine · {legsThisWeek} faite{legsThisWeek > 1 ? 's' : ''} cette semaine
+              </p>
+            )}
+            {pos.week !== undefined && (
+              <div className="stack">
+                {pos.labels.map((l) => (
+                  <div key={l} className={`session-line ${l === pos.label ? 'next' : ''}`}>
+                    <div>
+                      <strong>Séance {l}</strong>
+                      <div className="small muted">{pos.weekData?.sessions[l]?.name}</div>
+                    </div>
+                    <span className={`badge ${pos.doneLabels.includes(l) ? 'ok' : ''}`}>
+                      {pos.doneLabels.includes(l) ? 'Faite ✓' : l === pos.label ? 'Prochaine' : 'À faire'}
+                    </span>
+                  </div>
+                ))}
               </div>
             )}
-            <button
-              className="btn primary block"
-              style={{ marginTop: 12 }}
-              onClick={() => navigate('/demarrer/jambes')}
-            >
-              Démarrer la séance {legs.next.label}
+            {knee && (
+              <div className={`knee-line ${knee.level}`}>
+                <strong>Genou {knee.level}</strong> (lendemain {lastAnswered?.kneeCheck?.lendemain}/10) · {knee.action}
+              </div>
+            )}
+            {phase.jumpNote && <p className="small warn-text">{phase.jumpNote} Les sauts seront sautés (réactivables).</p>}
+            {phase.overMax && (
+              <p className="small warn-text">
+                La phase dure depuis plus de {pos.phase.maxWeeks} semaines : si la douleur ne baisse pas nettement, vois un médecin ou ta kiné.
+              </p>
+            )}
+            <button className="btn primary block" style={{ marginTop: 12 }} onClick={() => navigate('/demarrer/jambes')}>
+              Démarrer la séance {pos.label}
             </button>
           </>
         )}
+
+        {pos.phase.exitCriteria?.length ? (
+          phase.minReached ? (
+            <button className="btn block" style={{ marginTop: 8 }} onClick={() => navigate('/phase/test')}>
+              Faire le test de sortie
+              {phase.lastTest && !phase.lastTest.passed && ` (dernier : ${phase.lastTest.failed.length} critère${phase.lastTest.failed.length > 1 ? 's' : ''} manquant${phase.lastTest.failed.length > 1 ? 's' : ''})`}
+            </button>
+          ) : (
+            <p className="small muted" style={{ marginTop: 8 }}>
+              Test de sortie possible après{' '}
+              {pos.phase.minDays !== undefined
+                ? `${pos.phase.minDays} jours (jour ${phase.daysInPhase + 1})`
+                : `${pos.phase.minWeeks} semaines faites (${pos.weeksDone} pour l’instant)`}
+              .
+            </p>
+          )
+        ) : null}
+
+        <details className="small muted" style={{ marginTop: 8 }}>
+          <summary>Objectif et règles de la phase</summary>
+          <p>{pos.phase.goal}</p>
+          <ul>
+            {pos.phase.rules.map((r) => (
+              <li key={r}>{r}</li>
+            ))}
+          </ul>
+        </details>
+      </section>
+
+      <section className="card">
+        <h2>Volley</h2>
+        {ladder ? (
+          <p>
+            {ladder.current ? `Dernier volley : marche ${ladder.current}. ` : ''}
+            Prochain autorisé : <strong>marche {ladder.next}</strong> ({pos.phase.volleyLadder?.find((s) => s.step === ladder.next)?.label}).
+            <span className="small muted"> {ladder.reason}</span>
+          </p>
+        ) : (
+          <p className="small muted">
+            {pos.phase.rules.find((r) => /volley/i.test(r)) ?? 'Le check genou s’applique aussi au volley.'}
+          </p>
+        )}
+        <button className="btn block" onClick={() => navigate('/volley')}>
+          Enregistrer un volley
+        </button>
       </section>
 
       <section className="card">

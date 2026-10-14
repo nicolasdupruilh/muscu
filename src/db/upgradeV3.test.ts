@@ -3,7 +3,15 @@ import Dexie from 'dexie'
 import { afterEach, describe, expect, it } from 'vitest'
 import { catalogue } from '../data'
 import { AppDB, syncCatalogue, upperPlaceKey } from './db'
-import { alternativesFor, finishSession, logSet, replaceExercise, startAbsSession, startLegSession, startUpperSession } from './sessions'
+import { alternativesFor, finishLegSession, finishSession, logSet, replaceExercise, startAbsSession, startUpperSession } from './sessions'
+import { setPhaseManually, startLegSession } from './phases'
+
+/** Séance B de la semaine 1 de la phase 4 (blocs de l'ancien programme), dans la variante demandée. */
+async function startP4B(d: AppDB, variant?: string) {
+  await setPhaseManually('p4', d)
+  await finishLegSession(await startLegSession('complete', d), 0, d)
+  return startLegSession(variant, d)
+}
 
 const names: string[] = []
 let n = 0
@@ -49,7 +57,7 @@ describe('variantes', () => {
 
   it('jambes B 1 h : la variante choisie, avec l’épaulé', async () => {
     const d = await freshDb()
-    const id = await startLegSession(1, '1h', d) // semaine 1, séance B
+    const id = await startP4B(d, '1h')
     const s = (await d.sessions.get(id))!
     expect(s.variant).toMatchObject({ id: '1h', estimatedMin: 65 })
     expect(s.plan?.map((p) => p.exerciseId)).toEqual(['echauffement-jambes', 'epaule', 'rdl', 'hip-thrust', 'leg-curl', 'copenhague'])
@@ -59,7 +67,7 @@ describe('variantes', () => {
 
   it('sans variante précisée : la complète', async () => {
     const d = await freshDb()
-    const s = (await d.sessions.get(await startLegSession(1, undefined, d)))!
+    const s = (await d.sessions.get(await startP4B(d)))!
     expect(s.variant?.id).toBe('complete')
     expect(s.plan?.map((p) => p.exerciseId)).toContain('traineau')
     d.close()
@@ -69,10 +77,10 @@ describe('variantes', () => {
 describe('remplacement par une alternative', () => {
   it('garde l’exercice prévu et ce que j’ai vraiment fait', async () => {
     const d = await freshDb()
-    const id = await startLegSession(1, 'complete', d)
+    const id = await startP4B(d, 'complete')
     const leg = () => d.sessions.get(id).then((s) => s!.plan!)
     const curl = (await leg()).find((p) => p.exerciseId === 'leg-curl')!
-    expect(curl.targetLoadKg).toBe(55)
+    expect(curl.targetLoadKg).toBe(57.5)
     const copenhague = (await leg()).find((p) => p.exerciseId === 'copenhague')!
     expect(alternativesFor('copenhague', await d.exercises.toArray())).toEqual(['adducteurs-machine'])
     expect(alternativesFor('adducteurs-machine', await d.exercises.toArray())).toEqual(['copenhague'])
@@ -87,10 +95,10 @@ describe('remplacement par une alternative', () => {
 
     // Remplacer un exercice qui a une charge cible : elle ne vaut plus ; revenir à l'exercice prévu la rétablit.
     await replaceExercise(id, curl.key, 'curl-poulie', d)
-    expect((await leg()).find((p) => p.key === curl.key)).toMatchObject({ exerciseId: 'curl-poulie', targetLoadKg: undefined, replaced: { exerciseId: 'leg-curl', targetLoadKg: 55 } })
+    expect((await leg()).find((p) => p.key === curl.key)).toMatchObject({ exerciseId: 'curl-poulie', targetLoadKg: undefined, replaced: { exerciseId: 'leg-curl', targetLoadKg: 57.5 } })
     await replaceExercise(id, curl.key, 'leg-curl', d)
     const back = (await leg()).find((p) => p.key === curl.key)!
-    expect(back).toMatchObject({ exerciseId: 'leg-curl', targetLoadKg: 55 })
+    expect(back).toMatchObject({ exerciseId: 'leg-curl', targetLoadKg: 57.5 })
     expect(back.replaced).toBeUndefined()
     d.close()
   })
@@ -145,7 +153,7 @@ describe('migration de la trame haut du corps v1', () => {
 describe('remplacement entre durée et reps', () => {
   it('passe à 8 à 12 reps quand un gainage en durée est remplacé par un exercice en reps, et revient', async () => {
     const d = await freshDb()
-    const id = await startLegSession(1, 'complete', d)
+    const id = await startP4B(d, 'complete')
     const leg = () => d.sessions.get(id).then((s) => s!.plan!)
     const copenhague = (await leg()).find((p) => p.exerciseId === 'copenhague')!
     expect(copenhague).toMatchObject({ prescribedReps: '20 s', repRange: [20, 20] })

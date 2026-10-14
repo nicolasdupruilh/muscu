@@ -8,7 +8,7 @@ export interface Exercise extends CatalogueExercise {
   archived: boolean
 }
 
-export type SessionType = 'jambes' | 'push' | 'pull' | 'abdos' | 'libre' | 'course'
+export type SessionType = 'jambes' | 'push' | 'pull' | 'abdos' | 'libre' | 'course' | 'volley' | 'iso'
 
 export type ProgramId = 'jambes' | 'abdos'
 
@@ -53,6 +53,9 @@ export interface PlannedExercise {
   adjustmentNote?: string
   /** Les exercices consécutifs qui partagent cette valeur s'enchaînent sans pause (superset, ou circuit abdos). */
   superset?: string
+  /** Exercice optionnel : sa condition (« semaine>=2 et lendemain<=2 ») est remplie aujourd'hui. */
+  optional?: boolean
+  condition?: string
   /** Exercice remplacé pendant la séance : ce que le programme prévoyait à l'origine. */
   replaced?: { exerciseId: string; targetLoadKg?: number; prescribedReps?: Reps; repRange?: [number, number] }
 }
@@ -78,12 +81,59 @@ export interface RestTimer {
 
 export interface LegPrescription {
   programVersion: number
+  /** Programme par phases (v4) : phase de la séance. */
+  phaseId?: string
+  phaseName?: string
   /** « Jambes A : force et sauts ». */
   name: string
   week: number
   label: string
   blockName: string
   deload: boolean
+}
+
+/** Place d'une séance dans le programme par phases. */
+export interface SessionPhase {
+  /** Entrée dans la phase (PhaseEvent.id) : les séances d'une entrée comptent ensemble. */
+  entryId: number
+  phaseId: string
+  /** Semaine du programme dont la séance reprend le contenu (absente en phase 0). */
+  week?: number
+  /** Rang de la semaine faite dans cette entrée de phase, répétitions comprises (1, 2, 3, 4…). */
+  instance?: number
+  label?: string
+  /** Charge ajoutée aux charges cibles quand la dernière semaine est répétée (phase 1 : +2,5 kg par répétition). */
+  loadBonusKg?: number
+}
+
+export interface VolleyInfo {
+  durationMin: number
+  /** Marche de l'échelle de retour au volley (phase 3). */
+  ladderStep?: number
+  /** Nombre approximatif d'attaques. */
+  attacks?: number
+}
+
+/** Journal des phases : chaque entrée dans une phase. La phase en cours est la dernière. */
+export interface PhaseEvent {
+  id?: number
+  at: string
+  phaseId: string
+  reason: 'debut' | 'test' | 'regression' | 'manuel'
+  note?: string
+}
+
+export type CriterionAnswer = number | boolean | { right: number; left: number }
+
+/** Test de sortie d'une phase, réussi ou non. */
+export interface PhaseTest {
+  id?: number
+  at: string
+  phaseId: string
+  answers: Record<string, CriterionAnswer>
+  passed: boolean
+  /** Critères non remplis. */
+  failed: string[]
 }
 
 export interface Session {
@@ -100,10 +150,16 @@ export interface Session {
   /** Exercices prévus, dans l'ordre (séances haut du corps et libres). */
   plan?: PlannedExercise[]
   rest?: RestTimer
+  /** Exercices optionnels masqués parce que leur condition n'était pas remplie. */
+  hiddenOptional?: { exerciseId: string; condition: string }[]
   /** Variante choisie au démarrage (séances jambes, push, pull). */
   variant?: SessionVariant
   /** Séance jambes : copie de ce qui était prescrit au démarrage (le fichier du programme peut changer ensuite). */
   prescription?: LegPrescription
+  /** Séance jambes du programme par phases : place dans la phase. */
+  phase?: SessionPhase
+  /** Séance de volley. */
+  volley?: VolleyInfo
   /** Séance jambes ajustée à cause du dernier check genou. */
   kneeAdjustment?: 'orange' | 'rouge'
   notes?: string

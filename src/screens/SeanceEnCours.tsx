@@ -4,7 +4,7 @@ import { unlockAudio } from '../alarm'
 import { ExercisePicker } from '../components/ExercisePicker'
 import { KneeScale } from '../components/KneeScale'
 import { defaultMode, doneValue, formatDone, LastTime, RestChooser, SetEditor, TargetLine, valueFields } from '../components/SetEntry'
-import { legPrescription, legProgram } from '../data'
+import { legPhase, legProgram, oldLegPrescription } from '../data'
 import type { Exercise, PlannedExercise, Session, SetLog } from '../db/models'
 import {
   abandonSession,
@@ -28,6 +28,7 @@ import { legTarget } from '../logic/structuredPlans'
 import { groupRounds, groupsOf, nextSet, restAfter } from '../logic/supersets'
 import { formatDuration } from '../logic/variants'
 import { describeTempo } from '../logic/tempo'
+import { describeCondition } from '../logic/phases'
 import { AbsCircuit } from './AbsCircuit'
 import { ChoixSeance } from './ChoixSeance'
 
@@ -78,7 +79,8 @@ function SeanceEnCours({ session }: { session: Session }) {
   // Exercice ouvert : celui que j'ai touché, sinon la prochaine série dans l'ordre de la séance (supersets compris).
   const next = nextSet(plan, count)
   const open = openKey ?? next?.key
-  const remaining = plan.filter((p) => !p.skipped && !isComplete(p)).length
+  // Les exercices optionnels ne comptent pas comme « restants ».
+  const remaining = plan.filter((p) => !p.skipped && !p.optional && !isComplete(p)).length
 
   const move = (key: string, dir: -1 | 1) =>
     updatePlan(id, (pl) => {
@@ -185,7 +187,7 @@ function SeanceEnCours({ session }: { session: Session }) {
 
   return (
     <>
-      {isLegs ? <LegHeader session={session} /> : <h1>{typeNames[session.type] ?? session.type}</h1>}
+      {isLegs ? <LegHeader session={session} exercises={exercises} /> : <h1>{typeNames[session.type] ?? session.type}</h1>}
       <p className="muted">
         {session.variant && <>Variante {session.variant.label} (prévu {formatDuration(session.variant.estimatedMin)}) · </>}
         Commencée à {timeFormat.format(new Date(session.date))}, il y a <Elapsed since={session.date} /> ·{' '}
@@ -266,28 +268,42 @@ function SeanceEnCours({ session }: { session: Session }) {
   )
 }
 
-/** En-tête d'une séance jambes : semaine, bloc, semaine allégée, ajustement genou, règle de charge. */
-function LegHeader({ session }: { session: Session }) {
+/** En-tête d'une séance jambes : phase, semaine, bloc, semaine allégée, règles de la phase, exercices masqués. */
+function LegHeader({ session, exercises }: { session: Session; exercises: Map<string, Exercise> }) {
   // Ce qui était prescrit au démarrage de la séance, même si le programme a changé depuis.
-  const p = session.prescription ?? legPrescription(session.program?.index ?? 0)
+  const p = session.prescription ?? (session.program ? oldLegPrescription(session.program.index) : undefined)
+  const phase = session.phase && legPhase(session.phase.phaseId)
   const rule = session.kneeAdjustment && legProgram.healthCheck.rules.find((r) => r.level === session.kneeAdjustment)
   return (
     <>
       <h1>{p?.name ?? 'Jambes'}</h1>
       <p className="muted">
-        Semaine {p?.week} · {p?.blockName} {p?.deload && <span className="badge warn">Semaine allégée</span>}
+        {phase ? phase.name : `Semaine ${p?.week}`}
+        {session.phase?.week !== undefined && session.phase.instance && <> · semaine {session.phase.instance}</>}
+        {phase?.id === 'p4' && p?.blockName && <> · {p.blockName}</>}
+        {p?.deload && <span className="badge warn">Semaine allégée</span>}
       </p>
       {rule && (
         <div className={`card knee ${rule.level}`}>
           <strong>Genou {rule.level} à la dernière séance.</strong>
           <div className="small">{rule.action}</div>
-          <div className="small muted">Les ajustements sont appliqués ci-dessous ; tu peux les annuler exercice par exercice.</div>
         </div>
       )}
-      <details className="small muted">
-        <summary>Règle de charge</summary>
-        {legProgram.loadRule}
-      </details>
+      {phase && (
+        <details className="small muted">
+          <summary>Règles de la phase</summary>
+          <ul>
+            {phase.rules.map((r) => (
+              <li key={r}>{r}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+      {session.hiddenOptional?.map((h) => (
+        <p key={h.exerciseId} className="small muted">
+          {exercises.get(h.exerciseId)?.name ?? h.exerciseId} masqué : optionnel {describeCondition(h.condition)}, condition non remplie aujourd’hui.
+        </p>
+      ))}
     </>
   )
 }
@@ -384,6 +400,7 @@ function ExerciseCard({
           {planned.label && <span className="small muted">{planned.label}</span>}
           <strong className="exercise-name">{exercise.name}</strong>
           {originalName && <span className="small muted">à la place de {originalName}</span>}
+          {planned.optional && <span className="small optional-tag">Optionnel · {describeCondition(planned.condition ?? '')}</span>}
           {!open && (
             <span className="small muted">
               {planned.sets} × {prescription}

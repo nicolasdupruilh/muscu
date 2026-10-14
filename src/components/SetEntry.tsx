@@ -7,6 +7,7 @@ import { formatLoad, formatRest, formatSet, formatValue } from '../logic/format'
 import { hasLoad, setValue } from '../logic/history'
 import { REST_PRESETS, REST_STEP } from '../logic/rest'
 import type { EntryMode } from '../logic/reps'
+import { HoldTimer } from './HoldTimer'
 import { LoadStepper } from './LoadStepper'
 import { Stepper } from './Stepper'
 
@@ -128,6 +129,7 @@ export function SetEditor({
           format={(v) => (unit === 'bodyweight+kg' && v === 0 ? 'PDC' : `${v.toLocaleString('fr-FR')} kg`)}
         />
       )}
+      {mode === 'time' && targetValue > 0 && <HoldTimer seconds={targetValue} onDone={(sec) => setValue(sec)} />}
       {mode !== 'check' && (
         <>
           <div className="stepper-label">{valueLabel}</div>

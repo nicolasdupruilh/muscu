@@ -1,6 +1,8 @@
 // Vérifie la cohérence des fichiers de data/ : formes attendues et références entre fichiers.
 // Une erreur dans un JSON doit se voir tout de suite, pas en pleine séance.
 
+import { AUTO_CRITERIA, parseCondition } from '../logic/phases'
+
 const LOAD_UNITS = ['kg', 'bodyweight', 'bodyweight+kg', 'time', 'none']
 
 export interface RawData {
@@ -88,37 +90,78 @@ export function validateData(raw: RawData): string[] {
     })
   }
 
-  // Programme jambes
+  // Programme jambes, par phases
   const legs = raw.legs
-  if (!isObj(legs) || !Array.isArray(legs.weeks) || !isNum(legs.weeksCount) || !Array.isArray(legs.sessionsPerWeek)) {
-    err('programme-jambes.json : structure inattendue (weeks, weeksCount, sessionsPerWeek)')
+  if (!isObj(legs) || legs.type !== 'phased' || !Array.isArray(legs.phases) || legs.phases.length === 0) {
+    err('programme-jambes.json : structure inattendue (type « phased » et liste « phases » attendus)')
   } else {
-    const names = legs.sessionsPerWeek as unknown[]
-    if (legs.weeks.length !== legs.weeksCount) err(`programme-jambes.json : ${legs.weeks.length} semaines au lieu de ${legs.weeksCount}`)
-    legs.weeks.forEach((w, i) => {
-      if (!isObj(w)) return err(`programme-jambes.json, semaine n°${i + 1} : pas un objet`)
-      if (w.week !== i + 1) err(`programme-jambes.json : semaine n°${i + 1} numérotée ${String(w.week)}`)
-      if (!isObj(w.sessions)) return err(`programme-jambes.json, semaine ${i + 1} : séances absentes`)
-      for (const name of names) {
-        const s = (w.sessions as Obj)[name as string]
-        const where = `programme-jambes.json, semaine ${i + 1} séance ${String(name)}`
-        if (!isObj(s) || !isStr(s.name)) {
-          err(`${where} : absente`)
-          continue
-        }
-        checkVariants(where, s.variants, 'items', (it, w2) => {
-          checkRef(it.exerciseId, w2)
-          if (it.exerciseId === 'leg-extension') err(`${w2} : leg extension interdit`)
-          if (!isNum(it.sets)) err(`${w2} : sets manquant`)
-          if (!isReps(it.reps)) err(`${w2} : reps manquant`)
-          if (!isNum(it.restSec)) err(`${w2} : restSec manquant`)
+    const F = 'programme-jambes.json'
+    const phaseIds = new Set<unknown>()
+    const checkItem = (it: Obj, w: string) => {
+      checkRef(it.exerciseId, w)
+      if (it.exerciseId === 'leg-extension') err(`${w} : leg extension interdit`)
+      if (!isNum(it.sets)) err(`${w} : sets manquant`)
+      if (!isReps(it.reps)) err(`${w} : reps manquant`)
+      if (!isNum(it.restSec)) err(`${w} : restSec manquant`)
+      if (it.condition !== undefined && !(isStr(it.condition) && parseCondition(it.condition))) {
+        err(`${w} : condition « ${String(it.condition)} » illisible (attendu : semaine>=2, lendemain<=2, reliés par « et »)`)
+      }
+    }
+    const checkSession = (s: unknown, where: string) => {
+      if (!isObj(s) || !isStr(s.name)) return err(`${where} : absente`)
+      checkVariants(where, s.variants, 'items', checkItem)
+    }
+    legs.phases.forEach((p, i) => {
+      const where = `${F}, phase n°${i + 1}`
+      if (!isObj(p)) return err(`${where} : pas un objet`)
+      const pw = `${F}, ${String(p.id)}`
+      if (!isStr(p.id) || phaseIds.has(p.id)) err(`${where} : id manquant ou en double`)
+      phaseIds.add(p.id)
+      if (!isStr(p.name)) err(`${pw} : name manquant`)
+      if (!Array.isArray(p.rules) || !p.rules.every(isStr)) err(`${pw} : rules doit être une liste de textes`)
+      const hasWeeks = Array.isArray(p.weeks) && p.weeks.length > 0
+      const hasSessions = isObj(p.sessions)
+      if (!hasWeeks && !hasSessions) err(`${pw} : ni semaines (weeks) ni séances (sessions)`)
+      if (hasSessions) for (const [label, s] of Object.entries(p.sessions as Obj)) checkSession(s, `${pw} séance ${label}`)
+      if (hasWeeks) {
+        const labels = JSON.stringify(Object.keys(((p.weeks as Obj[])[0]?.sessions as Obj) ?? {}))
+        ;(p.weeks as unknown[]).forEach((w, k) => {
+          if (!isObj(w) || !isObj(w.sessions)) return err(`${pw}, semaine n°${k + 1} : séances absentes`)
+          if (w.week !== k + 1) err(`${pw} : semaine n°${k + 1} numérotée ${String(w.week)}`)
+          if (JSON.stringify(Object.keys(w.sessions)) !== labels) err(`${pw}, semaine ${k + 1} : séances différentes des autres semaines`)
+          for (const [label, s] of Object.entries(w.sessions)) checkSession(s, `${pw}, semaine ${k + 1} séance ${label}`)
         })
+      }
+      if (Array.isArray(p.daily)) {
+        p.daily.forEach((it, j) => (isObj(it) ? checkItem(it, `${pw}, quotidien ${j + 1}`) : err(`${pw}, quotidien ${j + 1} : pas un objet`)))
+      }
+      if (p.minDays !== undefined && !isNum(p.minDays)) err(`${pw} : minDays doit être un nombre`)
+      if (p.minWeeks !== undefined && !isNum(p.minWeeks)) err(`${pw} : minWeeks doit être un nombre`)
+      if (p.exitCriteria !== undefined) {
+        if (!Array.isArray(p.exitCriteria)) err(`${pw} : exitCriteria doit être une liste`)
+        else
+          p.exitCriteria.forEach((c, j) => {
+            const cw = `${pw}, critère n°${j + 1}`
+            if (!isObj(c) || !isStr(c.id) || !isStr(c.label)) return err(`${cw} : id ou label manquant`)
+            const type = c.type ?? 'scale'
+            if (type === 'scale' && !isNum(c.max)) err(`${cw} (${c.id}) : max manquant pour une échelle 0-10`)
+            else if (type === 'ratio' && !isNum(c.min)) err(`${cw} (${c.id}) : min manquant pour un ratio`)
+            else if (type === 'auto' && !AUTO_CRITERIA[c.id]) err(`${cw} : critère automatique « ${c.id} » que l'appli ne sait pas calculer`)
+            else if (!['scale', 'yesno', 'ratio', 'auto'].includes(type as string)) err(`${cw} (${c.id}) : type « ${String(type)} » inconnu`)
+          })
+      }
+      if (p.volleyLadder !== undefined) {
+        const steps = Array.isArray(p.volleyLadder) ? p.volleyLadder : []
+        if (!steps.length || steps.some((st, j) => !isObj(st) || st.step !== j + 1 || !isStr(st.label))) {
+          err(`${pw} : volleyLadder doit lister les marches 1, 2, 3… avec un label`)
+        }
       }
     })
     const hc = legs.healthCheck
-    if (!isObj(hc) || !Array.isArray(hc.rules) || hc.rules.length === 0) err('programme-jambes.json : healthCheck.rules absent')
-    if (legs.version !== undefined && !(Number.isInteger(legs.version) && (legs.version as number) >= 1)) err('programme-jambes.json : version doit être un entier à partir de 1')
-    if (legs.changelog !== undefined && !(Array.isArray(legs.changelog) && legs.changelog.every(isStr))) err('programme-jambes.json : changelog doit être une liste de textes')
+    if (!isObj(hc) || !Array.isArray(hc.rules) || hc.rules.length === 0) err(`${F} : healthCheck.rules absent`)
+    if (isObj(hc) && hc.decisionOn !== undefined && hc.decisionOn !== 'lendemain') err(`${F} : healthCheck.decisionOn inconnu`)
+    if (legs.version !== undefined && !(Number.isInteger(legs.version) && (legs.version as number) >= 1)) err(`${F} : version doit être un entier à partir de 1`)
+    if (legs.changelog !== undefined && !(Array.isArray(legs.changelog) && legs.changelog.every(isStr))) err(`${F} : changelog doit être une liste de textes`)
   }
 
   // Programme abdos

@@ -7,7 +7,8 @@ import planningJson from '../../data/planning.json'
 import type { AbsProgramFile, ExercisesFile, LegProgramFile, PlanningFile, UpperBodyFile } from './types'
 import { validateData } from './validate'
 import type { ProgramShape } from '../logic/programs'
-import type { LegPrescription, ProgramId } from '../db/models'
+import type { LegPrescription } from '../db/models'
+import type { PhasePosition } from '../logic/phases'
 import { positionOf } from '../logic/programs'
 
 export const dataErrors = validateData({
@@ -23,13 +24,13 @@ export const absProgram = absJson as unknown as AbsProgramFile
 export const upperBody = upperBodyJson as unknown as UpperBodyFile
 export const planning = planningJson as unknown as PlanningFile
 
-export const programShapes: Record<ProgramId, ProgramShape> = {
-  jambes: { weeksCount: legProgram.weeksCount, sessionLabels: legProgram.sessionsPerWeek },
-  // Deux séances avec abdos (après push et pull) font une semaine du programme abdos.
+/** Programme abdos : deux séances avec abdos (après push et pull) font une semaine. */
+export const programShapes: { abdos: ProgramShape } = {
   abdos: { weeksCount: absProgram.weeksCount, sessionLabels: ['1re', '2e'] },
 }
 
-export const legWeek = (week: number) => legProgram.weeks.find((w) => w.week === week)
+/** Ancien programme jambes (v1 à v3, 16 semaines × A et B) : pour relire les séances faites avec lui. */
+export const OLD_LEG_SHAPE: ProgramShape = { weeksCount: 16, sessionLabels: ['A', 'B'] }
 
 export const absBlockForWeek = (week: number) => absProgram.blocks.find((b) => week >= b.weeks[0] && week <= b.weeks[1])
 
@@ -48,19 +49,27 @@ export const slotOptions: { slot: string; label: string }[] = (() => {
 /** Version du programme jambes (1 si le fichier n'en indique pas). */
 export const legProgramVersion = legProgram.version ?? 1
 
-/** Copie de ce qui est prescrit à cette position du programme jambes, à enregistrer dans la séance. */
-export function legPrescription(index: number, programVersion = legProgramVersion): LegPrescription | undefined {
-  const pos = positionOf(programShapes.jambes, index)
-  const week = legWeek(pos.week)
-  const session = week?.sessions[pos.label]
-  if (!week || !session) return undefined
-  return { programVersion, name: session.name, week: pos.week, label: pos.label, blockName: week.blockName, deload: week.deload }
+export const legPhase = (id: string) => legProgram.phases.find((p) => p.id === id)
+
+/** Copie de ce qui est prescrit pour une séance jambes du programme par phases, à enregistrer dans la séance. */
+export function legPrescription(pos: PhasePosition): LegPrescription {
+  const w = pos.weekData
+  return {
+    programVersion: legProgramVersion,
+    phaseId: pos.phase.id,
+    phaseName: pos.phase.name,
+    name: pos.session?.name ?? 'Jambes',
+    week: pos.week ?? 0,
+    label: pos.label,
+    blockName: w?.blockName ?? pos.phase.name,
+    deload: w?.deload ?? false,
+  }
 }
 
-/** Séance jambes à une position du programme (nom et variantes). */
-export function legSessionAt(index: number) {
-  const pos = positionOf(programShapes.jambes, index)
-  return legWeek(pos.week)?.sessions[pos.label]
+/** Séance jambes de l'ancien programme sans copie du prescrit (sauvegarde très ancienne) : semaine et séance seulement. */
+export function oldLegPrescription(index: number): LegPrescription {
+  const pos = positionOf(OLD_LEG_SHAPE, index)
+  return { programVersion: 1, name: `Jambes ${pos.label}`, week: pos.week, label: pos.label, blockName: '', deload: false }
 }
 
 export const upperTemplate = (type: 'push' | 'pull') => upperBody.templates.find((t) => t.id === type)!

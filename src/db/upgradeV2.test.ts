@@ -1,10 +1,10 @@
 import 'fake-indexeddb/auto'
 import Dexie from 'dexie'
 import { afterEach, describe, expect, it } from 'vitest'
-import { catalogue, legProgramVersion } from '../data'
+import { catalogue } from '../data'
 import { AppDB, syncCatalogue } from './db'
 import { updateExercise } from './catalogue'
-import { createExercise, startLegSession } from './sessions'
+import { createExercise } from './sessions'
 
 let n = 0
 const names: string[] = []
@@ -18,16 +18,6 @@ const newName = () => {
 }
 
 describe('mise à jour du programme jambes v2', () => {
-  it('une séance démarrée enregistre une copie de ce qui est prescrit', async () => {
-    const d = new AppDB(newName())
-    await syncCatalogue(d)
-    const id = await startLegSession(0, undefined, d)
-    const s = (await d.sessions.get(id))!
-    expect(s.prescription).toEqual({ programVersion: legProgramVersion, name: 'Jambes A : force et sauts', week: 1, label: 'A', blockName: 'Base tendon', deload: false })
-    expect(s.plan?.map((p) => p.exerciseId)).toContain('pogos')
-    d.close()
-  })
-
   it('les séances jambes déjà en base reçoivent leur copie (v1) sans rien perdre', async () => {
     const name = newName()
     // Base telle qu'elle était avant la mise à jour (schéma version 2, programme v1).
@@ -57,7 +47,8 @@ describe('mise à jour du programme jambes v2', () => {
     const d = new AppDB(name)
     await syncCatalogue(d)
     const legs = (await d.sessions.get(7))!
-    expect(legs.prescription).toMatchObject({ programVersion: 1, name: 'Jambes A : force et sauts', week: 1, label: 'A' })
+    // Le programme v4 n'a plus les séances de l'ancien : la copie garde la semaine et la séance.
+    expect(legs.prescription).toMatchObject({ programVersion: 1, name: 'Jambes A', week: 1, label: 'A' })
     // Ce qui était prescrit en v1 est intact : 4 × 3 box jumps, pas les pogos de la v2.
     expect(legs.plan).toEqual(v1Plan)
     expect(legs.kneeCheck).toEqual({ pendant: 1, lendemain: 0 })

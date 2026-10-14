@@ -2,6 +2,9 @@ import { HashRouter, NavLink, Route, Routes } from 'react-router'
 import { Accueil } from './screens/Accueil'
 import { Seance } from './screens/SeanceEnCours'
 import { Demarrer } from './screens/Demarrer'
+import { Iso } from './screens/Iso'
+import { PhaseTest } from './screens/PhaseTest'
+import { Volley } from './screens/Volley'
 import { ExerciceDetail, ExercicesHistorique, GenouHistorique, Historique, SeanceDetail } from './screens/Historique'
 import { Reglages } from './screens/Reglages'
 import { CatalogueFiche, CatalogueListe, CatalogueNouveau } from './screens/Catalogue'
@@ -45,6 +48,9 @@ export function App() {
             <Route path="/" element={<Accueil />} />
             <Route path="/seance" element={<Seance />} />
             <Route path="/demarrer/:kind" element={<Demarrer />} />
+            <Route path="/iso" element={<Iso />} />
+            <Route path="/volley" element={<Volley />} />
+            <Route path="/phase/test" element={<PhaseTest />} />
             <Route path="/historique" element={<Historique />} />
             <Route path="/historique/seance/:id" element={<SeanceDetail />} />
             <Route path="/historique/exercices" element={<ExercicesHistorique />} />

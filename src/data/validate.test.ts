@@ -3,6 +3,7 @@ import exercises from '../../data/exercises.json'
 import legs from '../../data/programme-jambes.json'
 import abs from '../../data/programme-abdos.json'
 import upperBody from '../../data/programme-haut-du-corps.json'
+import type { LegProgramFile } from './types'
 import { validateData } from './validate'
 
 const real = { exercises, legs, abs, upperBody }
@@ -15,9 +16,9 @@ describe('fichiers de data/', () => {
 
   it('détectent un exercice inconnu', () => {
     const l = clone(legs)
-    l.weeks[2].sessions.A.variants[1].items[1].exerciseId = 'inconnu'
+    l.phases[1].weeks![2].sessions.A.variants[1].items[1].exerciseId = 'inconnu'
     expect(validateData({ ...real, legs: l })).toEqual([
-      'programme-jambes.json, semaine 3 séance A, variante n°2 (complete), ligne 2 : exercice « inconnu » absent du catalogue',
+      'programme-jambes.json, p1, semaine 3 séance A, variante n°2 (complete), ligne 2 : exercice « inconnu » absent du catalogue',
     ])
   })
 
@@ -25,10 +26,10 @@ describe('fichiers de data/', () => {
     const e = clone(exercises)
     e.exercises.push({ ...e.exercises[0], id: 'leg-extension' })
     const l = clone(legs)
-    l.weeks[0].sessions.B.variants[0].items[0].exerciseId = 'leg-extension'
+    l.phases[2].weeks![0].sessions.B.variants[0].items[0].exerciseId = 'leg-extension'
     e.exercises.find((x) => x.id === 'copenhague')!.alternatives = ['leg-extension']
     const errors = validateData({ ...real, exercises: e, legs: l })
-    expect(errors).toContain('programme-jambes.json, semaine 1 séance B, variante n°1 (1h), ligne 1 : leg extension interdit')
+    expect(errors).toContain('programme-jambes.json, p2, semaine 1 séance B, variante n°1 (1h), ligne 1 : leg extension interdit')
     expect(errors).toContain('exercises.json (copenhague), alternatives : leg extension interdit')
   })
 
@@ -44,14 +45,14 @@ describe('fichiers de data/', () => {
 
   it('contrôlent les variantes : ordre des durées, supersets, tours d’abdos', () => {
     const l = clone(legs)
-    const b = l.weeks[0].sessions.B
+    const b = l.phases[4].weeks![0].sessions.B
     ;[b.variants[0], b.variants[1]] = [b.variants[1], b.variants[0]] // 1 h 30 avant 1 h
     const u = clone(upperBody)
     const slots = u.templates[0].variants[0].slots
     slots[0].superset = 'S1' // S1 n'est plus d'un seul tenant
     u.templates[1].variants[1].abdosRounds = 0
     const errors = validateData({ ...real, legs: l, upperBody: u })
-    expect(errors).toContain('programme-jambes.json, semaine 1 séance B, variante n°2 (1h) : les variantes doivent aller de la plus courte à la plus longue')
+    expect(errors).toContain('programme-jambes.json, p4, semaine 1 séance B, variante n°2 (1h) : les variantes doivent aller de la plus courte à la plus longue')
     expect(errors).toContain('programme-haut-du-corps.json, push, variante n°1 (1h) : les exercices du superset « S1 » doivent se suivre')
     expect(errors).toContain('programme-haut-du-corps.json, pull variante n°2 : abdosRounds doit être un entier à partir de 1')
   })
@@ -60,5 +61,20 @@ describe('fichiers de data/', () => {
     const e = clone(exercises)
     e.exercises.find((x) => x.id === 'epaule')!.alternatives = ['inconnu']
     expect(validateData({ ...real, exercises: e })).toEqual(['exercises.json (epaule), alternatives : exercice « inconnu » absent du catalogue'])
+  })
+
+  it('contrôlent les phases : conditions, critères de sortie, échelle volley', () => {
+    const l = clone(legs) as unknown as LegProgramFile
+    l.phases[1].weeks![0].sessions.A.variants[1].items[8].condition = 'si le genou va bien'
+    l.phases[2].exitCriteria![0].id = 'inconnu'
+    l.phases[0].exitCriteria![0].max = undefined as unknown as number
+    l.phases[3].volleyLadder![2].step = 7
+    const errors = validateData({ ...real, legs: l })
+    expect(errors).toContain(
+      'programme-jambes.json, p1, semaine 1 séance A, variante n°2 (complete), ligne 9 : condition « si le genou va bien » illisible (attendu : semaine>=2, lendemain<=2, reliés par « et »)',
+    )
+    expect(errors).toContain("programme-jambes.json, p2, critère n°1 : critère automatique « inconnu » que l'appli ne sait pas calculer")
+    expect(errors).toContain('programme-jambes.json, p0, critère n°1 (douleur-charge) : max manquant pour une échelle 0-10')
+    expect(errors).toContain('programme-jambes.json, p3 : volleyLadder doit lister les marches 1, 2, 3… avec un label')
   })
 })

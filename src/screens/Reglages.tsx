@@ -2,65 +2,40 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { notificationsSupported, requestNotifications } from '../alarm'
 import { backupFileName, backupStats, checkBackup, exportBackup, importBackup, type Backup } from '../db/backup'
-import { catalogue, legProgram, legProgramVersion, programShapes } from '../data'
+import { catalogue, legPhase, legProgram, legProgramVersion, programShapes } from '../data'
+import { setCurrentPhaseStart, setPhaseManually } from '../db/phases'
 import { updateSettings } from '../db/db'
-import type { ProgramId, ProgramSettings } from '../db/models'
-import { useDurationFactor, useExercises, useProgramStatus, useSettings } from '../hooks'
+import type { ProgramSettings } from '../db/models'
+import { useDurationFactor, useExercises, usePhase, useProgramStatus, useSettings } from '../hooks'
 import { DURATION_SAMPLES, lastSessionsLabel } from '../logic/variants'
-import { formatLocalDate } from '../logic/dates'
+import { formatLocalDate, toLocalDate } from '../logic/dates'
 import { toIndex } from '../logic/programs'
 
-const programNames: Record<ProgramId, string> = { jambes: 'Programme jambes', abdos: 'Programme abdos' }
+const saveAbs = (update: (p: ProgramSettings) => ProgramSettings) =>
+  updateSettings((s) => ({ ...s, programs: { ...s.programs, abdos: update(s.programs.abdos) } }))
 
-const saveProgram = (id: ProgramId, update: (p: ProgramSettings) => ProgramSettings) =>
-  updateSettings((s) => ({ ...s, programs: { ...s.programs, [id]: update(s.programs[id]) } }))
-
-function ProgramSettingsCard({ id, settings }: { id: ProgramId; settings: ProgramSettings }) {
-  const status = useProgramStatus(id)
-  const shape = programShapes[id]
+/** Programme abdos : date de début, position (suit les séances faites), correction à la main. */
+function AbsSettingsCard({ settings }: { settings: ProgramSettings }) {
+  const status = useProgramStatus('abdos')
+  const shape = programShapes.abdos
   const [week, setWeek] = useState<number>()
   const [slot, setSlot] = useState<number>()
   if (!status) return null
 
   const currentWeek = week ?? status.next?.week ?? shape.weeksCount
   const currentSlot = slot ?? status.next?.slot ?? 0
-  const sessionName = (label: string) => (id === 'jambes' ? `Séance ${label}` : `${label} séance`)
 
   return (
     <section className="card stack">
-      <h2>{programNames[id]}</h2>
-
+      <h2>Programme abdos</h2>
       <label className="field">
         Date de début
-        <input
-          type="date"
-          value={settings.startDate ?? ''}
-          onChange={(e) => saveProgram(id, (p) => ({ ...p, startDate: e.target.value || undefined }))}
-        />
+        <input type="date" value={settings.startDate ?? ''} onChange={(e) => saveAbs((p) => ({ ...p, startDate: e.target.value || undefined }))} />
       </label>
-      {settings.startDate && <p className="small muted">Commencé le {formatLocalDate(settings.startDate)}</p>}
-      {id === 'jambes' && (
-        <details className="small muted">
-          <summary>Programme version {legProgramVersion}</summary>
-          <ul>
-            {(legProgram.changelog ?? []).map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-          <p>Les séances déjà faites gardent ce qui était prescrit le jour où tu les as faites.</p>
-        </details>
-      )}
-
       <p>
-        Prochaine séance :{' '}
-        <strong>
-          {status.next ? `semaine ${status.next.week}, ${sessionName(status.next.label).toLowerCase()}` : 'programme terminé'}
-        </strong>
+        Prochaine séance : <strong>{status.next ? `semaine ${status.next.week}, ${status.next.label} séance` : 'programme terminé'}</strong>
       </p>
-
-      <p className="small muted">
-        Le programme avance au fil des séances faites. Pour reprendre ailleurs (refaire une semaine, sauter en avant) :
-      </p>
+      <p className="small muted">Le programme avance au fil des séances faites. Pour reprendre ailleurs :</p>
       <div className="row">
         <select className="grow" value={currentWeek} onChange={(e) => setWeek(Number(e.target.value))} aria-label="Semaine">
           {Array.from({ length: shape.weeksCount }, (_, i) => (
@@ -72,7 +47,7 @@ function ProgramSettingsCard({ id, settings }: { id: ProgramId; settings: Progra
         <select className="grow" value={currentSlot} onChange={(e) => setSlot(Number(e.target.value))} aria-label="Séance">
           {shape.sessionLabels.map((label, i) => (
             <option key={label} value={i}>
-              {sessionName(label)}
+              {label} séance
             </option>
           ))}
         </select>
@@ -80,7 +55,7 @@ function ProgramSettingsCard({ id, settings }: { id: ProgramId; settings: Progra
       <button
         className="btn"
         onClick={async () => {
-          await saveProgram(id, (p) => ({ ...p, override: { index: toIndex(shape, currentWeek, currentSlot), at: new Date().toISOString() } }))
+          await saveAbs((p) => ({ ...p, override: { index: toIndex(shape, currentWeek, currentSlot), at: new Date().toISOString() } }))
           setWeek(undefined)
           setSlot(undefined)
         }}
@@ -88,10 +63,77 @@ function ProgramSettingsCard({ id, settings }: { id: ProgramId; settings: Progra
         Reprendre ici
       </button>
       {settings.override && (
-        <button className="link" onClick={() => saveProgram(id, ({ override: _, ...p }) => p)}>
+        <button className="link" onClick={() => saveAbs(({ override: _, ...p }) => p)}>
           Annuler la correction et recalculer depuis le début
         </button>
       )}
+    </section>
+  )
+}
+
+const reasonLabels: Record<string, string> = { debut: 'début', test: 'test réussi', regression: 'régression', manuel: 'changement à la main' }
+const eventDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+
+/** Programme jambes par phases : phase en cours, date de début, historique des phases, changement à la main. */
+function PhaseSettingsCard() {
+  const phase = usePhase()
+  const [target, setTarget] = useState<string>()
+  if (!phase) return null
+  const { pos, events } = phase
+  const chosen = target ?? pos.phase.id
+
+  return (
+    <section className="card stack">
+      <h2>Programme jambes</h2>
+      <p>
+        <strong>{pos.phase.name}</strong>
+        {pos.week ? ` · semaine ${pos.instance}` : ''}
+      </p>
+      <label className="field">
+        Début de la phase
+        <input type="date" value={toLocalDate(new Date(phase.ctx.entry.at))} onChange={(e) => e.target.value && setCurrentPhaseStart(e.target.value)} />
+      </label>
+      <details className="small muted">
+        <summary>Historique des phases</summary>
+        <ul>
+          {[...events].reverse().map((e) => (
+            <li key={e.id}>
+              {eventDate.format(new Date(e.at))} : {legPhase(e.phaseId)?.name ?? e.phaseId} ({reasonLabels[e.reason] ?? e.reason}
+              {e.note ? `, ${e.note}` : ''})
+            </li>
+          ))}
+        </ul>
+      </details>
+      <details className="small muted">
+        <summary>Programme version {legProgramVersion}</summary>
+        <ul>
+          {(legProgram.changelog ?? []).map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+        <p>Les séances déjà faites gardent ce qui était prescrit le jour où tu les as faites.</p>
+      </details>
+      <p className="small muted">
+        Les phases avancent par le test de sortie et reculent toutes seules selon le lendemain. Pour corriger une erreur :
+      </p>
+      <select value={chosen} onChange={(e) => setTarget(e.target.value)} aria-label="Phase">
+        {legProgram.phases.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.name}
+          </option>
+        ))}
+      </select>
+      <button
+        className="btn"
+        disabled={chosen === pos.phase.id}
+        onClick={async () => {
+          if (!confirm(`Commencer « ${legPhase(chosen)?.name} » maintenant ? La phase repart de sa première semaine.`)) return
+          await setPhaseManually(chosen)
+          setTarget(undefined)
+        }}
+      >
+        Commencer cette phase maintenant
+      </button>
     </section>
   )
 }
@@ -105,8 +147,8 @@ export function Reglages() {
   return (
     <>
       <h1>Réglages</h1>
-      <ProgramSettingsCard id="jambes" settings={settings.programs.jambes} />
-      <ProgramSettingsCard id="abdos" settings={settings.programs.abdos} />
+      <PhaseSettingsCard />
+      <AbsSettingsCard settings={settings.programs.abdos} />
 
       <section className="card">
         <h2>Catalogue d'exercices</h2>

@@ -57,3 +57,9 @@ export function restEndAlarm(body: string) {
   navigator.vibrate?.([300, 150, 300])
   if (document.visibilityState === 'hidden') void notify(body)
 }
+
+/** Signal court (fin d'une tenue, fin d'un repos dans le minuteur des isométriques) : son et vibration. */
+export function signal() {
+  beep()
+  navigator.vibrate?.([300, 150, 300])
+}

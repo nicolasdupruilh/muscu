@@ -36,6 +36,8 @@ export interface LegItem {
   tempo?: string
   /** Les exercices qui partagent la même valeur s'enchaînent sans pause (superset). */
   superset?: string
+  /** Exercice optionnel, proposé seulement si la condition est remplie (ex. « semaine>=2 et lendemain<=2 »). */
+  condition?: string
 }
 
 /** Variante d'une séance selon le temps disponible, de la plus courte à la complète. */
@@ -55,12 +57,59 @@ export interface LegSession {
   variants: LegVariant[]
 }
 
+/** Semaine d'une phase. En phase 4, elle reprend un bloc de l'ancien programme (bloc, semaine allégée). */
 export interface LegWeek {
   week: number
-  block: number
-  blockName: string
-  deload: boolean
+  block?: number
+  blockName?: string
+  deload?: boolean
+  oldBlock?: number
   sessions: Record<string, LegSession>
+}
+
+/** Critère de sortie d'une phase : échelle 0-10 (valeur ≤ max), oui/non, ratio droite/gauche (≥ min), ou calculé (auto). */
+export interface ExitCriterion {
+  id: string
+  label: string
+  type?: 'scale' | 'yesno' | 'ratio' | 'auto'
+  max?: number
+  min?: number
+}
+
+export interface VolleyStep {
+  step: number
+  label: string
+}
+
+/** Isométriques à faire tous les jours pendant la phase. */
+export interface DailyItem {
+  exerciseId: string
+  sets: number
+  reps: Reps
+  restSec: number
+  note?: string
+}
+
+export interface LegPhase {
+  id: string
+  name: string
+  goal: string
+  rules: string[]
+  /** Durée minimale avant le test de sortie : en jours (phase 0) ou en semaines du programme. */
+  minDays?: number
+  minWeeks?: number
+  /** Au-delà, la phase dure anormalement longtemps : conseil de consulter. */
+  maxWeeks?: number
+  daily?: DailyItem[]
+  /** Séances fixes, sans semaines (phase 0). */
+  sessions?: Record<string, LegSession>
+  /** Séances par semaine (phase 0 : ["A", "A"]). */
+  sessionsPerWeek?: string[]
+  weeks?: LegWeek[]
+  /** Après la dernière semaine, on la répète tant que les critères de sortie ne sont pas remplis. */
+  repeatLastWeek?: boolean
+  exitCriteria?: ExitCriterion[]
+  volleyLadder?: VolleyStep[]
 }
 
 export interface HealthRule {
@@ -79,25 +128,26 @@ export interface HealthQuestion {
 export interface LegProgramFile {
   id: string
   name: string
-  type: 'structured'
-  weeksCount: number
-  sessionsPerWeek: string[]
+  type: 'phased'
   tempoNotation: string
-  loadRule: string
   healthCheck: {
     id: string
     label: string
+    /** Types de séance concernés (jambes, volley). */
+    appliesTo?: string[]
     questions: HealthQuestion[]
     rules: HealthRule[]
+    /** Réponse sur laquelle se prend la décision vert / orange / rouge. */
+    decisionOn?: 'lendemain'
     note: string
   }
-  volleyAdjustments: string
   /** Version du programme, incrémentée à chaque modification (voir PRINCIPES.md). Absente = version 1. */
   version?: number
   changelog?: string[]
   variantRule?: string
   supersetRule?: string
-  weeks: LegWeek[]
+  phaseRule?: string
+  phases: LegPhase[]
 }
 
 export interface AbsItem {

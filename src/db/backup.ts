@@ -1,10 +1,11 @@
 // Sauvegarde manuelle : toutes les données dans un fichier JSON, et restauration depuis ce fichier.
 import { toLocalDate } from '../logic/dates'
-import { db, fillLegPrescription, syncCatalogue, type AppDB } from './db'
-import type { Exercise, Session, SetLog, Settings } from './models'
+import { db, ensurePhaseStart, fillLegPrescription, syncCatalogue, type AppDB } from './db'
+import type { Exercise, PhaseEvent, PhaseTest, Session, SetLog, Settings } from './models'
 
 export const BACKUP_APP = 'appli-sport'
-export const BACKUP_FORMAT = 1
+/** 2 : ajout du journal des phases et des tests de sortie (programme jambes v4). Le format 1 se lit toujours. */
+export const BACKUP_FORMAT = 2
 
 export interface Backup {
   app: typeof BACKUP_APP
@@ -15,11 +16,13 @@ export interface Backup {
     sessions: Session[]
     setLogs: SetLog[]
     settings: Settings[]
+    phaseEvents?: PhaseEvent[]
+    phaseTests?: PhaseTest[]
   }
 }
 
 export async function exportBackup(database: AppDB = db): Promise<Backup> {
-  return database.transaction('r', database.exercises, database.sessions, database.setLogs, database.settings, async () => ({
+  return database.transaction('r', [database.exercises, database.sessions, database.setLogs, database.settings, database.phaseEvents, database.phaseTests], async () => ({
     app: BACKUP_APP,
     format: BACKUP_FORMAT,
     exportedAt: new Date().toISOString(),
@@ -28,6 +31,8 @@ export async function exportBackup(database: AppDB = db): Promise<Backup> {
       sessions: await database.sessions.toArray(),
       setLogs: await database.setLogs.toArray(),
       settings: await database.settings.toArray(),
+      phaseEvents: await database.phaseEvents.toArray(),
+      phaseTests: await database.phaseTests.toArray(),
     },
   }))
 }
@@ -70,14 +75,19 @@ export const backupStats = (b: Backup): BackupStats => ({
 export async function importBackup(b: Backup, database: AppDB = db): Promise<void> {
   const errors = checkBackup(b)
   if (errors.length) throw new Error(errors.join(' '))
-  await database.transaction('rw', database.exercises, database.sessions, database.setLogs, database.settings, async () => {
-    await Promise.all([database.exercises.clear(), database.sessions.clear(), database.setLogs.clear(), database.settings.clear()])
+  const tables = [database.exercises, database.sessions, database.setLogs, database.settings, database.phaseEvents, database.phaseTests]
+  await database.transaction('rw', tables, async () => {
+    await Promise.all(tables.map((t) => t.clear()))
     await database.exercises.bulkAdd(b.data.exercises)
     // Une sauvegarde plus ancienne n'a pas toujours la copie du prescrit.
     b.data.sessions.forEach(fillLegPrescription)
     await database.sessions.bulkAdd(b.data.sessions)
     await database.setLogs.bulkAdd(b.data.setLogs)
     await database.settings.bulkAdd(b.data.settings)
+    await database.phaseEvents.bulkAdd(b.data.phaseEvents ?? [])
+    await database.phaseTests.bulkAdd(b.data.phaseTests ?? [])
   })
   await syncCatalogue(database)
+  // Sauvegarde d'avant les phases : on commence en phase 0.
+  await ensurePhaseStart(database)
 }

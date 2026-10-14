@@ -1,59 +1,57 @@
 import { describe, expect, it } from 'vitest'
-import { absBlockForWeek, absProgram, catalogue, legProgram, legWeek } from '../data'
+import { absBlockForWeek, absProgram, catalogue, legPhase } from '../data'
 import type { PlannedExercise, SetLog } from '../db/models'
-import { absTarget, buildAbsPlan, buildLegPlan, legTarget } from './structuredPlans'
+import { absTarget, buildAbsPlan, buildPhasePlan, legTarget } from './structuredPlans'
 import { nextSet } from './supersets'
 
 const isJump = (id: string) => catalogue.exercises.find((e) => e.id === id)?.category === 'plyo'
-const complete = (week: number, label: 'A' | 'B') => legWeek(week)!.sessions[label].variants.find((v) => v.id === 'complete')!.items
-const w2A = complete(2, 'A')
-const w1A = complete(1, 'A')
+/** Exercices d'une séance de phase, pour une variante. */
+const itemsOf = (phaseId: string, week: number, label: 'A' | 'B', variant = 'complete') =>
+  legPhase(phaseId)!.weeks!.find((w) => w.week === week)!.sessions[label].variants.find((v) => v.id === variant)!.items
 
-describe('séance jambes', () => {
-  it('reprend exactement la prescription', () => {
-    const plan = buildLegPlan(w2A, w1A, undefined, isJump)
-    const squat = plan.find((p) => p.exerciseId === 'squat-arriere')!
-    expect(squat).toMatchObject({ sets: 4, repRange: [6, 6], targetLoadKg: 75, tempo: '3-0-X-0', restSec: 180 })
-    expect(plan.every((p) => !p.adjustmentNote && !p.skipped)).toBe(true)
+describe('séance jambes par phases', () => {
+  it('reprend exactement la prescription de la semaine', () => {
+    const { plan, hidden } = buildPhasePlan(itemsOf('p1', 2, 'A'), { week: 2, lendemain: 1, isJump })
+    expect(plan.find((p) => p.exerciseId === 'squat-arriere')).toMatchObject({ sets: 4, repRange: [8, 8], targetLoadKg: 70, tempo: '3-0-3-0' })
+    expect(plan.find((p) => p.exerciseId === 'squat-unipodal-incline')).toMatchObject({ prescribedReps: 8 })
+    expect(hidden).toEqual([])
   })
 
-  it('programme v2 : pliométrie de la séance A, reps par jambe et par côté', () => {
-    expect(legProgram.version).toBe(3)
-    const plan = buildLegPlan(w2A, w1A, undefined, isJump)
-    expect(plan.map((p) => p.exerciseId).slice(0, 6)).toEqual([
-      'echauffement-jambes',
-      'pogos',
-      'sauts-lateraux-ligne',
-      'drop-landing-unipodal',
-      'box-jump',
-      'skater-bound',
-    ])
-    expect(plan.find((p) => p.exerciseId === 'drop-landing-unipodal')).toMatchObject({ sets: 3, repRange: [8, 8], prescribedReps: '8/jambe' })
+  it('exercice optionnel : proposé si la condition est remplie, masqué sinon', () => {
+    const rn = (o: { week: number; lendemain?: number }) => {
+      const { plan, hidden } = buildPhasePlan(itemsOf('p1', o.week, 'A'), { ...o, isJump })
+      return { planned: plan.find((p) => p.exerciseId === 'reverse-nordic'), hidden }
+    }
+    expect(rn({ week: 1, lendemain: 0 })).toEqual({ planned: undefined, hidden: [{ exerciseId: 'reverse-nordic', condition: 'semaine>=2 et lendemain<=2' }] })
+    expect(rn({ week: 2, lendemain: 2 }).planned).toMatchObject({ optional: true, condition: 'semaine>=2 et lendemain<=2' })
+    expect(rn({ week: 2, lendemain: 3 }).planned).toBeUndefined()
+    expect(rn({ week: 3 }).planned).toBeUndefined() // lendemain inconnu
   })
 
-  it('genou orange : sauts divisés par deux, charges de la semaine précédente', () => {
-    const plan = buildLegPlan(w2A, w1A, 'orange', isJump)
-    const box = plan.find((p) => p.exerciseId === 'box-jump')!
-    expect(box.sets).toBe(2) // 4 → 2
-    expect(plan.find((p) => p.exerciseId === 'pogos')!.sets).toBe(2) // 3 → 2 (arrondi au-dessus)
+  it('semaine répétée : la charge ajoutée s’applique aux charges cibles et se voit', () => {
+    const { plan } = buildPhasePlan(itemsOf('p1', 3, 'A'), { week: 3, lendemain: 1, loadBonusKg: 2.5, isJump })
     const squat = plan.find((p) => p.exerciseId === 'squat-arriere')!
-    expect(squat.targetLoadKg).toBe(72.5)
-    expect(squat.adjustmentNote).toContain('72,5 kg au lieu de 75 kg')
+    expect(squat.targetLoadKg).toBe(75) // 72,5 + 2,5
+    expect(squat.adjustmentNote).toBe('Semaine répétée : +2,5 kg sur la charge cible (72,5 kg prévus).')
+    expect(plan.find((p) => p.exerciseId === 'presse-lente')?.targetLoadKg).toBeUndefined()
   })
 
-  it('genou rouge : sauts et réceptions sautés, le reste inchangé', () => {
-    const plan = buildLegPlan(w2A, w1A, 'rouge', isJump)
-    expect(plan.find((p) => p.exerciseId === 'box-jump')!.skipped).toBe(true)
-    expect(plan.find((p) => p.exerciseId === 'drop-landing-unipodal')!.skipped).toBe(true)
-    expect(plan.find((p) => p.exerciseId === 'pogos')!.skipped).toBe(true)
-    const squat = plan.find((p) => p.exerciseId === 'squat-arriere')!
-    expect(squat.skipped).toBeFalsy()
-    expect(squat.targetLoadKg).toBe(75)
+  it('garde-fou : les sauts sont sautés par défaut, avec la raison', () => {
+    const { plan } = buildPhasePlan(itemsOf('p2', 1, 'A'), { week: 1, isJump, jumpNote: 'Séance avec sauts hier.' })
+    const jumps = plan.filter((p) => p.skipped)
+    expect(jumps.map((p) => p.exerciseId)).toEqual(['reception-bipodale-figee', 'sauts-faibles-bipodaux', 'pogos', 'drop-landing-unipodal'])
+    expect(jumps.every((p) => p.adjustmentNote === 'Séance avec sauts hier.')).toBe(true)
+    expect(plan.find((p) => p.exerciseId === 'squat-arriere')?.skipped).toBeUndefined()
+  })
+
+  it('variante 1 h : supersets conservés', () => {
+    const { plan } = buildPhasePlan(itemsOf('p1', 1, 'A', '1h'), { week: 1, isJump })
+    expect(plan.filter((p) => p.superset === 'S1').map((p) => p.exerciseId)).toEqual(['squat-unipodal-incline', 'step-down', 'mollets-unipodal'])
   })
 
   describe('cible de charge', () => {
-    const plan = buildLegPlan(w2A, w1A, undefined, isJump)
-    const squat = plan.find((p) => p.exerciseId === 'squat-arriere')!
+    const { plan } = buildPhasePlan(itemsOf('p2', 2, 'A'), { week: 2, isJump })
+    const squat = plan.find((p) => p.exerciseId === 'squat-arriere')! // 4 × 6 à 75 kg
     const bulgare = plan.find((p) => p.exerciseId === 'fente-bulgare')! // 3 × 8, pas de charge cible
     const sets = (loadKg: number, ...reps: number[]): SetLog[] =>
       reps.map((r, i) => ({ sessionId: 1, planKey: 'k', exerciseId: 'x', setNumber: i + 1, loadKg, reps: r, targetReps: 8, done: true, at: '' }))
@@ -92,28 +90,6 @@ describe('séance jambes', () => {
       const box = plan.find((p) => p.exerciseId === 'box-jump')!
       expect(legTarget(box, [], 'none').sets[0]).toEqual({ loadKg: undefined, value: 5 })
     })
-  })
-})
-
-describe('variantes jambes', () => {
-  it('la variante 1 h garde les sauts clés et l’exercice principal, avec ses supersets', () => {
-    const v1h = legWeek(1)!.sessions.A.variants.find((v) => v.id === '1h')!
-    const plan = buildLegPlan(v1h.items, undefined, undefined, isJump)
-    expect(plan.map((p) => `${p.exerciseId}${p.superset ? `[${p.superset}]` : ''}`)).toEqual([
-      'echauffement-jambes',
-      'drop-landing-unipodal[S0]',
-      'box-jump[S0]',
-      'squat-arriere',
-      'fente-bulgare',
-      'reverse-nordic[S1]',
-      'mollets-debout[S1]',
-    ])
-  })
-
-  it('genou orange : charges de la semaine précédente prises dans la même variante', () => {
-    const b1h = (week: number) => legWeek(week)!.sessions.B.variants.find((v) => v.id === '1h')!.items
-    const plan = buildLegPlan(b1h(2), b1h(1), 'orange', isJump)
-    expect(plan.find((p) => p.exerciseId === 'rdl')?.targetLoadKg).toBe(80) // 82,5 en semaine 2, 80 en semaine 1
   })
 })
 

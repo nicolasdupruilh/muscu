@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, NavLink, useNavigate, useParams } from 'react-router'
 import { LineChart } from '../components/LineChart'
 import { formatDone } from '../components/SetEntry'
-import { legPrescription, legProgram, programShapes } from '../data'
+import { legPhase, legProgram, oldLegPrescription, programShapes } from '../data'
 import type { Exercise, Session, SetLog } from '../db/models'
 import { abandonSession } from '../db/sessions'
 import { useExercises, useSessions, useSetLogs } from '../hooks'
@@ -22,6 +22,9 @@ export const typeLabels: Record<string, string> = {
   libre: 'Séance libre',
   course: 'Footing',
 }
+
+/** Séances sans séries saisies : footing, volley, isométriques cochés. */
+const WITHOUT_SETS = ['course', 'volley', 'iso']
 
 const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? 's' : ''}`
 const dayMonth = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
@@ -43,10 +46,16 @@ function HistoryTabs() {
 
 /** Titre d'une séance : « Jambes A · S3 », « Abdos · S2 », « Push ». */
 function sessionTitle(s: Session): string {
-  if (s.type === 'jambes' && s.program) {
-    const p = s.prescription ?? positionOf(programShapes.jambes, s.program.index)
-    return `Jambes ${p.label} · semaine ${p.week}`
+  if (s.type === 'jambes' && s.phase) {
+    const phase = legPhase(s.phase.phaseId)
+    return `Jambes ${s.phase.label ?? ''} · ${phase?.name.split(' :')[0] ?? s.phase.phaseId}${s.phase.instance ? `, semaine ${s.phase.instance}` : ''}`
   }
+  if (s.type === 'jambes' && s.program) {
+    const p = s.prescription ?? oldLegPrescription(s.program.index)
+    return `Jambes ${p.label} · semaine ${p.week} (ancien programme)`
+  }
+  if (s.type === 'volley') return `Volley${s.volley?.ladderStep ? ` · marche ${s.volley.ladderStep}` : ''}`
+  if (s.type === 'iso') return 'Isométriques genou'
   if (s.type === 'abdos' && s.program) return `Abdos · semaine ${positionOf(programShapes.abdos, s.program.index).week}`
   return typeLabels[s.type] ?? s.type
 }
@@ -77,7 +86,7 @@ export function Historique() {
         <ul className="list card">
           {done.map((s) => {
             const sum = sessionSummary(s, logs)
-            const knee = kneeRule(s.kneeCheck, legProgram.healthCheck.rules)
+            const knee = kneeRule(s.kneeCheck, legProgram.healthCheck.rules, legProgram.healthCheck.decisionOn)
             return (
               <li key={s.id}>
                 <Link className="history-row" to={`/historique/seance/${s.id}`}>
@@ -85,7 +94,7 @@ export function Historique() {
                     <strong>{sessionTitle(s)}</strong>
                     <span className="small muted">
                       {formatDay(new Date(s.date))}
-                      {s.type !== 'course' && ` · ${plural(sum.exercises, 'exercice')} · ${plural(sum.sets, 'série')}`}
+                      {!WITHOUT_SETS.includes(s.type) && ` · ${plural(sum.exercises, 'exercice')} · ${plural(sum.sets, 'série')}`}
                       {durationLabel(s, sessions, sum.minutes)}
                     </span>
                   </span>
@@ -121,9 +130,9 @@ export function SeanceDetail() {
   const mine = logs.filter((l) => l.sessionId === s.id && l.done)
   const keys = (s.plan ?? []).map((p) => p.key).filter((k) => mine.some((l) => l.planKey === k))
   for (const l of mine) if (!keys.includes(l.planKey)) keys.push(l.planKey)
-  const knee = kneeRule(s.kneeCheck, legProgram.healthCheck.rules)
+  const knee = kneeRule(s.kneeCheck, legProgram.healthCheck.rules, legProgram.healthCheck.decisionOn)
   // Nom de la séance tel qu'il était prescrit le jour où elle a été faite.
-  const legP = s.type === 'jambes' && s.program ? s.prescription ?? legPrescription(s.program.index) : undefined
+  const legP = s.type === 'jambes' ? s.prescription ?? (s.program ? oldLegPrescription(s.program.index) : undefined) : undefined
 
   return (
     <>
@@ -135,9 +144,16 @@ export function SeanceDetail() {
         {legP && `Semaine ${legP.week} · ${legP.blockName}${legP.deload ? ' (allégée)' : ''} · programme v${legP.programVersion} · `}
         {formatDay(new Date(s.date))}
         {durationLabel(s, sessions, sum.minutes)}
-        {s.type !== 'course' && ` · ${plural(sum.sets, 'série')}`}
+        {!WITHOUT_SETS.includes(s.type) && ` · ${plural(sum.sets, 'série')}`}
       </p>
 
+      {s.volley && (
+        <p>
+          Volley · {formatDuration(s.volley.durationMin)}
+          {s.volley.ladderStep && ` · marche ${s.volley.ladderStep}`}
+          {s.volley.attacks !== undefined && ` · environ ${s.volley.attacks} attaques`}
+        </p>
+      )}
       {s.kneeCheck && (
         <section className={`card knee ${knee?.level ?? ''}`}>
           <strong>Genou {knee?.level}</strong>
@@ -365,7 +381,7 @@ export function GenouHistorique() {
             </thead>
             <tbody>
               {[...points].reverse().map((p) => {
-                const level = kneeRule({ pendant: p.pendant, lendemain: p.lendemain }, legProgram.healthCheck.rules)?.level
+                const level = kneeRule({ pendant: p.pendant, lendemain: p.lendemain }, legProgram.healthCheck.rules, legProgram.healthCheck.decisionOn)?.level
                 return (
                   <tr key={p.sessionId}>
                     <td>

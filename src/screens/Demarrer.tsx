@@ -1,11 +1,11 @@
 // « Combien de temps tu as ? » : un appui sur une durée lance la variante qui tient dans ce temps ;
 // la liste en dessous permet de prendre une autre variante.
 import { Navigate, useNavigate, useParams } from 'react-router'
-import { catalogue, legSessionAt, programShapes, upperTemplate } from '../data'
+import { catalogue, upperTemplate } from '../data'
 import type { Variant } from '../data/types'
-import { startLegSession, startUpperSession } from '../db/sessions'
-import { useActiveSession, useDurationFactor, useProgramStatus } from '../hooks'
-import { positionOf } from '../logic/programs'
+import { startLegSession } from '../db/phases'
+import { startUpperSession } from '../db/sessions'
+import { useActiveSession, useDurationFactor, usePhase } from '../hooks'
 import { chooseVariant, correctedMin, formatDuration, lastSessionsLabel, TIME_CHOICES } from '../logic/variants'
 
 interface Choice extends Variant {
@@ -29,23 +29,22 @@ function summarize(lines: { superset?: string; id: string }[]): Pick<Choice, 'su
 export function Demarrer() {
   const { kind } = useParams()
   const active = useActiveSession()
-  const legs = useProgramStatus('jambes')
+  const phase = usePhase()
   const factor = useDurationFactor()
   const navigate = useNavigate()
-  if (active === undefined || !legs || !factor) return null
+  if (active === undefined || !phase || !factor) return null
   if (active) return <Navigate to="/seance" replace />
 
   let title: string
   let choices: Choice[]
   let start: (variantId: string) => Promise<number>
   if (kind === 'jambes') {
-    const index = legs.next?.index
-    const session = index !== undefined ? legSessionAt(index) : undefined
-    if (index === undefined || !session) return <Navigate to="/" replace />
-    const pos = positionOf(programShapes.jambes, index)
-    title = `${session.name} · semaine ${pos.week}`
+    const { pos } = phase
+    const session = pos.session
+    if (pos.finished || !session) return <Navigate to="/" replace />
+    title = `${pos.phase.name} · ${session.name}${pos.week ? ` · semaine ${pos.instance}` : ''}`
     choices = session.variants.map((v) => ({ ...v, ...summarize(v.items.map((i) => ({ id: i.exerciseId, superset: i.superset }))) }))
-    start = (id) => startLegSession(index, id)
+    start = (id) => startLegSession(id)
   } else if (kind === 'push' || kind === 'pull') {
     const template = upperTemplate(kind)
     title = template.name

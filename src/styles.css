@@ -1008,3 +1008,46 @@ textarea.textarea {
 .superset-group.current .superset-head strong {
   color: var(--accent);
 }
+
+/* Minuteur de tenue */
+
+.hold-start.done {
+  color: var(--ok);
+}
+
+.hold-timer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+  padding: 8px 0;
+}
+
+.hold-clock {
+  font-size: 3.5rem;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.chip.ladder-step {
+  text-align: left;
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+.knee-btn.picked {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.ok-text {
+  color: var(--ok);
+}
+
+.optional-tag {
+  color: var(--accent);
+  font-weight: 600;
+}

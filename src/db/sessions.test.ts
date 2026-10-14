@@ -8,12 +8,9 @@ import {
   createExercise,
   deleteSet,
   endRest,
-  finishLegSession,
   finishSession,
   logSet,
-  saveKneeNextDay,
   startAbsSession,
-  startLegSession,
   startUpperSession,
 } from './sessions'
 
@@ -105,27 +102,6 @@ describe("création d'exercice", () => {
 })
 
 describe('séances cadrées', () => {
-  it('démarre la séance jambes prescrite et la termine avec le check genou', async () => {
-    const d = await freshDb()
-    const id = await startLegSession(3, undefined, d) // semaine 2, séance B
-    const s = (await d.sessions.get(id))!
-    expect(s).toMatchObject({ type: 'jambes', program: { programId: 'jambes', index: 3 } })
-    expect(s.plan?.find((p) => p.exerciseId === 'rdl')?.targetLoadKg).toBe(82.5)
-    expect(s.kneeAdjustment).toBeUndefined()
-    await finishLegSession(id, 4, d)
-    await saveKneeNextDay(id, 1, d)
-    expect((await d.sessions.get(id))!.kneeCheck).toMatchObject({ pendant: 4, lendemain: 1 })
-  })
-
-  it('ajuste la séance jambes suivante si le genou était orange', async () => {
-    const d = await freshDb()
-    await finishLegSession(await startLegSession(2, undefined, d), 4, d) // semaine 2 A, douleur 4 → orange
-    const id = await startLegSession(3, undefined, d) // semaine 2 B
-    const s = (await d.sessions.get(id))!
-    expect(s.kneeAdjustment).toBe('orange')
-    expect(s.plan?.find((p) => p.exerciseId === 'rdl')?.targetLoadKg).toBe(80) // charge de la semaine 1
-  })
-
   it('démarre les abdos enchaînés après un push', async () => {
     const d = await freshDb()
     const push = await startUpperSession('push', undefined, d)

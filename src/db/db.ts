@@ -1,14 +1,16 @@
 import Dexie, { type EntityTable } from 'dexie'
-import { catalogue, legPrescription } from '../data'
+import { catalogue, legProgram, oldLegPrescription } from '../data'
 import { placeKey } from '../logic/upperPlan'
 import type { CatalogueExercise } from '../data/types'
-import { defaultSettings, type Exercise, type Session, type SetLog, type Settings } from './models'
+import { defaultSettings, type Exercise, type PhaseEvent, type PhaseTest, type Session, type SetLog, type Settings } from './models'
 
 export class AppDB extends Dexie {
   exercises!: EntityTable<Exercise, 'id'>
   sessions!: EntityTable<Session, 'id'>
   setLogs!: EntityTable<SetLog, 'id'>
   settings!: EntityTable<Settings, 'id'>
+  phaseEvents!: EntityTable<PhaseEvent, 'id'>
+  phaseTests!: EntityTable<PhaseTest, 'id'>
 
   constructor(name = 'appli-sport') {
     super(name)
@@ -34,6 +36,11 @@ export class AppDB extends Dexie {
           if (p.templateKey) p.templateKey = upperPlaceKey(p.templateKey)
         })
       })
+    })
+    // Programme jambes v4 par phases : journal des phases et tests de sortie.
+    this.version(5).stores({
+      phaseEvents: '++id, at, phaseId',
+      phaseTests: '++id, at, phaseId',
     })
   }
 }
@@ -61,8 +68,19 @@ export function upperPlaceKey(key: string): string {
  */
 export function fillLegPrescription(s: Session) {
   if (s.type !== 'jambes' || !s.program || s.prescription) return
-  const p = legPrescription(s.program.index, 1)
-  if (p) s.prescription = p
+  s.prescription = oldLegPrescription(s.program.index)
+}
+
+/**
+ * Programme par phases : sans aucune entrée dans le journal (première ouverture de la version 4, ou nouvelle
+ * installation), on commence en phase 0 maintenant. Renvoie true si l'entrée a été créée.
+ */
+export async function ensurePhaseStart(database: AppDB = db, now = new Date()): Promise<boolean> {
+  return database.transaction('rw', database.phaseEvents, async () => {
+    if ((await database.phaseEvents.count()) > 0) return false
+    await database.phaseEvents.add({ at: now.toISOString(), phaseId: legProgram.phases[0].id, reason: 'debut' })
+    return true
+  })
 }
 
 export const db = new AppDB()

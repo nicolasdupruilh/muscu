@@ -1,5 +1,5 @@
 {
- "version": 3,
+ "version": 4,
  "note": "Catalogue de départ. L'utilisateur peut ajouter ses propres exercices depuis l'appli.",
  "exercises": [
   {
@@ -912,6 +912,193 @@
    "alternatives": [
     "copenhague"
    ]
+  },
+  {
+   "id": "iso-genou",
+   "name": "Isométrique genou (Spanish squat ou chaise contre le mur)",
+   "category": "tendon",
+   "equipment": "aucun",
+   "loadUnit": "time",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [],
+   "cues": "Genou plié à environ 60°, tenir 45 s. Douleur jusqu'à 3/10 acceptable, elle doit diminuer au fil des séries",
+   "alternatives": [
+    "iso-presse"
+   ]
+  },
+  {
+   "id": "iso-presse",
+   "name": "Isométrique à la presse (genou à 60°)",
+   "category": "tendon",
+   "equipment": "machine",
+   "loadUnit": "time",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [],
+   "cues": "Pousse fort sans bouger, 45 s",
+   "loadIncrementKg": 5
+  },
+  {
+   "id": "presse-lente",
+   "name": "Presse à cuisses, tempo lent",
+   "category": "strength",
+   "equipment": "machine",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [],
+   "cues": "3 s en descente, 3 s en montée. Amplitude limitée à 90° de flexion au début",
+   "loadIncrementKg": 5
+  },
+  {
+   "id": "squat-unipodal-incline",
+   "name": "Squat unipodal lent, talon surélevé",
+   "category": "tendon",
+   "equipment": "disque",
+   "loadUnit": "bodyweight+kg",
+   "unilateral": true,
+   "defaultRestSec": 90,
+   "slots": [],
+   "cues": "Talon sur un disque de 5 à 10 cm, descente 3 s jusqu'à 60°, genou dans l'axe du pied",
+   "loadIncrementKg": 2
+  },
+  {
+   "id": "step-down",
+   "name": "Step-down latéral lent",
+   "category": "stability",
+   "equipment": "box",
+   "loadUnit": "bodyweight+kg",
+   "unilateral": true,
+   "defaultRestSec": 60,
+   "slots": [],
+   "cues": "Depuis une box de 20 cm, descente 3 s, le genou ne rentre pas vers l'intérieur. C'est le contrôle de la réception",
+   "loadIncrementKg": 2
+  },
+  {
+   "id": "mollets-unipodal",
+   "name": "Mollets debout unipodal",
+   "category": "strength",
+   "equipment": "haltères",
+   "loadUnit": "bodyweight+kg",
+   "unilateral": true,
+   "defaultRestSec": 60,
+   "slots": [],
+   "cues": "Montée complète, 1 s en haut, descente 2 s",
+   "loadIncrementKg": 2
+  },
+  {
+   "id": "mollets-assis",
+   "name": "Mollets assis (soléaire)",
+   "category": "strength",
+   "equipment": "machine",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 60,
+   "slots": [],
+   "cues": "Genou plié : cible le soléaire, très sollicité à la réception. Sans machine : haltère posé sur le genou",
+   "loadIncrementKg": 5
+  },
+  {
+   "id": "abduction-hanche",
+   "name": "Abduction de hanche (machine ou poulie)",
+   "category": "strength",
+   "equipment": "machine",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 60,
+   "slots": [],
+   "cues": "Moyen fessier : il empêche le genou de rentrer à la réception",
+   "loadIncrementKg": 2.5
+  },
+  {
+   "id": "equilibre-unipodal",
+   "name": "Équilibre unipodal dynamique",
+   "category": "stability",
+   "equipment": "aucun",
+   "loadUnit": "time",
+   "unilateral": true,
+   "defaultRestSec": 30,
+   "slots": [],
+   "cues": "Sur une jambe, genou légèrement fléchi, va toucher devant, sur le côté, derrière avec l'autre pied"
+  },
+  {
+   "id": "reception-bipodale-figee",
+   "name": "Réception bipodale figée depuis 30 cm",
+   "category": "plyo",
+   "equipment": "box",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 60,
+   "slots": [],
+   "cues": "Tombe de la box, réception silencieuse, tiens 2 s, genoux dans l'axe"
+  },
+  {
+   "id": "sauts-faibles-bipodaux",
+   "name": "Petits sauts verticaux bipodaux, réception figée",
+   "category": "plyo",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 60,
+   "slots": [],
+   "cues": "Saut à 50 % de ton max, tiens 2 s à chaque réception"
+  },
+  {
+   "id": "saut-attaque-sous-max",
+   "name": "Saut d'attaque sous-maximal, réception figée",
+   "category": "plyo",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 90,
+   "slots": [],
+   "cues": "Élan 2 ou 3 pas, saut à 70 %, réception sur deux pieds tenue 2 s. Pas de ballon"
+  },
+  {
+   "id": "saut-contre-fige",
+   "name": "Saut de contre, réception figée",
+   "category": "plyo",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 75,
+   "slots": [],
+   "cues": "Pas chassé puis saut, réception tenue 2 s"
+  },
+  {
+   "id": "hop-lateral-fige",
+   "name": "Hop latéral unipodal, réception figée",
+   "category": "plyo",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": true,
+   "defaultRestSec": 60,
+   "slots": [],
+   "cues": "Petit saut latéral sur une jambe, tiens 2 s"
+  },
+  {
+   "id": "saut-attaque-max",
+   "name": "Saut d'attaque maximal",
+   "category": "plyo",
+   "equipment": "aucun",
+   "loadUnit": "none",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [],
+   "cues": "Élan complet, vise une marque au mur, réception amortie sur deux pieds"
+  },
+  {
+   "id": "hang-power-clean-leger",
+   "name": "Hang power clean, réception haute",
+   "category": "olympic",
+   "equipment": "barre",
+   "loadUnit": "kg",
+   "unilateral": false,
+   "defaultRestSec": 120,
+   "slots": [],
+   "cues": "Réception haute, au-dessus de la parallèle, pieds qui claquent",
+   "loadIncrementKg": 2.5
   }
  ]
 }

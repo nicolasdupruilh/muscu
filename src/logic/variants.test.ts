@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { legWeek, upperBody } from '../data'
+import { legPhase, upperBody } from '../data'
 import { chooseVariant, durationFactor, durationSamples, formatDuration, realDurationMin, type DurationSample } from './variants'
 
-const legB = legWeek(1)!.sessions.B.variants // 1 h (65), 1 h 30 (105), complète (135)
-const legA = legWeek(1)!.sessions.A.variants // 1 h (65), complète (120)
+const p4 = legPhase('p4')!.weeks![0].sessions
+const legB = p4.B.variants // 1 h (65), 1 h 30 (105), complète (135)
+const legA = p4.A.variants // 1 h (60), complète (125)
 const push = upperBody.templates.find((t) => t.id === 'push')!.variants // 1 h (65), complète (95)
 
 describe('choix de la variante', () => {

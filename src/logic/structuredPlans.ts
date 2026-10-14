@@ -4,7 +4,7 @@ import type { AbsBlock, LegItem, LoadUnit } from '../data/types'
 import type { PlannedExercise, SetLog } from '../db/models'
 import type { Target } from './doubleProgression'
 import { formatKg } from './format'
-import type { KneeLevel } from './knee'
+import { conditionMet } from './phases'
 import { parseReps } from './reps'
 
 const rangeOf = (reps: PlannedExercise['prescribedReps']): [number, number] => {
@@ -13,21 +13,36 @@ const rangeOf = (reps: PlannedExercise['prescribedReps']): [number, number] => {
   return [v, p.max ?? v]
 }
 
+export interface PhasePlanOptions {
+  /** Semaine de la phase (pour les conditions « semaine>=2 »). */
+  week?: number
+  /** Dernière réponse du lendemain (pour les conditions « lendemain<=2 »). */
+  lendemain?: number
+  /** Charge ajoutée aux charges cibles (dernière semaine répétée en phase 1). */
+  loadBonusKg?: number
+  /** Raison de ne pas sauter aujourd'hui : les exercices de saut sont sautés par défaut, réactivables. */
+  jumpNote?: string
+  isJump: (exerciseId: string) => boolean
+}
+
 /**
- * Plan d'une séance jambes tel que prescrit, pour la variante choisie. Si le dernier check genou est orange ou rouge,
- * les ajustements sont appliqués et notés sur chaque exercice concerné :
- * - orange : sauts divisés par deux, charges de la semaine précédente ;
- * - rouge : pas de sauts ni de réceptions (exercices sautés, réactivables).
+ * Plan d'une séance jambes du programme par phases, pour la variante choisie.
+ * Un exercice avec une condition est optionnel quand elle est remplie, et masqué sinon (renvoyé dans « hidden »).
  */
-export function buildLegPlan(
-  items: LegItem[],
-  /** Mêmes exercices la semaine précédente (même variante), pour l'ajustement « charges de la semaine précédente ». */
-  previousWeek: LegItem[] | undefined,
-  knee: KneeLevel | undefined,
-  isJump: (exerciseId: string) => boolean,
-): PlannedExercise[] {
-  return items.map((it, i) => {
-    const planned: PlannedExercise = {
+export function buildPhasePlan(items: LegItem[], o: PhasePlanOptions): { plan: PlannedExercise[]; hidden: { exerciseId: string; condition: string }[] } {
+  const hidden: { exerciseId: string; condition: string }[] = []
+  const plan: PlannedExercise[] = []
+  items.forEach((it, i) => {
+    if (it.condition && !conditionMet(it.condition, { semaine: o.week, lendemain: o.lendemain })) {
+      hidden.push({ exerciseId: it.exerciseId, condition: it.condition })
+      return
+    }
+    const bonus = it.targetLoadKg !== undefined && o.loadBonusKg ? o.loadBonusKg : 0
+    const notes = [
+      bonus ? `Semaine répétée : +${formatKg(bonus)} sur la charge cible (${formatKg(it.targetLoadKg!)} prévus).` : '',
+      o.jumpNote && o.isJump(it.exerciseId) ? o.jumpNote : '',
+    ].filter(Boolean)
+    plan.push({
       key: `jambes:${i}`,
       exerciseId: it.exerciseId,
       sets: it.sets,
@@ -35,25 +50,15 @@ export function buildLegPlan(
       restSec: it.restSec,
       note: it.note || undefined,
       prescribedReps: it.reps,
-      targetLoadKg: it.targetLoadKg,
+      targetLoadKg: it.targetLoadKg !== undefined ? it.targetLoadKg + bonus : undefined,
       tempo: it.tempo,
       superset: it.superset,
-    }
-    const jump = isJump(it.exerciseId)
-    if (knee === 'rouge' && jump) {
-      return { ...planned, skipped: true, adjustmentNote: 'Genou rouge : pas de sauts ni de réceptions aujourd’hui.' }
-    }
-    if (knee === 'orange') {
-      if (jump) {
-        return { ...planned, sets: Math.ceil(it.sets / 2), adjustmentNote: `Genou orange : sauts divisés par deux (${Math.ceil(it.sets / 2)} séries au lieu de ${it.sets}).` }
-      }
-      const prev = previousWeek?.find((p) => p.exerciseId === it.exerciseId)?.targetLoadKg
-      if (it.targetLoadKg !== undefined && prev !== undefined && prev !== it.targetLoadKg) {
-        return { ...planned, targetLoadKg: prev, adjustmentNote: `Genou orange : charge de la semaine précédente (${formatKg(prev)} au lieu de ${formatKg(it.targetLoadKg)}).` }
-      }
-    }
-    return planned
+      ...(it.condition && { optional: true, condition: it.condition }),
+      ...(o.jumpNote && o.isJump(it.exerciseId) && { skipped: true }),
+      ...(notes.length && { adjustmentNote: notes.join(' ') }),
+    })
   })
+  return { plan, hidden }
 }
 
 const hasLoad = (unit: LoadUnit) => unit === 'kg' || unit === 'bodyweight+kg'

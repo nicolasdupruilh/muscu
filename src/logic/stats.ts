@@ -88,10 +88,10 @@ export interface KneePoint {
   lendemain?: number
 }
 
-/** Douleur au genou de chaque séance jambes, dans l'ordre chronologique. */
+/** Douleur au genou de chaque séance jambes et de chaque volley, dans l'ordre chronologique. */
 export function kneeHistory(sessions: Session[]): KneePoint[] {
   return sessions
-    .filter((s) => s.type === 'jambes' && s.status === 'terminee' && s.kneeCheck)
+    .filter((s) => (s.type === 'jambes' || s.type === 'volley') && s.status === 'terminee' && s.kneeCheck)
     .map((s) => ({ sessionId: s.id!, date: s.date, pendant: s.kneeCheck!.pendant, lendemain: s.kneeCheck!.lendemain }))
     .sort((a, b) => a.date.localeCompare(b.date))
 }

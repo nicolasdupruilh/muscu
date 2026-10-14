@@ -1,12 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
-import { syncCatalogue } from './db/db'
+import { ensurePhaseStart, syncCatalogue } from './db/db'
 import './styles.css'
 
 async function start() {
   try {
     await syncCatalogue()
+    await ensurePhaseStart()
   } catch (e) {
     console.error('Synchronisation du catalogue impossible', e)
   }

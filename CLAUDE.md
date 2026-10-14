@@ -4,10 +4,9 @@ Appli personnelle pour assister mes séances de musculation à la salle, sur iPh
 
 ## Contexte
 
-- Je fais 2 séances jambes (programme cadré sur 16 semaines), 2 séances haut du corps (trame souple : push et pull), des abdos cadrés en fin de séance haut du corps, et une sortie course par semaine.
+- Je fais 2 séances jambes (programme par phases sur critères, voir plus bas), 2 séances haut du corps (trame souple : push et pull), des abdos cadrés en fin de séance haut du corps, et une sortie course par semaine.
 - Pas de jours fixes : je place mes séances selon mes disponibilités. On parle de « 1re / 2e séance de la semaine », jamais de « séance du lundi ».
-- Pas de volley pour l'instant : ignorer `volleyAdjustments` jusqu'à nouvel ordre.
-- Après la semaine 16 : la trame haut du corps continue, un nouveau programme jambes (nouveau fichier dans `data/`) prendra le relais.
+- Volley : enregistré comme une séance (type `volley`) avec le check genou. Interdit en phases 0 à 2 (saisie possible, avec un avertissement), échelle `volleyLadder` en phase 3. Les ajustements volley de la phase 4 (pliométrie réduite selon le nombre de volleys, pas de séance la veille d'un match) sont seulement affichés pour l'instant.
 - Genou droit fragile (tendinopathie rotulienne) : le suivi de la douleur fait partie du programme jambes. Leg extension interdit, ne jamais le proposer.
 - Les fichiers du dossier `data/` sont la source de vérité pour les programmes et le catalogue de départ. Ne pas les réécrire à la main dans le code : l'appli les importe.
 - **Lire `PRINCIPES.md` avant toute modification d'un fichier `data/programme-*.json`.**
@@ -26,7 +25,7 @@ Appli personnelle pour assister mes séances de musculation à la salle, sur iPh
 ## Fichiers de données
 
 - `data/exercises.json` : catalogue de départ. Chaque exercice a un `id`, un nom, une catégorie, un équipement, une unité de charge (`kg`, `bodyweight`, `bodyweight+kg`, `time`, `none`), un incrément de charge, un repos par défaut, des `slots` (emplacements de la trame haut du corps où il peut être choisi), des consignes et éventuellement des `alternatives` (remplaçants proposés en séance cadrée).
-- `data/programme-jambes.json` : 16 semaines × séances A et B, entièrement prescrites (séries, reps, charge cible, tempo, repos, notes), chacune en plusieurs `variants` par durée (`id`, `label`, `estimatedMin`, `items`), de la plus courte à la complète. Les exercices qui partagent la même valeur `superset` s'enchaînent. Contient aussi le check genou (`healthCheck`) avec les règles vert/orange/rouge et les ajustements volley.
+- `data/programme-jambes.json` (v4, `type: "phased"`) : 5 phases `p0` à `p4`. Chaque phase a un objectif, des `rules` affichées, une durée minimale (`minDays` ou `minWeeks`), des `exitCriteria` (échelle 0-10 avec `max`, `yesno`, `ratio` droite/gauche avec `min`, ou `auto` calculé), et soit des séances fixes (`sessions`, phase 0, avec des isométriques quotidiens `daily`), soit des semaines A/B (`weeks`, `repeatLastWeek`). Chaque séance a ses `variants` par durée, les exercices peuvent avoir un `superset` et une `condition` (« semaine>=2 et lendemain<=2 »). La phase 3 a l'échelle `volleyLadder`, la phase 4 reprend les blocs de l'ancien programme. `healthCheck` : règles vert/orange/rouge, `appliesTo` (jambes, volley), `decisionOn: "lendemain"`.
 - `data/programme-abdos.json` : circuit abdos par blocs de semaines, à enchaîner après les séances push et pull.
 - `data/programme-haut-du-corps.json` : trames push et pull, chacune en `variants` par durée (`estimatedMin` abdos compris, `abdosRounds` = tours du circuit abdos qui suit) composées de slots (fourchette de reps, nombre de séries, repos, exercice par défaut, `superset`) + règle de double progression.
 - `data/planning.json` : rythme hebdomadaire indicatif (2 jambes, push, pull, footing). Il ne décide pas de la séance proposée.
@@ -40,8 +39,19 @@ Notation du tempo : excentrique-pause bas-concentrique-pause haut, en secondes, 
 - `SetLog` : une série réalisée. Session, exercice, numéro de série, charge, reps réalisées (ou durée), repos réellement pris avant la série, cochée. Exercice unilatéral : une seule saisie par série, qui vaut pour chaque côté.
 - `Settings` : par programme (jambes, abdos) une date de début, indicative, et une éventuelle correction manuelle de position ; préférences.
 
-### Progression des programmes cadrés
-- Un programme est une suite de séances : S1 A, S1 B, S2 A… On avance selon les séances faites, pas selon le calendrier. Une séance pas faite est décalée, jamais sautée.
+### Programme jambes par phases (v4)
+- Journal des phases (`PhaseEvent` : début, test réussi, régression, changement à la main). La phase en cours est la dernière entrée enregistrée ; seules les séances faites depuis cette entrée comptent (`Session.phase` : entrée, phase, semaine du contenu, rang de la semaine, A/B, charge ajoutée). L'historique de l'ancien programme reste consultable mais ne compte pas.
+- Dans une phase : A puis B ; semaine terminée → suivante. Un lendemain orange (3 à 5/10, jambes ou volley) dans la semaine → on refait la même semaine. Après la dernière semaine (`repeatLastWeek`) on la répète ; en phase 1, +2,5 kg sur les charges cibles à chaque répétition si le lendemain est resté vert.
+- Durée minimale : jours calendaires en phase 0, semaines du programme terminées (répétitions comprises) ensuite. Au-delà de `maxWeeks` : conseil de consulter.
+- Test de sortie quand la durée minimale est faite ; phase suivante seulement si tous les critères sont remplis (critères auto : `lendemain-2sem`, `lendemain-sauts`, `volley-complet`).
+- Régression automatique après chaque réponse du lendemain : au-dessus de 5/10, ou au-dessus de 2/10 trois fois de suite → phase précédente (phase 0 au minimum). Exceptions validées : en phase 3, un lendemain de volley au-dessus de 5 fait redescendre l'échelle de deux marches (et pas de sauts en salle cette semaine) sans changer de phase ; en phase 4, retour en phase 3 après deux lendemains au-dessus de 5 de suite.
+- Échelle volley (phase 3) : marche suivante si le lendemain du dernier volley est ≤ 2, même marche si 3 à 5, deux marches plus bas au-dessus de 5.
+- Garde-fous : en phase 2, pas plus de 2 séances avec sauts par semaine ni deux jours de suite ; en phase 3, pas de sauts en salle à moins de 48 h d'un volley. Les sauts sont alors sautés par défaut, réactivables.
+- Exercice avec `condition` : optionnel si elle est remplie, masqué sinon (semaine = semaine de la phase, lendemain = dernière réponse).
+- Isométriques quotidiens (phase 0) : carte à cocher sur l'accueil, minuteur guidé, rappel quotidien à 18 h par un fichier calendrier (.ics) à importer, pastille sur l'icône.
+
+### Progression des programmes cadrés (abdos)
+- Un programme est une suite de séances : S1, S1, S2… On avance selon les séances faites, pas selon le calendrier. Une séance pas faite est décalée, jamais sautée.
 - La prochaine séance est la première non faite à partir du point de départ (début du programme ou dernière correction manuelle).
 - Je peux corriger la position à la main dans les réglages (« reprendre à la semaine 5, séance A »). Seules les séances faites après la correction comptent.
 - Abdos : deux séances avec abdos (après push et après pull) font une semaine du programme abdos.
@@ -62,7 +72,7 @@ L'historique est rattaché à l'exercice, pas au slot : si je fais « Rowing hal
 ## Écrans
 
 ### Accueil
-- Programme jambes : semaine en cours, séances de la semaine (faites / à faire), bouton pour démarrer la prochaine. Si le check genou du lendemain de la dernière séance jambes n'a pas été rempli, le demander ici.
+- Programme jambes : phase, semaine (refaite ou répétée), séances de la semaine, feu du dernier lendemain, bouton pour démarrer la prochaine, test de sortie, règles de la phase. Check du matin : une réponse vaut pour toutes les séances (jambes, volley) qui l'attendent. Isométriques du jour en phase 0. Volley : marche actuelle et suivante autorisée en phase 3.
 - Haut du corps : push ou pull proposé, avec la semaine abdos qui suivra.
 - Footing : un bouton « Footing fait » et le nombre de footings de la semaine, à titre indicatif.
 - Possibilité de choisir une autre séance.
@@ -92,15 +102,16 @@ L'historique est rattaché à l'exercice, pas au slot : si je fais « Rowing hal
 - Exercice sans charge cible dans le programme : charge de la dernière fois, et +1 cran proposé si toutes les séries avaient atteint les reps visées (« largement réussies » si +2 reps ou plus), jamais en semaine allégée. La charge de la dernière fois reste toujours affichée.
 - Abdos en circuit : enchaîner les exercices d'un tour sans repos, puis le repos entre les tours. Afficher le tour en cours. La progression du bloc (+2 reps ou +5 s quand tous les tours sont propres) se propose comme pour la double progression.
 - Semaines allégées marquées comme telles.
-- Fin de séance jambes : check genou (douleur pendant, 0 à 10). Le lendemain : question sur le squat unipodal. Afficher le feu (vert / orange / rouge) et l'action associée selon `healthCheck.rules`. Si orange ou rouge, afficher l'ajustement dans la séance jambes suivante (sauts divisés par deux, charges de la semaine précédente, ou pas de sauts).
+- Fin de séance jambes (et saisie d'un volley) : douleur pendant, 0 à 10. Le lendemain matin : squat unipodal lent. Le feu (vert / orange / rouge) et l'action se décident sur la réponse du lendemain (`decisionOn`), avec les conséquences du programme par phases (voir plus haut).
+- Exercice en durée : minuteur de tenue dans la saisie de la série.
 
 ### Historique
 - Liste des séances passées, détail de chaque séance.
 - Par exercice : courbe de la meilleure série (charge et reps, ou 1RM estimé), tableau des séances.
-- Courbe de la douleur au genou dans le temps.
+- Courbe de la douleur au genou dans le temps (jambes et volley).
 
 ### Réglages
-- Date de début du programme jambes et abdos, planning de la semaine.
+- Programme jambes : phase en cours, date de début de la phase, historique des phases, changement de phase à la main. Programme abdos : date de début et position.
 - Catalogue d'exercices : voir, modifier, créer, archiver.
 - Export / import JSON.
 
