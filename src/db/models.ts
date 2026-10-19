@@ -149,6 +149,8 @@ export interface Session {
   parentSessionId?: number
   /** Exercices prévus, dans l'ordre (séances haut du corps et libres). */
   plan?: PlannedExercise[]
+  /** Séance push ou pull libre : je choisis l'exercice suivant au fur et à mesure (pas de trame). */
+  free?: boolean
   rest?: RestTimer
   /** Exercices optionnels masqués parce que leur condition n'était pas remplie. */
   hiddenOptional?: { exerciseId: string; condition: string }[]

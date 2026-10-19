@@ -3,7 +3,7 @@ import Dexie from 'dexie'
 import { afterEach, describe, expect, it } from 'vitest'
 import { catalogue } from '../data'
 import { AppDB, syncCatalogue, upperPlaceKey } from './db'
-import { alternativesFor, finishLegSession, finishSession, logSet, replaceExercise, startAbsSession, startUpperSession } from './sessions'
+import { alternativesFor, finishLegSession, logSet, replaceExercise, startAbsSession } from './sessions'
 import { setPhaseManually, startLegSession } from './phases'
 
 /** Séance B de la semaine 1 de la phase 4 (blocs de l'ancien programme), dans la variante demandée. */
@@ -30,20 +30,16 @@ afterEach(async () => {
 })
 
 describe('variantes', () => {
-  it('push 1 h : 5 exercices avec un superset, puis 2 tours d’abdos', async () => {
+  it('abdos d’une ancienne séance enchaînée : les tours de la variante du push', async () => {
     const d = await freshDb()
-    const id = await startUpperSession('push', '1h', d)
-    const s = (await d.sessions.get(id))!
-    expect(s.variant).toEqual({ id: '1h', label: '1 h', estimatedMin: 65, abdosRounds: 2 })
-    expect(s.plan?.map((p) => `${p.templateKey}${p.superset ? `[${p.superset}]` : ''}`)).toEqual([
-      'push:push-horizontal:1',
-      'push:push-incline:1',
-      'push:push-vertical:1',
-      'push:lateral-raise:1[S1]',
-      'push:triceps:1[S1]',
-    ])
-    await finishSession(id, d)
-    const abs = (await d.sessions.get(await startAbsSession(0, id, d)))!
+    const push = (await d.sessions.add({
+      date: '2026-10-10T18:00:00Z',
+      type: 'push',
+      status: 'terminee',
+      plan: [],
+      variant: { id: '1h', label: '1 h', estimatedMin: 65, abdosRounds: 2 },
+    })) as number
+    const abs = (await d.sessions.get(await startAbsSession(0, push, d)))!
     expect(abs.plan?.every((p) => p.sets === 2 && p.superset === 'circuit')).toBe(true)
     d.close()
   })
@@ -140,12 +136,6 @@ describe('migration de la trame haut du corps v1', () => {
     const log = (await d.setLogs.toArray())[0]
     expect(log).toMatchObject({ planKey: 'pull:3', templateKey: 'pull:row:1', loadKg: 30 })
     expect((await d.sessions.get(1))!.plan![0].templateKey).toBe('pull:row:1')
-    // Le rowing haltère est reproposé à la place « Rowing », dans les deux variantes.
-    for (const variant of ['1h', 'complete']) {
-      const id = await startUpperSession('pull', variant, d)
-      expect((await d.sessions.get(id))!.plan!.find((p) => p.slot === 'row')?.exerciseId).toBe('rowing-haltere')
-      await d.sessions.delete(id)
-    }
     d.close()
   })
 })

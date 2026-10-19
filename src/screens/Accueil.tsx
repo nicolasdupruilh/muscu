@@ -6,6 +6,7 @@ import { legPhase, legProgram, legProgramVersion, upperBody } from '../data'
 import { db, updateSettings } from '../db/db'
 import type { Session } from '../db/models'
 import { saveNextDay, setIsoDone } from '../db/phases'
+import { startAbsSession } from '../db/sessions'
 import { logFooting } from '../db/queries'
 import { useActiveSession, usePhase, useProgramStatus, useSessions, useSetLogs, useSettings } from '../hooks'
 import { formatDay, isSameWeek, toLocalDate } from '../logic/dates'
@@ -48,6 +49,7 @@ export function Accueil() {
   if (!sessions || !logs || !phase || !abs || active === undefined || !settings) return null
 
   const footings = sessions.filter((s) => s.type === 'course' && isSameWeek(new Date(s.date), now))
+  const absThisWeek = sessions.filter((s) => s.type === 'abdos' && s.status === 'terminee' && isSameWeek(new Date(s.date), now)).length
   const upper = nextUpperType(sessions)
   const { pos, ladder, events } = phase
   const rules = legProgram.healthCheck.rules
@@ -242,13 +244,37 @@ export function Accueil() {
       <section className="card">
         <h2>Haut du corps</h2>
         <p className="muted">
-          Prochaine : <strong>{upper === 'push' ? 'Push' : 'Pull'}</strong>
-          {abs.next && ` · puis abdos, semaine ${abs.next.week} (${abs.next.label} séance)`}
+          Prochaine : <strong>{upper === 'push' ? 'Push' : 'Pull'}</strong> · tu choisis les exercices au fur et à mesure
         </p>
         <div className="row">
           <StartUpperButton type="push" primary={upper === 'push'} />
           <StartUpperButton type="pull" primary={upper === 'pull'} />
         </div>
+      </section>
+
+      <section className="card">
+        <div className="row">
+          <h2 className="grow">Abdos</h2>
+          {absThisWeek > 0 && <span className="badge ok">{absThisWeek} cette semaine</span>}
+        </div>
+        {abs.next ? (
+          <>
+            <p className="muted">
+              Semaine {abs.next.week} du programme, {abs.next.label} séance
+            </p>
+            <button
+              className="btn block"
+              onClick={async () => {
+                await startAbsSession(abs.next!.index)
+                navigate('/seance')
+              }}
+            >
+              Lancer le circuit abdos
+            </button>
+          </>
+        ) : (
+          <p>Programme abdos terminé.</p>
+        )}
       </section>
 
       <section className="card">

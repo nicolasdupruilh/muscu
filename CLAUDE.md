@@ -4,7 +4,7 @@ Appli personnelle pour assister mes séances de musculation à la salle, sur iPh
 
 ## Contexte
 
-- Je fais 2 séances jambes (programme par phases sur critères, voir plus bas), 2 séances haut du corps (trame souple : push et pull), des abdos cadrés en fin de séance haut du corps, et une sortie course par semaine.
+- Je fais 2 séances jambes (programme par phases sur critères, voir plus bas), 2 séances haut du corps (push et pull, exercices choisis au fur et à mesure), des abdos cadrés en séance à part (lancés depuis l'accueil quand je veux), et une sortie course par semaine.
 - Pas de jours fixes : je place mes séances selon mes disponibilités. On parle de « 1re / 2e séance de la semaine », jamais de « séance du lundi ».
 - Volley : enregistré comme une séance (type `volley`) avec le check genou. Interdit en phases 0 à 2 (saisie possible, avec un avertissement), échelle `volleyLadder` en phase 3. Les ajustements volley de la phase 4 (pliométrie réduite selon le nombre de volleys, pas de séance la veille d'un match) sont seulement affichés pour l'instant.
 - Genou droit fragile (tendinopathie rotulienne) : le suivi de la douleur fait partie du programme jambes. Leg extension interdit, ne jamais le proposer.
@@ -24,10 +24,10 @@ Appli personnelle pour assister mes séances de musculation à la salle, sur iPh
 
 ## Fichiers de données
 
-- `data/exercises.json` : catalogue de départ. Chaque exercice a un `id`, un nom, une catégorie, un équipement, une unité de charge (`kg`, `bodyweight`, `bodyweight+kg`, `time`, `none`), un incrément de charge, un repos par défaut, des `slots` (emplacements de la trame haut du corps où il peut être choisi), des consignes et éventuellement des `alternatives` (remplaçants proposés en séance cadrée).
+- `data/exercises.json` : catalogue de départ. Chaque exercice a un `id`, un nom, une catégorie, un équipement, une unité de charge (`kg`, `bodyweight`, `bodyweight+kg`, `time`, `none`), un incrément de charge, un repos par défaut, des `slots` (emplacements de la trame haut du corps : rangent l'exercice en push ou pull et lui donnent séries, reps et repos par défaut), des consignes et éventuellement des `alternatives` (remplaçants proposés en séance cadrée).
 - `data/programme-jambes.json` (v4, `type: "phased"`) : 5 phases `p0` à `p4`. Chaque phase a un objectif, des `rules` affichées, une durée minimale (`minDays` ou `minWeeks`), des `exitCriteria` (échelle 0-10 avec `max`, `yesno`, `ratio` droite/gauche avec `min`, ou `auto` calculé), et soit des séances fixes (`sessions`, phase 0, avec des isométriques quotidiens `daily`), soit des semaines A/B (`weeks`, `repeatLastWeek`). Chaque séance a ses `variants` par durée, les exercices peuvent avoir un `superset` et une `condition` (« semaine>=2 et lendemain<=2 »). La phase 3 a l'échelle `volleyLadder`, la phase 4 reprend les blocs de l'ancien programme. `healthCheck` : règles vert/orange/rouge, `appliesTo` (jambes, volley), `decisionOn: "lendemain"`.
-- `data/programme-abdos.json` : circuit abdos par blocs de semaines, à enchaîner après les séances push et pull.
-- `data/programme-haut-du-corps.json` : trames push et pull, chacune en `variants` par durée (`estimatedMin` abdos compris, `abdosRounds` = tours du circuit abdos qui suit) composées de slots (fourchette de reps, nombre de séries, repos, exercice par défaut, `superset`) + règle de double progression.
+- `data/programme-abdos.json` : circuit abdos par blocs de semaines, en séance à part.
+- `data/programme-haut-du-corps.json` : trames push et pull (`variants` par durée composées de slots : fourchette de reps, séries, repos, exercice par défaut, `superset`) + règle de double progression. Depuis les séances libres, il sert seulement à dire quels exercices sont « du push » ou « du pull » et à donner séries, fourchette et repos par défaut. `variants`, `estimatedMin` et `abdosRounds` ne servent plus qu'aux anciennes séances.
 - `data/planning.json` : rythme hebdomadaire indicatif (2 jambes, push, pull, footing). Il ne décide pas de la séance proposée.
 
 Notation du tempo : excentrique-pause bas-concentrique-pause haut, en secondes, X = explosif. L'afficher aussi en clair (ex. « Descente 3 s, remontée explosive »).
@@ -54,17 +54,17 @@ Notation du tempo : excentrique-pause bas-concentrique-pause haut, en secondes, 
 - Un programme est une suite de séances : S1, S1, S2… On avance selon les séances faites, pas selon le calendrier. Une séance pas faite est décalée, jamais sautée.
 - La prochaine séance est la première non faite à partir du point de départ (début du programme ou dernière correction manuelle).
 - Je peux corriger la position à la main dans les réglages (« reprendre à la semaine 5, séance A »). Seules les séances faites après la correction comptent.
-- Abdos : deux séances avec abdos (après push et après pull) font une semaine du programme abdos.
+- Abdos : deux séances abdos font une semaine du programme abdos.
 - Haut du corps : on propose push ou pull, celui des deux fait le moins récemment.
 - La mise à jour de `data/exercises.json` ajoute les nouveaux exercices et met à jour ceux du catalogue que je n'ai pas modifiés. Mes exercices et mes modifications ne sont jamais écrasés.
 
 ### Variantes, supersets, durées
-- Au démarrage d'une séance jambes, push ou pull : « Combien de temps tu as ? » (45 min, 1 h, 1 h 30, 2 h, sans limite). Un appui lance la variante la plus complète dont la durée estimée × coefficient tient dans ce temps (sinon la plus courte). Les variantes sont listées dessous avec leur durée pour en prendre une autre. Pas de changement de variante en cours de séance.
+- Au démarrage d'une séance jambes : « Combien de temps tu as ? » (45 min, 1 h, 1 h 30, 2 h, sans limite). Un appui lance la variante la plus complète dont la durée estimée × coefficient tient dans ce temps (sinon la plus courte). Les variantes sont listées dessous avec leur durée pour en prendre une autre. Pas de changement de variante en cours de séance.
 - La séance enregistre sa variante (`Session.variant`). Les ajustements genou s'appliquent à la variante choisie (charges de la semaine précédente prises dans la même variante).
 - Supersets : série 1 de chaque exercice du groupe sans pause, puis le repos du groupe (le plus long de ses repos), puis la série 2… Un exercice qui a moins de séries sort du tour. Le circuit abdos suit la même logique (un seul groupe, repos entre les tours).
-- Abdos enchaînés après push ou pull : `abdosRounds` tours. Abdos seuls : tours du programme abdos.
-- Durée réelle = de l'heure de début à la fin (abdos enchaînés compris pour push/pull), comparée à `estimatedMin` dans l'historique. Coefficient de correction : médiane de réel ÷ estimé sur les 8 dernières séances avec variante, en écartant les rapports hors de 0,5–2 ; remise à 1 possible dans les réglages.
-- Places de la trame haut du corps repérées par slot et rang (`push:triceps:2`), pas par position : la mémoire « dernier exercice fait à cette place » suit d'une variante à l'autre.
+- Abdos : tours du programme abdos (`abdosRounds` ne vaut que pour les anciennes séances enchaînées après un push ou un pull).
+- Durée réelle = de l'heure de début à la fin (abdos enchaînés compris pour les anciennes séances push/pull), comparée à `estimatedMin` dans l'historique. Coefficient de correction : médiane de réel ÷ estimé sur les 8 dernières séances avec variante, en écartant les rapports hors de 0,5–2 ; remise à 1 possible dans les réglages.
+- Anciennes séances push/pull : places de la trame repérées par slot et rang (`push:triceps:2`).
 - Remplacement en séance cadrée : alternatives du catalogue d'abord, puis tout le catalogue. La place garde l'exercice prévu (`replaced`) ; la charge cible du programme ne vaut que pour lui ; si le remplaçant ne se mesure pas pareil (durée ↔ reps), la prescription devient 8 à 12 reps ou 30 s.
 
 L'historique est rattaché à l'exercice, pas au slot : si je fais « Rowing haltère » dans le slot Rowing, je retrouve ma dernière perf de « Rowing haltère », peu importe le slot.
@@ -73,19 +73,21 @@ L'historique est rattaché à l'exercice, pas au slot : si je fais « Rowing hal
 
 ### Accueil
 - Programme jambes : phase, semaine (refaite ou répétée), séances de la semaine, feu du dernier lendemain, bouton pour démarrer la prochaine, test de sortie, règles de la phase. Check du matin : une réponse vaut pour toutes les séances (jambes, volley) qui l'attendent. Isométriques du jour en phase 0. Volley : marche actuelle et suivante autorisée en phase 3.
-- Haut du corps : push ou pull proposé, avec la semaine abdos qui suivra.
+- Haut du corps : push ou pull proposé (celui fait le moins récemment), les deux boutons disponibles.
+- Abdos : semaine et séance du programme abdos, bouton pour lancer le circuit.
 - Footing : un bouton « Footing fait » et le nombre de footings de la semaine, à titre indicatif.
 - Possibilité de choisir une autre séance.
 
-### Séance haut du corps (trame souple)
-- La trame (push ou pull) s'affiche slot par slot.
-- Pour chaque slot, je choisis l'exercice du jour dans une liste filtrée sur ce slot. L'exercice par défaut est celui que j'ai fait la dernière fois dans ce slot (sinon le `defaultExerciseId`).
-- Si l'exercice n'existe pas : bouton « Créer un exercice » directement dans la liste. Il est ajouté au catalogue et à ce slot, et proposé les fois suivantes.
-- Je peux aussi ajouter un exercice hors trame, en sauter un, ou changer l'ordre.
+### Séance haut du corps (libre, `Session.free`)
+- Push ou pull, sans trame ni variante : la séance démarre vide et la liste s'ouvre pour le premier exercice. Je choisis l'exercice suivant à la fin du précédent : après sa dernière série, le chrono de repos se lance et la liste s'ouvre dessous.
+- Liste : « Exercices du push / pull » en tête (slots de la trame, ou déjà faits dans une séance de ce type), du plus récent au plus ancien, puis les autres exercices, recherche, et « Créer un exercice » (nouvelle machine : ajouté au catalogue, proposé ensuite).
+- Choix « Superset (2 exercices) » dans la liste : les deux s'enchaînent sans pause, repos après le second.
+- Séries, fourchette et repos d'un exercice ajouté : ceux de la dernière fois (séries réellement faites), sinon ceux de sa place dans la trame, sinon 3 × 8 à 12 (20 à 40 s en durée) et son repos par défaut. Modifiables.
+- Je peux changer un exercice pas commencé, le retirer, en sauter un, ou changer l'ordre.
 - Pour chaque exercice, afficher clairement la dernière séance : date, charge et reps de chaque série.
 - Proposer une cible du jour par la double progression : si toutes les séries de la dernière fois ont atteint le haut de la fourchette, charge + incrément et reps visées au bas de la fourchette ; sinon même charge, viser +1 rep sur les séries sous le haut de la fourchette.
 - Saisie série par série : charge préremplie avec la cible, boutons +/− ; à la fin de chaque série, j'entre les reps réalisées (boutons rapides autour de la cible) et je valide. La validation lance le chrono de repos.
-- Les abdos s'enchaînent à la fin (voir Séance cadrée).
+- Pas d'abdos enchaînés : je les lance depuis l'accueil quand je veux.
 
 ### Repos et chrono
 - Avant un exercice, je choisis le temps de repos : prérempli avec celui de la dernière fois sur cet exercice (sinon le repos du slot ou de l'exercice). Boutons rapides : 45 s, 1 min, 1 min 30, 2 min, 2 min 30, 3 min, + réglage fin.
@@ -118,7 +120,7 @@ L'historique est rattaché à l'exercice, pas au slot : si je fais « Rowing hal
 ## Priorités de développement
 
 1. Socle : projet, import des fichiers `data/`, base IndexedDB, navigation.
-2. Séance haut du corps : choix de l'exercice par slot, création d'exercice, dernière perf, saisie série par série.
+2. Séance haut du corps : choix de l'exercice (par slot, puis libre au fur et à mesure), création d'exercice, dernière perf, saisie série par série.
 3. Chrono de repos avec choix du temps et ajustement de cible.
 4. Séances cadrées jambes et abdos, check genou.
 5. Historique et courbes.

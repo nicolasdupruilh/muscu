@@ -4,21 +4,22 @@ import { unlockAudio } from '../alarm'
 import { ExercisePicker } from '../components/ExercisePicker'
 import { KneeScale } from '../components/KneeScale'
 import { defaultMode, doneValue, formatDone, LastTime, RestChooser, SetEditor, TargetLine, valueFields } from '../components/SetEntry'
-import { legPhase, legProgram, oldLegPrescription } from '../data'
+import { legPhase, legProgram, oldLegPrescription, upperTemplate } from '../data'
 import type { Exercise, PlannedExercise, Session, SetLog } from '../db/models'
 import {
   abandonSession,
+  addFreeExercises,
+  changeFreeExercise,
   deleteSet,
   finishLegSession,
   finishSession,
   alternativesFor,
   logSet,
   replaceExercise,
-  startAbsSession,
   updatePlan,
   updateSet,
 } from '../db/sessions'
-import { useActiveSession, useExercises, useProgramStatus, useSetLogs } from '../hooks'
+import { useActiveSession, useExercises, useSessions, useSetLogs } from '../hooks'
 import { doubleProgression, type Target } from '../logic/doubleProgression'
 import { formatKg, formatLoad, formatRest } from '../logic/format'
 import { hasLoad, lastPerformance, toPastSets, type LastPerformance } from '../logic/history'
@@ -29,6 +30,7 @@ import { groupRounds, groupsOf, nextSet, restAfter } from '../logic/supersets'
 import { formatDuration } from '../logic/variants'
 import { describeTempo } from '../logic/tempo'
 import { describeCondition } from '../logic/phases'
+import { dayExerciseIds } from '../logic/freePlan'
 import { AbsCircuit } from './AbsCircuit'
 import { ChoixSeance } from './ChoixSeance'
 
@@ -62,15 +64,20 @@ export function Seance() {
 function SeanceEnCours({ session }: { session: Session }) {
   const exercises = useExercises()
   const logs = useSetLogs()
-  const abs = useProgramStatus('abdos')
+  const sessions = useSessions()
   const navigate = useNavigate()
   const [openKey, setOpenKey] = useState<string | null>(null)
-  const [picker, setPicker] = useState<PickerState>(null)
+  // Séance libre qui commence : la liste s'ouvre pour choisir le premier exercice.
+  const [picker, setPicker] = useState<PickerState>(session.free && !session.plan?.length ? { mode: 'add' } : null)
   const [kneeCheck, setKneeCheck] = useState(false)
-  if (!exercises || !logs || !abs) return null
+  if (!exercises || !logs || !sessions) return null
 
   const id = session.id!
   const isLegs = session.type === 'jambes'
+  // Push ou pull libre : je choisis l'exercice suivant à la fin du précédent.
+  const free = !!session.free
+  const template = free ? upperTemplate(session.type === 'pull' ? 'pull' : 'push') : undefined
+  const day = template && { title: `Exercices du ${template.id}`, ids: dayExerciseIds(template, [...exercises.values()], sessions, logs) }
   const plan = session.plan ?? []
   const sessionLogs = logs.filter((l) => l.sessionId === id)
   const setsOf = (key: string) => sessionLogs.filter((l) => l.planKey === key).sort((a, b) => a.setNumber - b.setNumber)
@@ -98,13 +105,7 @@ function SeanceEnCours({ session }: { session: Session }) {
     if (remaining > 0 && !confirm('Il reste des exercices non terminés. Terminer la séance quand même ?')) return
     if (isLegs) return setKneeCheck(true)
     await finishSession(id)
-    // Les abdos s'enchaînent après un push ou un pull.
-    if ((session.type === 'push' || session.type === 'pull') && abs.next) {
-      await startAbsSession(abs.next.index, id)
-      window.scrollTo(0, 0)
-    } else {
-      navigate('/')
-    }
+    navigate('/')
   }
 
   if (kneeCheck) {
@@ -141,6 +142,32 @@ function SeanceEnCours({ session }: { session: Session }) {
         onClose={() => setPicker(null)}
         onPick={async (exerciseId) => {
           await replaceExercise(id, pickerTarget.key, exerciseId)
+          setOpenKey(pickerTarget.key)
+          setPicker(null)
+        }}
+      />
+    )
+  }
+
+  if (picker && free) {
+    const addFree = async (ids: string[]) => {
+      const key = await addFreeExercises(id, ids)
+      setOpenKey(key)
+      setPicker(null)
+    }
+    return (
+      <ExercisePicker
+        title={pickerTarget ? `Changer ${exercises.get(pickerTarget.exerciseId)?.name ?? ''}` : plan.length ? 'Exercice suivant' : 'Premier exercice'}
+        exercises={[...exercises.values()]}
+        logs={logs}
+        currentId={pickerTarget?.exerciseId}
+        defaultRestSec={90}
+        day={day}
+        onClose={() => setPicker(null)}
+        onPickSuperset={pickerTarget ? undefined : addFree}
+        onPick={async (exerciseId) => {
+          if (!pickerTarget) return addFree([exerciseId])
+          await changeFreeExercise(id, pickerTarget.key, exerciseId)
           setOpenKey(pickerTarget.key)
           setPicker(null)
         }}
@@ -191,7 +218,11 @@ function SeanceEnCours({ session }: { session: Session }) {
       <p className="muted">
         {session.variant && <>Variante {session.variant.label} (prévu {formatDuration(session.variant.estimatedMin)}) · </>}
         Commencée à {timeFormat.format(new Date(session.date))}, il y a <Elapsed since={session.date} /> ·{' '}
-        {remaining === 0 ? 'tout est fait' : `${remaining} exercice${remaining > 1 ? 's' : ''} restant${remaining > 1 ? 's' : ''}`}
+        {free
+          ? `${plan.length} exercice${plan.length > 1 ? 's' : ''}`
+          : remaining === 0
+            ? 'tout est fait'
+            : `${remaining} exercice${remaining > 1 ? 's' : ''} restant${remaining > 1 ? 's' : ''}`}
       </p>
 
       {groupsOf(plan).map((group) => {
@@ -210,7 +241,7 @@ function SeanceEnCours({ session }: { session: Session }) {
             open={open === p.key}
             first={i === 0}
             lastInPlan={i === plan.length - 1}
-            restFor={() => restAfter(plan, count, p.key)}
+            restFor={() => restAfter(plan, count, p.key, free)}
             originalName={p.replaced && exercises.get(p.replaced.exerciseId)?.name}
             onToggle={() => setOpenKey(open === p.key ? '' : p.key)}
             onChange={p.prescribedReps === undefined ? () => setPicker({ mode: 'change', key: p.key }) : undefined}
@@ -221,11 +252,16 @@ function SeanceEnCours({ session }: { session: Session }) {
               setOpenKey(null)
             }}
             onRemove={() => updatePlan(id, (pl) => pl.filter((x) => x.key !== p.key))}
+            removable={p.key.startsWith('extra:') || p.key.startsWith('free:')}
             onSets={(sets) => patch(p.key, { sets })}
             onRest={(restSec) => patch(p.key, { restSec })}
             onIgnoreRestAdjust={(ignore) => patch(p.key, { ignoreRestAdjust: ignore })}
             // Après chaque série, on suit l'ordre de la séance : l'exercice suivant d'un superset s'ouvre tout seul.
-            onValidated={() => setOpenKey(null)}
+            // Séance libre : quand tout ce qui est prévu est fait, la liste s'ouvre pour l'exercice suivant (sous le chrono).
+            onValidated={() => {
+              setOpenKey(null)
+              if (free && !nextSet(plan, (k) => count(k) + (k === p.key ? 1 : 0))) setPicker({ mode: 'add' })
+            }}
             deload={session.prescription?.deload}
           />
           )
@@ -245,13 +281,14 @@ function SeanceEnCours({ session }: { session: Session }) {
         )
       })}
 
-      <button className="btn block" style={{ marginTop: 16 }} onClick={() => setPicker({ mode: 'add' })}>
-        + Ajouter un exercice {isLegs ? 'hors programme' : 'hors trame'}
+      {free && plan.length === 0 && <p className="muted">Choisis ton premier exercice.</p>}
+      <button className={`btn block ${free && !next ? 'primary big' : ''}`} style={{ marginTop: 16 }} onClick={() => setPicker({ mode: 'add' })}>
+        {free ? (plan.length ? '+ Exercice suivant' : '+ Premier exercice') : `+ Ajouter un exercice ${isLegs ? 'hors programme' : 'hors trame'}`}
       </button>
 
       <div className="stack" style={{ marginTop: 24 }}>
-        <button className="btn primary block" onClick={finish}>
-          {isLegs ? 'Terminer et faire le check genou' : abs.next ? 'Terminer et enchaîner les abdos' : 'Terminer la séance'}
+        <button className={`btn block ${free && !next ? '' : 'primary'}`} onClick={finish}>
+          {isLegs ? 'Terminer et faire le check genou' : 'Terminer la séance'}
         </button>
         <button
           className="link"
@@ -325,6 +362,7 @@ function ExerciseCard({
   onMove,
   onSkip,
   onRemove,
+  removable,
   onSets,
   onRest,
   onIgnoreRestAdjust,
@@ -351,6 +389,8 @@ function ExerciseCard({
   onMove: (dir: -1 | 1) => void
   onSkip: () => void
   onRemove: () => void
+  /** Exercice ajouté pendant la séance : on peut le retirer tant qu'aucune série n'est faite. */
+  removable: boolean
   onSets: (n: number) => void
   onRest: (sec: number) => void
   onIgnoreRestAdjust: (ignore: boolean) => void
@@ -530,7 +570,7 @@ function ExerciseCard({
             <button className="btn" onClick={onSkip}>
               {planned.skipped ? 'Reprendre' : 'Sauter'}
             </button>
-            {planned.key.startsWith('extra:') && sets.length === 0 && (
+            {removable && sets.length === 0 && (
               <button className="btn" onClick={onRemove}>
                 Retirer
               </button>

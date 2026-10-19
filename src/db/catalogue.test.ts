@@ -2,7 +2,9 @@ import 'fake-indexeddb/auto'
 import { afterEach, describe, expect, it } from 'vitest'
 import { resetToCatalogue, setArchived, updateExercise } from './catalogue'
 import { AppDB, syncCatalogue } from './db'
-import { createExercise, startUpperSession } from './sessions'
+import { createExercise } from './sessions'
+import { upperTemplate } from '../data'
+import { dayExerciseIds } from '../logic/freePlan'
 
 let n = 0
 const dbs: AppDB[] = []
@@ -51,13 +53,13 @@ describe('catalogue', () => {
     await expect(updateExercise('dc-halteres', { name: '   ' }, d)).rejects.toThrow('nom')
   })
 
-  it('un exercice archivé n’est plus proposé dans la trame et le reste après une synchronisation', async () => {
+  it('un exercice archivé n’est plus proposé dans les exercices du jour et le reste après une synchronisation', async () => {
     const d = await freshDb()
     await setArchived('dc-halteres', true, d)
     await syncCatalogue(d)
     expect((await d.exercises.get('dc-halteres'))?.archived).toBe(true)
-    // La place « développé horizontal » propose un autre exercice disponible de son slot.
-    const id = await startUpperSession('push', undefined, d)
-    expect((await d.sessions.get(id))?.plan?.[0].exerciseId).toBe('dc-barre')
+    const day = dayExerciseIds(upperTemplate('push'), await d.exercises.toArray(), [], [])
+    expect(day).not.toContain('dc-halteres')
+    expect(day).toContain('dc-barre')
   })
 })

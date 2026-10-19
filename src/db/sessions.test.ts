@@ -4,7 +4,9 @@ import { AppDB, syncCatalogue } from './db'
 import {
   abandonSession,
   activeSession,
+  addFreeExercises,
   adjustRest,
+  changeFreeExercise,
   createExercise,
   deleteSet,
   endRest,
@@ -26,29 +28,46 @@ afterEach(async () => {
   await Promise.all(dbs.splice(0).map((d) => d.delete()))
 })
 
-describe('séance haut du corps', () => {
-  it('démarre une seule séance à la fois', async () => {
+describe('séance haut du corps libre', () => {
+  it('démarre vide, une seule séance à la fois', async () => {
     const d = await freshDb()
-    const id = await startUpperSession('push', undefined, d)
-    expect(await startUpperSession('pull', undefined, d)).toBe(id)
-    const s = await activeSession(d)
-    expect(s).toMatchObject({ type: 'push', status: 'en-cours' })
-    expect(s?.plan?.[0]).toMatchObject({ key: 'push:push-horizontal:1', exerciseId: 'dc-halteres' })
+    const id = await startUpperSession('push', d)
+    expect(await startUpperSession('pull', d)).toBe(id)
+    expect(await activeSession(d)).toMatchObject({ type: 'push', status: 'en-cours', free: true, plan: [] })
   })
 
-  it("propose à chaque place l'exercice fait la dernière fois", async () => {
+  it('ajoute un exercice, puis deux en superset, et change un exercice pas commencé', async () => {
     const d = await freshDb()
-    const id = await startUpperSession('pull', undefined, d)
-    await logSet({ sessionId: id, planKey: 'pull:row:1', templateKey: 'pull:row:1', exerciseId: 'rowing-haltere', setNumber: 1, loadKg: 30, reps: 10 }, undefined, d)
+    const id = await startUpperSession('pull', d)
+    const first = await addFreeExercises(id, ['rowing-haltere'], d)
+    await addFreeExercises(id, ['curl-incline', 'face-pull'], d)
+    let plan = (await d.sessions.get(id))!.plan!
+    expect(plan.map((p) => [p.exerciseId, p.superset])).toEqual([
+      ['rowing-haltere', undefined],
+      ['curl-incline', 'S1'],
+      ['face-pull', 'S1'],
+    ])
+    expect(plan[0]).toMatchObject({ key: first, slot: 'row' })
+    await changeFreeExercise(id, plan[1].key, 'curl-marteau', d)
+    plan = (await d.sessions.get(id))!.plan!
+    expect(plan[1]).toMatchObject({ exerciseId: 'curl-marteau', superset: 'S1' })
+  })
+
+  it('reprend les séries faites et la fourchette de la dernière fois', async () => {
+    const d = await freshDb()
+    const id = await startUpperSession('pull', d)
+    const key = await addFreeExercises(id, ['rowing-haltere'], d)
+    await d.sessions.update(id, { plan: (await d.sessions.get(id))!.plan!.map((p) => ({ ...p, repRange: [10, 15] as [number, number] })) })
+    for (const setNumber of [1, 2]) await logSet({ sessionId: id, planKey: key, exerciseId: 'rowing-haltere', setNumber, loadKg: 30, reps: 12, restPlannedSec: 75 }, undefined, d)
     await finishSession(id, d)
-    expect(await activeSession(d)).toBeUndefined()
-    await startUpperSession('pull', undefined, d)
-    expect((await activeSession(d))?.plan?.[3].exerciseId).toBe('rowing-haltere')
+    const next = await startUpperSession('pull', d)
+    await addFreeExercises(next, ['rowing-haltere'], d)
+    expect((await d.sessions.get(next))!.plan![0]).toMatchObject({ sets: 2, repRange: [10, 15], restSec: 75 })
   })
 
   it('renumérote les séries après une suppression', async () => {
     const d = await freshDb()
-    const id = await startUpperSession('push', undefined, d)
+    const id = await startUpperSession('push', d)
     const base = { sessionId: id, planKey: 'push:0', exerciseId: 'dc-halteres', loadKg: 30, reps: 8 }
     const first = await logSet({ ...base, setNumber: 1 }, undefined, d)
     await logSet({ ...base, setNumber: 2 }, undefined, d)
@@ -59,7 +78,7 @@ describe('séance haut du corps', () => {
 
   it('abandonner supprime la séance et ses séries', async () => {
     const d = await freshDb()
-    const id = await startUpperSession('push', undefined, d)
+    const id = await startUpperSession('push', d)
     await logSet({ sessionId: id, planKey: 'push:0', exerciseId: 'dc-halteres', setNumber: 1, loadKg: 30, reps: 8 }, undefined, d)
     await abandonSession(id, d)
     expect(await d.sessions.count()).toBe(0)
@@ -70,7 +89,7 @@ describe('séance haut du corps', () => {
 describe('chrono de repos', () => {
   it('démarre à la validation et mesure le repos réellement pris', async () => {
     const d = await freshDb()
-    const id = await startUpperSession('push', undefined, d)
+    const id = await startUpperSession('push', d)
     const base = { sessionId: id, planKey: 'push:0', exerciseId: 'dc-halteres', loadKg: 30, reps: 8, restPlannedSec: 120 }
     await logSet({ ...base, setNumber: 1 }, 120, d)
     const rest = (await d.sessions.get(id))!.rest!
@@ -102,12 +121,10 @@ describe("création d'exercice", () => {
 })
 
 describe('séances cadrées', () => {
-  it('démarre les abdos enchaînés après un push', async () => {
+  it('démarre les abdos seuls, à la position du programme', async () => {
     const d = await freshDb()
-    const push = await startUpperSession('push', undefined, d)
-    await finishSession(push, d)
-    const id = await startAbsSession(0, push, d)
-    expect(await d.sessions.get(id)).toMatchObject({ type: 'abdos', parentSessionId: push, program: { programId: 'abdos', index: 0 } })
+    const id = await startAbsSession(0, undefined, d)
+    expect(await d.sessions.get(id)).toMatchObject({ type: 'abdos', program: { programId: 'abdos', index: 0 } })
     expect((await d.sessions.get(id))!.plan).toHaveLength(4)
   })
 })

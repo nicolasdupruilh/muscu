@@ -9,6 +9,8 @@ const shortDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'sho
 /**
  * Liste d'exercices à choisir, en plein écran. Filtrée sur un slot si `slot` est donné.
  * Un bouton permet de créer l'exercice s'il n'existe pas ; il est alors ajouté au slot.
+ * Séance libre : `day` met en tête les exercices du jour (push ou pull), et `onPickSuperset`
+ * permet de choisir deux exercices à enchaîner en superset.
  */
 export function ExercisePicker({
   title,
@@ -19,7 +21,9 @@ export function ExercisePicker({
   defaultRestSec,
   suggested = [],
   original,
+  day,
   onPick,
+  onPickSuperset,
   onClose,
 }: {
   title: string
@@ -32,11 +36,16 @@ export function ExercisePicker({
   suggested?: string[]
   /** Remplacement : exercice prévu par le programme, pour pouvoir y revenir. */
   original?: string
+  /** Exercices du jour, affichés en tête (« Exercices du push »), le reste en dessous. */
+  day?: { title: string; ids: string[] }
   onPick: (id: string) => void
+  /** Deux exercices en superset, dans l'ordre choisi. */
+  onPickSuperset?: (ids: string[]) => void
   onClose: () => void
 }) {
   const [query, setQuery] = useState('')
   const [creating, setCreating] = useState(false)
+  const [superset, setSuperset] = useState<string[] | null>(null)
 
   const list = useMemo(() => {
     const q = normalize(query)
@@ -45,6 +54,20 @@ export function ExercisePicker({
       .map((e) => ({ e, last: lastPerformance(logs, e.id)?.at }))
       .sort((a, b) => (b.last ?? '').localeCompare(a.last ?? '') || a.e.name.localeCompare(b.e.name, 'fr'))
   }, [exercises, logs, slot, query])
+
+  const dayIds = new Set(day?.ids)
+  const sections = day
+    ? [
+        { title: day.title, items: list.filter(({ e }) => dayIds.has(e.id)) },
+        { title: 'Autres exercices', items: list.filter(({ e }) => !dayIds.has(e.id)) },
+      ].filter((s) => s.items.length > 0)
+    : [{ title: undefined, items: list }]
+
+  const nameOf = (id: string) => exercises.find((e) => e.id === id)?.name ?? id
+  const choose = (id: string) => {
+    if (!superset) return onPick(id)
+    setSuperset(superset.includes(id) ? superset.filter((x) => x !== id) : superset.length < 2 ? [...superset, id] : superset)
+  }
 
   return (
     <div className="sheet" role="dialog" aria-label={title}>
@@ -65,19 +88,49 @@ export function ExercisePicker({
             slots: slot ? [slot] : [],
             cues: '',
           }}
-          showSlots={false}
+          showSlots={!slot && !!day}
           showCues={false}
-          submitLabel="Créer et choisir"
-          note={slot ? 'Il sera proposé dans ce slot les prochaines fois.' : undefined}
+          submitLabel={superset ? 'Créer et ajouter au superset' : 'Créer et choisir'}
+          note={slot ? 'Il sera proposé dans ce slot les prochaines fois.' : day ? 'Il sera proposé en tête de liste les prochaines fois.' : undefined}
           onSubmit={async (values) => {
             const id = await createExercise(values)
             setCreating(false)
-            onPick(id)
+            setQuery('')
+            choose(id)
           }}
         />
       ) : (
         <>
-          <button className="btn primary block" onClick={() => setCreating(true)}>
+          {onPickSuperset && (
+            <div className="chips" role="group" aria-label="Type d’enchaînement">
+              <button className={`chip ${superset ? '' : 'on'}`} onClick={() => setSuperset(null)} aria-pressed={!superset}>
+                Un exercice
+              </button>
+              <button className={`chip ${superset ? 'on' : ''}`} onClick={() => setSuperset(superset ?? [])} aria-pressed={!!superset}>
+                Superset (2 exercices)
+              </button>
+            </div>
+          )}
+          {superset && (
+            <div className="card superset-pick">
+              <div className="small muted">Série de chaque exercice sans pause, puis le repos.</div>
+              {[0, 1].map((i) => (
+                <div key={i} className="row">
+                  <span className="badge">{i + 1}</span>
+                  {superset[i] ? <strong className="grow">{nameOf(superset[i])}</strong> : <span className="grow muted">Touche un exercice</span>}
+                  {superset[i] && (
+                    <button className="link inline" onClick={() => setSuperset(superset.filter((x) => x !== superset[i]))}>
+                      retirer
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button className="btn primary block" disabled={superset.length < 2} onClick={() => onPickSuperset?.(superset)}>
+                Lancer le superset
+              </button>
+            </div>
+          )}
+          <button className={`btn block ${superset ? '' : 'primary'}`} onClick={() => setCreating(true)}>
             + Créer un exercice
           </button>
           {exercises.length > 8 && (
@@ -90,7 +143,7 @@ export function ExercisePicker({
                 {original && original !== currentId && (
                   <li>
                     <button className="pick" onClick={() => onPick(original)}>
-                      <strong>{exercises.find((e) => e.id === original)?.name ?? original}</strong>
+                      <strong>{nameOf(original)}</strong>
                       <span className="small muted">Exercice prévu par le programme</span>
                     </button>
                   </li>
@@ -115,20 +168,28 @@ export function ExercisePicker({
               <h3 className="picker-section">Autre exercice</h3>
             </>
           )}
-          <ul className="list card">
-            {list.map(({ e, last }) => (
-              <li key={e.id}>
-                <button className={`pick ${e.id === currentId ? 'current' : ''}`} onClick={() => onPick(e.id)}>
-                  <span>
-                    <strong>{e.name}</strong>
-                    {e.source === 'user' && <span className="badge"> perso</span>}
-                  </span>
-                  <span className="small muted">{last ? `Fait le ${shortDate.format(new Date(last))}` : 'Jamais fait'}</span>
-                </button>
-              </li>
-            ))}
-            {list.length === 0 && <li className="muted">Aucun exercice. Crée-le avec le bouton ci-dessus.</li>}
-          </ul>
+          {sections.map((section) => (
+            <div key={section.title ?? 'all'} className="stack">
+              {section.title && <h3 className="picker-section">{section.title}</h3>}
+              <ul className="list card">
+                {section.items.map(({ e, last }) => {
+                  const picked = superset?.indexOf(e.id) ?? -1
+                  return (
+                    <li key={e.id}>
+                      <button className={`pick ${e.id === currentId || picked >= 0 ? 'current' : ''}`} onClick={() => choose(e.id)}>
+                        <span>
+                          {picked >= 0 && <span className="badge">{picked + 1}</span>} <strong>{e.name}</strong>
+                          {e.source === 'user' && <span className="badge"> perso</span>}
+                        </span>
+                        <span className="small muted">{last ? `Fait le ${shortDate.format(new Date(last))}` : 'Jamais fait'}</span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ))}
+          {list.length === 0 && <p className="muted">Aucun exercice. Crée-le avec le bouton ci-dessus.</p>}
         </>
       )}
     </div>

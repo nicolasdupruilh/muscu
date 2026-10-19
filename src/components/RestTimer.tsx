@@ -33,7 +33,8 @@ function useNextLabel(session: Session): string | undefined {
     const names = new Map((await db.exercises.bulkGet(plan.map((p) => p.exerciseId))).map((e) => [e?.id, e?.name]))
     const n = nextSet(plan, count)
     const p = n && plan.find((x) => x.key === n.key)
-    if (!n || !p) return undefined
+    // Séance libre : tout ce qui était prévu est fait, l'exercice suivant reste à choisir.
+    if (!n || !p) return session.free ? 'exercice suivant, au choix' : undefined
     return n.superset ? `Tour ${n.round} : ${names.get(p.exerciseId)}` : `${names.get(p.exerciseId)}, série ${n.round}`
   }, [session])
 }

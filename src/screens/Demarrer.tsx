@@ -1,10 +1,9 @@
-// « Combien de temps tu as ? » : un appui sur une durée lance la variante qui tient dans ce temps ;
-// la liste en dessous permet de prendre une autre variante.
+// « Combien de temps tu as ? » (séance jambes) : un appui sur une durée lance la variante qui tient dans ce temps ;
+// la liste en dessous permet de prendre une autre variante. Push et pull sont libres, sans variante.
 import { Navigate, useNavigate, useParams } from 'react-router'
-import { catalogue, upperTemplate } from '../data'
+import { catalogue } from '../data'
 import type { Variant } from '../data/types'
 import { startLegSession } from '../db/phases'
-import { startUpperSession } from '../db/sessions'
 import { useActiveSession, useDurationFactor, usePhase } from '../hooks'
 import { chooseVariant, correctedMin, formatDuration, lastSessionsLabel, TIME_CHOICES } from '../logic/variants'
 
@@ -45,15 +44,6 @@ export function Demarrer() {
     title = `${pos.phase.name} · ${session.name}${pos.week ? ` · semaine ${pos.instance}` : ''}`
     choices = session.variants.map((v) => ({ ...v, ...summarize(v.items.map((i) => ({ id: i.exerciseId, superset: i.superset }))) }))
     start = (id) => startLegSession(id)
-  } else if (kind === 'push' || kind === 'pull') {
-    const template = upperTemplate(kind)
-    title = template.name
-    choices = template.variants.map((v) => ({
-      ...v,
-      ...summarize(v.slots.map((s) => ({ id: s.defaultExerciseId, superset: s.superset }))),
-      summary: `${v.slots.length} exercices${new Set(v.slots.map((s) => s.superset).filter(Boolean)).size ? ', supersets' : ''}, puis ${v.abdosRounds} tours d’abdos`,
-    }))
-    start = (id) => startUpperSession(kind, id)
   } else {
     return <Navigate to="/" replace />
   }

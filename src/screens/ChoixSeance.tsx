@@ -30,7 +30,7 @@ export function ChoixSeance() {
               navigate('/seance')
             }}
           >
-            Abdos seuls · semaine {abs.next.week}
+            Abdos · semaine {abs.next.week}
           </button>
         )}
         <button className="btn block" onClick={() => navigate('/volley')}>

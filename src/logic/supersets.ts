@@ -47,17 +47,17 @@ export const groupRounds = (group: PlannedExercise[]) => Math.max(0, ...group.fi
 /**
  * Repos à lancer après avoir validé une série de `key` :
  * - aucun si la série suivante est dans le même tour du même superset (on enchaîne sans pause) ;
- * - aucun si la séance est finie ;
+ * - aucun si la séance est finie, sauf en séance libre (`openEnded`) : l'exercice suivant reste à choisir ;
  * - sinon le repos de l'exercice, ou pour un superset le plus long des repos de ses exercices.
  * `doneCount` compte les séries faites AVANT celle qu'on valide.
  */
-export function restAfter(plan: PlannedExercise[], doneCount: (key: string) => number, key: string): number | undefined {
+export function restAfter(plan: PlannedExercise[], doneCount: (key: string) => number, key: string, openEnded = false): number | undefined {
   const after = (k: string) => doneCount(k) + (k === key ? 1 : 0)
   const following = nextSet(plan, after)
-  if (!following) return undefined
+  if (!following && !openEnded) return undefined
   const group = groupOf(plan, key)
   const round = doneCount(key) + 1
-  if (group.length > 1 && group.some((p) => p.key === following.key) && following.round === round) return undefined
+  if (following && group.length > 1 && group.some((p) => p.key === following.key) && following.round === round) return undefined
   const rest = Math.max(0, ...group.filter((p) => !p.skipped || p.key === key).map((p) => p.restSec))
   return rest > 0 ? rest : undefined
 }

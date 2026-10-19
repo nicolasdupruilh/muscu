@@ -20,13 +20,6 @@ export function lastPerformance(logs: SetLog[], exerciseId: string, excludeSessi
   return { sessionId: latest.sessionId, at: sets.reduce((m, s) => (s.at > m ? s.at : m), ''), sets }
 }
 
-/** Exercice fait la dernière fois à cette place de la trame (« push:5 »…). */
-export function lastExerciseAt(logs: SetLog[], templateKey: string): string | undefined {
-  let best: SetLog | undefined
-  for (const l of logs) if (l.templateKey === templateKey && l.done && (!best || l.at > best.at)) best = l
-  return best?.exerciseId
-}
-
 /** Valeur réalisée d'une série : secondes pour un exercice en durée, reps sinon. */
 export const setValue = (s: Pick<SetLog, 'reps' | 'durationSec'>, unit: LoadUnit) =>
   (unit === 'time' ? s.durationSec : s.reps) ?? 0

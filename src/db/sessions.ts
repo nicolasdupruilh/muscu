@@ -1,51 +1,67 @@
 // Actions sur les séances en cours : démarrer, enregistrer une série, modifier le plan, terminer.
 import { absBlockForWeek, absProgram, programShapes, upperTemplate } from '../data'
-import type { LoadUnit, Variant } from '../data/types'
+import type { LoadUnit } from '../data/types'
+import { addToFreePlan, freePlanned } from '../logic/freePlan'
 import { positionOf } from '../logic/programs'
 import { restTaken } from '../logic/rest'
 import { buildAbsPlan, replacePlanned } from '../logic/structuredPlans'
-import { buildUpperPlan, slugify } from '../logic/upperPlan'
+import { slugify } from '../logic/upperPlan'
 import { db, type AppDB } from './db'
-import type { Exercise, PlannedExercise, Session, SessionVariant, SetLog } from './models'
+import type { Exercise, PlannedExercise, Session, SetLog } from './models'
 
 export async function activeSession(database: AppDB = db): Promise<Session | undefined> {
   return database.sessions.where('status').equals('en-cours').first()
 }
 
-/** Variante d'une liste par son identifiant ; à défaut, la complète (la dernière). */
-const variantById = <V extends { id: string }>(variants: V[], id?: string): V => variants.find((v) => v.id === id) ?? variants[variants.length - 1]
-
-const sessionVariant = (v: Variant & { abdosRounds?: number }): SessionVariant => ({
-  id: v.id,
-  label: v.label,
-  estimatedMin: v.estimatedMin,
-  ...(v.abdosRounds !== undefined && { abdosRounds: v.abdosRounds }),
-})
-
-/** Démarre une séance push ou pull dans la variante choisie, ou renvoie la séance déjà en cours. */
-export async function startUpperSession(type: 'push' | 'pull', variantId?: string, database: AppDB = db): Promise<number> {
-  return database.transaction('rw', database.sessions, database.setLogs, database.exercises, async () => {
+/** Démarre une séance push ou pull libre (vide : les exercices se choisissent un par un), ou renvoie la séance en cours. */
+export async function startUpperSession(type: 'push' | 'pull', database: AppDB = db): Promise<number> {
+  return database.transaction('rw', database.sessions, async () => {
     const current = await activeSession(database)
     if (current) return current.id!
-    const template = upperTemplate(type)
-    const variant = variantById(template.variants, variantId)
-    const exercises = new Map((await database.exercises.toArray()).map((e) => [e.id, e]))
-    const available = (id: string) => !!exercises.get(id) && !exercises.get(id)!.archived
-    const alternativeFor = (slot: string) => [...exercises.values()].find((e) => !e.archived && e.slots.includes(slot))?.id
-    const plan = buildUpperPlan(template, variant, await database.setLogs.toArray(), available, alternativeFor)
-    return (await database.sessions.add({
-      date: new Date().toISOString(),
-      type,
-      status: 'en-cours',
-      plan,
-      variant: sessionVariant(variant),
-    })) as number
+    return (await database.sessions.add({ date: new Date().toISOString(), type, status: 'en-cours', plan: [], free: true })) as number
   })
 }
 
 /**
- * Démarre la séance abdos à cette position du programme. Enchaînée après un push ou un pull,
- * elle prend le nombre de tours de la variante de cette séance (abdosRounds).
+ * Ajoute à une séance libre l'exercice choisi, ou deux exercices en superset.
+ * Séries, fourchette et repos repris de la dernière fois (voir freePlanned). Renvoie la clé du premier.
+ */
+export async function addFreeExercises(sessionId: number, exerciseIds: string[], database: AppDB = db): Promise<string> {
+  return database.transaction('rw', database.sessions, database.setLogs, database.exercises, async () => {
+    const session = await database.sessions.get(sessionId)
+    if (!session) throw new Error('Séance introuvable')
+    const type = session.type === 'pull' ? 'pull' : 'push'
+    const templates = [upperTemplate(type), upperTemplate(type === 'push' ? 'pull' : 'push')]
+    const [sessions, logs] = await Promise.all([database.sessions.toArray(), database.setLogs.toArray()])
+    const stamp = Date.now()
+    const items = (await database.exercises.bulkGet(exerciseIds)).map((e, i) => {
+      if (!e) throw new Error(`Exercice introuvable : ${exerciseIds[i]}`)
+      return freePlanned(e, templates, sessions, logs, `free:${stamp}:${i}`)
+    })
+    await database.sessions.update(sessionId, { plan: addToFreePlan(session.plan ?? [], items) })
+    return items[0].key
+  })
+}
+
+/** Séance libre : change l'exercice d'une place pas encore commencée (séries, fourchette et repos du nouvel exercice). */
+export async function changeFreeExercise(sessionId: number, key: string, exerciseId: string, database: AppDB = db) {
+  return database.transaction('rw', database.sessions, database.setLogs, database.exercises, async () => {
+    const session = await database.sessions.get(sessionId)
+    const exercise = await database.exercises.get(exerciseId)
+    if (!session || !exercise) throw new Error('Séance ou exercice introuvable')
+    const type = session.type === 'pull' ? 'pull' : 'push'
+    const templates = [upperTemplate(type), upperTemplate(type === 'push' ? 'pull' : 'push')]
+    const [sessions, logs] = await Promise.all([database.sessions.toArray(), database.setLogs.toArray()])
+    const fresh = freePlanned(exercise, templates, sessions, logs, key)
+    await database.sessions.update(sessionId, {
+      plan: (session.plan ?? []).map((p) => (p.key === key ? { ...fresh, ...(p.superset && { superset: p.superset }) } : p)),
+    })
+  })
+}
+
+/**
+ * Démarre la séance abdos à cette position du programme. Une ancienne séance enchaînée après un push ou un pull
+ * prenait le nombre de tours de la variante de cette séance (abdosRounds).
  */
 export async function startAbsSession(index: number, parentSessionId?: number, database: AppDB = db): Promise<number> {
   return database.transaction('rw', database.sessions, async () => {

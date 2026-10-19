@@ -1051,3 +1051,13 @@ textarea.textarea {
   color: var(--accent);
   font-weight: 600;
 }
+
+/* Séance libre : les deux exercices du superset restent visibles pendant qu'on fait défiler la liste. */
+.superset-pick {
+  position: sticky;
+  top: calc(env(safe-area-inset-top) + 4px);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

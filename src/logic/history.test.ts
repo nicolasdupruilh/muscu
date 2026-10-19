@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { SetLog } from '../db/models'
-import { lastExerciseAt, lastPerformance, toPastSets } from './history'
+import { lastPerformance, toPastSets } from './history'
 
 let id = 1
 const log = (p: Partial<SetLog> & Pick<SetLog, 'sessionId' | 'exerciseId' | 'setNumber' | 'at'>): SetLog => ({
@@ -34,13 +34,6 @@ describe('dernière perf', () => {
 
   it('ne trouve rien pour un exercice jamais fait', () => {
     expect(lastPerformance(logs, 'face-pull')).toBeUndefined()
-  })
-})
-
-describe('exercice par défaut d’une place de la trame', () => {
-  it('est le dernier fait à cette place', () => {
-    expect(lastExerciseAt(logs, 'pull:3')).toBe('rowing-poulie')
-    expect(lastExerciseAt(logs, 'pull:4')).toBeUndefined()
   })
 })
 

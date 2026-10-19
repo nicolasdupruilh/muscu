@@ -67,3 +67,14 @@ describe('supersets', () => {
     expect(nextSet(plan, (k) => done[k] ?? 0)).toEqual({ key: 'elev', round: 1, superset: 'S1' })
   })
 })
+
+describe('séance libre', () => {
+  it('lance le repos après la dernière série prévue : l’exercice suivant reste à choisir', () => {
+    const free = [ex('dc', 2, 120), ex('elev', 2, 75, 'S1'), ex('tri', 2, 60, 'S1')]
+    const done: Record<string, number> = { dc: 2, elev: 2, tri: 1 }
+    expect(restAfter(free, (k) => done[k] ?? 0, 'tri')).toBeUndefined()
+    expect(restAfter(free, (k) => done[k] ?? 0, 'tri', true)).toBe(75)
+    // Au milieu d'un tour de superset, toujours pas de repos.
+    expect(restAfter(free, (k) => ({ dc: 2, elev: 1, tri: 1 })[k] ?? 0, 'elev', true)).toBeUndefined()
+  })
+})
